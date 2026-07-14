@@ -10,7 +10,7 @@ Plugin version: `1.0.0`
 PASS: 22 skill packages and catalog groups
 PASS: 111 routing fixtures
 PASS: 52 boundary/failure scenarios
-PASS: 25 local Git/package semantic smoke tests
+PASS: 27 local Git/package semantic smoke tests
 PASS: deterministic release archive generation with exactly one embedded manifest
 ```
 
@@ -28,8 +28,9 @@ post-push remote verification, tag object/peeling semantics, NUL-safe worktree a
 filename handling, destructive-clean preview, both non-obstructing and obstructing hard-reset cases,
 conflict stages and abort, shared-tag-namespace prune candidates, reflog recovery, atomic multi-ref
 push, submodule gitlinks, corrected history pickaxe/bisect behavior, remote names containing dots or
-slashes, fail-closed remote redaction, skipped-validation manifest metadata, and installer
-preflight/rollback behavior.
+slashes, malformed remote URL isolation, fail-closed remote redaction, tracked-only release inputs,
+tracked-symlink rejection, skipped-validation sidecar metadata, and installer preflight/rollback
+behavior.
 
 ## Agent-runtime cases
 
@@ -44,5 +45,5 @@ run in this report.
 - provider authentication, branch protection, hosted release, and migration policy behavior;
 - macOS and Windows execution.
 
-Release artifacts record the source-tree digest, archive hash, tool versions, validation results,
-and tested environment.
+The embedded package manifest records source-derived identity and compatibility metadata. The
+sidecar release record adds the archive hash, build environment, and validation results.

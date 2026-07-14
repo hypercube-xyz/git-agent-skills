@@ -16,8 +16,10 @@
 - Add catalog groups, compatibility documentation, cross-skill handoff rules, security reporting,
   stronger routing/scenario fixtures, a fail-closed remote inspection helper, and transactional
   local skill linking.
-- Add deterministic release manifests containing source-tree identity, tool versions, validation
-  status, tested environment, and artifact hash.
+- Add deterministic embedded package manifests and sidecar release records containing source-tree
+  identity, build environment, validation status, and artifact hash.
 - Fix dynamic CI skill counting, truthful skipped-validation metadata, installer rollback,
   dotted/slashed remote-name inspection, submodule summary commands, bisect oracle semantics,
   hard-reset obstruction guidance, exact tag leases, history-fetch scope, and tier wording.
+- Package releases from Git-tracked regular files only, reject tracked symlinks, use Git-index modes,
+  and isolate malformed remote URLs without aborting the complete inventory.
