@@ -1,0 +1,34 @@
+{
+  "compatibility": {
+    "ci_os": "Ubuntu",
+    "git_minimum": "2.35",
+    "python_minimum": "3.9",
+    "tested_packaging_clients": [
+      "Skills CLI 1.5.17",
+      "Claude Code 2.1.209"
+    ]
+  },
+  "package": "git-agent-skills",
+  "package_version": "1.0.0",
+  "release_date": "2026-07-15",
+  "schema_version": 1,
+  "source_identity": {
+    "method": "sha256 over sorted package paths, executable modes, and file content",
+    "source_tree_sha256": "a801c10cb66cfe2af1d68f2374c765118def30944f5eaca36c5afa182a5f721b",
+    "upstream_repository": "https://github.com/hypercube-xyz/git-agent-skills"
+  },
+  "tool_versions": {
+    "git": "git version 2.47.3",
+    "python": "3.13.5"
+  },
+  "validation": {
+    "agent_runtime_cases": "not run",
+    "commands_executed": [
+      "python3 scripts/validate_skills.py",
+      "python3 scripts/evaluate_fixtures.py",
+      "python3 scripts/smoke_test_git.py"
+    ],
+    "reproducibility_check": "passed",
+    "result": "passed"
+  }
+}
