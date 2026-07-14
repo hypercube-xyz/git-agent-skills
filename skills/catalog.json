@@ -1,402 +1,151 @@
-[
-  {
-    "name": "diagnose-repository",
-    "title": "Diagnose Repository State",
-    "description": "Diagnose confusing Git repository state, interrupted operations, detached or unborn HEAD, index/worktree mismatches, ignored or untracked files, and repository integrity symptoms. Use when the user asks what state Git is in or why status, diff, switch, merge, or commit behaves unexpectedly. Do not use to perform the eventual recovery or history rewrite.",
-    "routes_from": [
-      "Git says I am in detached HEAD. Is my work lost?",
-      "ทำไม git status บอก modified แต่ git diff ไม่ขึ้นอะไร",
-      "A rebase stopped yesterday; tell me exactly what state the repo is in before doing anything."
-    ],
-    "routes_elsewhere": [
-      "Use `undo-changes` when the target and reversal are already known.",
-      "Use `recover-lost-work` when commits or files are missing or unreachable.",
-      "Use `resolve-conflicts` when unmerged entries need semantic resolution.",
-      "Do not repair, clean, reset, prune, fetch, or rewrite as part of diagnosis."
-    ]
+{
+  "schema_version": 1,
+  "package_version": "1.0.0",
+  "design": "Skills are routed by desired postcondition. Groups organize documentation and evaluation priority.",
+  "tiers": {
+    "core": {
+      "description": "High-value Git state, topology, recovery, or consequential workflows.",
+      "skills": [
+        "diagnose-repository",
+        "configure-git",
+        "craft-commits",
+        "sync-branches",
+        "integrate-branches",
+        "manage-worktrees",
+        "resolve-conflicts",
+        "undo-changes",
+        "recover-lost-work",
+        "edit-commit-history",
+        "find-regression",
+        "manage-submodules",
+        "manage-large-files",
+        "manage-tags",
+        "migrate-repository"
+      ]
+    },
+    "optional": {
+      "description": "Useful but lower-frequency or largely familiar workflows; keep compact and load only on a clear trigger.",
+      "skills": [
+        "setup-repository",
+        "manage-remotes",
+        "manage-branches",
+        "preserve-work",
+        "transplant-commits",
+        "investigate-history",
+        "optimize-large-repository"
+      ]
+    }
   },
-  {
-    "name": "setup-repository",
-    "title": "Set Up Repository",
-    "description": "Create or obtain one working Git repository by initializing, cloning, selecting clone depth or object filters, and establishing the initial local branch. Use for first-time repository setup. Do not use for ongoing configuration, submodule operations, large-repository tuning after setup, or full repository migration.",
-    "routes_from": [
-      "Clone this repo for development without downloading every blob yet.",
-      "Initialize this empty directory with main as the first branch.",
-      "I only need a bare mirror for an upcoming migration; do not create a worktree."
-    ],
-    "routes_elsewhere": [
-      "Use `configure-git` for identity, attributes, hooks, aliases, signing, or policy.",
-      "Use `manage-submodules` for nested repositories.",
-      "Use `optimize-large-repository` for ongoing sparse checkout, maintenance, or performance work.",
-      "Use `migrate-repository` to transfer all refs or change hosting."
-    ]
-  },
-  {
-    "name": "configure-git",
-    "title": "Configure Git Behavior",
-    "description": "Inspect and change Git configuration, identity, signing, attributes, ignore rules, hooks, aliases, credential-helper selection, and repository policy at the correct scope. Use when the desired outcome is configuration rather than repository history or content. Do not use to manage remote URLs, rewrite commits, or store secrets.",
-    "routes_from": [
-      "Set pull to rebase only in this repository and show where the old value came from.",
-      "Why do files keep changing from LF to CRLF? Configure a repository policy.",
-      "Configure signed commits for this repo without changing my other repositories."
-    ],
-    "routes_elsewhere": [
-      "Use `manage-remotes` for remote URLs and refspecs.",
-      "Use `manage-large-files` for LFS tracking and large-object policy.",
-      "Use `craft-commits` to create commits or choose commit-message style.",
-      "Do not place credentials or tokens in config."
-    ]
-  },
-  {
-    "name": "manage-remotes",
-    "title": "Manage Remote Topology",
-    "description": "Inspect, add, rename, remove, and edit Git remotes, fetch/push URLs, and refspecs; fetch remote observations when needed. Use when the problem is remote identity or topology. Do not use to reconcile branch histories, perform ordinary push/pull integration, migrate every ref, or expose credentials.",
-    "routes_from": [
-      "Origin points to the wrong GitHub repository; change it safely.",
-      "Why does fetch use HTTPS but push uses SSH? Inspect without showing tokens.",
-      "Add upstream and fetch its branches, but do not merge anything."
-    ],
-    "routes_elsewhere": [
-      "Use `sync-branches` for ahead/behind reconciliation and ordinary push/pull outcomes.",
-      "Use `migrate-repository` for all-ref transfer or host migration.",
-      "Use `configure-git` for credential-helper selection.",
-      "Do not publish refs or rewrite a remote branch under this skill."
-    ]
-  },
-  {
-    "name": "craft-commits",
-    "title": "Craft Atomic Commits",
-    "description": "Inspect local changes, partition them into coherent atomic commits, stage exact content, and write repository-conformant commit messages. Use whenever the user asks to commit work, split mixed changes, amend an unpublished commit, or improve commit structure. Follow repository policy and history first; use Conventional Commits only when no convention exists. Do not push or rewrite published history.",
-    "routes_from": [
-      "Commit these changes as clean atomic commits.",
-      "ช่วยแบ่งงานใน working tree เป็นหลาย commit แล้วตั้งข้อความตาม history ของ repo",
-      "Amend the typo in the last commit; it has not been pushed."
-    ],
-    "routes_elsewhere": [
-      "Use `edit-commit-history` to reorder, squash, split, or reword multiple existing commits.",
-      "Use `undo-changes` to unstage or discard known changes without creating a commit.",
-      "Use `scan-secrets` before committing when secret risk is material.",
-      "Do not push, tag, merge, or alter unrelated working changes."
-    ]
-  },
-  {
-    "name": "manage-branches",
-    "title": "Manage Local Branches",
-    "description": "Create, switch, rename, copy, delete, and inspect local branches and their upstream metadata without integrating histories. Use for local branch lifecycle and safe navigation, including detached HEAD preservation. Do not use for merge/rebase, remote synchronization, worktree lifecycle, or history editing.",
-    "routes_from": [
-      "Create feature/cache from the exact release commit and switch to it.",
-      "I committed while detached; give that commit a branch name before I leave.",
-      "Delete the local branch only if all of it is already in main."
-    ],
-    "routes_elsewhere": [
-      "Use `sync-branches` to update from or publish to a remote.",
-      "Use `integrate-branches` to merge or rebase lines of development.",
-      "Use `manage-worktrees` when a branch is checked out elsewhere.",
-      "Use `edit-commit-history` to rewrite commit topology."
-    ]
-  },
-  {
-    "name": "sync-branches",
-    "title": "Synchronize Branches",
-    "description": "Reconcile one local branch with its upstream or another verified remote branch through fetch plus fast-forward, pull-policy choice, or ordinary non-force push. Use for ahead/behind, divergent pull, non-fast-forward push rejection, first publication, and upstream tracking. Do not use for remote topology, local-only branch integration, or published-history rewrite.",
-    "routes_from": [
-      "Push says non-fast-forward. Inspect what changed and choose the safe path.",
-      "ดึง main ล่าสุดมา แต่ห้ามทิ้ง commit local",
-      "Publish this new branch to origin and set its upstream."
-    ],
-    "routes_elsewhere": [
-      "Use `manage-remotes` when the destination URL/refspec is wrong.",
-      "Use `integrate-branches` for local merge/rebase decisions not centered on an upstream.",
-      "Use `edit-commit-history` for force-with-lease or published rewrite.",
-      "Use `migrate-repository` for many refs or host transfer."
-    ]
-  },
-  {
-    "name": "integrate-branches",
-    "title": "Integrate Branch Histories",
-    "description": "Combine complete lines of development through merge, fast-forward, or local rebase, including choosing an integration strategy and validating the result. Use when the outcome is to incorporate one branch into another. Do not use for selected commits, ordinary upstream synchronization, conflict-only resolution, or editing an arbitrary commit series.",
-    "routes_from": [
-      "Merge the completed feature branch into main after reviewing the exact commit set.",
-      "Rebase my unpublished local commits onto the new base.",
-      "Can this branch be fast-forwarded without a merge commit?"
-    ],
-    "routes_elsewhere": [
-      "Use `sync-branches` when the main outcome is local/upstream synchronization and ordinary push.",
-      "Use `transplant-commits` for selected exact commits.",
-      "Use `resolve-conflicts` when unmerged paths require semantic resolution.",
-      "Use `edit-commit-history` for interactive reorder/squash/reword or published rewrite."
-    ]
-  },
-  {
-    "name": "preserve-work",
-    "title": "Preserve In-Progress Work",
-    "description": "Temporarily preserve current tracked, staged, untracked, or ignored work before switching context or attempting a risky operation. Use for stash, temporary commits, patches, or a safety branch chosen by evidence. Do not use to recover already lost work or discard changes.",
-    "routes_from": [
-      "Save everything including untracked files before I switch tasks.",
-      "Create a durable local safety point before this risky rebase.",
-      "I need a patch of only the tracked changes, and do not remove them."
-    ],
-    "routes_elsewhere": [
-      "Use `recover-lost-work` when work is missing or the preservation artifact is unknown.",
-      "Use `undo-changes` to discard or unstage known state.",
-      "Use `manage-worktrees` when parallel work should remain checked out rather than packed away.",
-      "Do not treat a stash as a durable backup or remote publication."
-    ]
-  },
-  {
-    "name": "manage-worktrees",
-    "title": "Manage Linked Worktrees",
-    "description": "Create, inspect, move, lock, unlock, repair, remove, and safely prune linked Git worktrees. Use for parallel checkouts that share one object database. Do not use for ordinary branch switching or for pruning unspecified candidates.",
-    "routes_from": [
-      "Create a linked worktree for the release branch.",
-      "Why can't I delete this branch? Check whether another worktree uses it.",
-      "Prune stale worktrees only if the dry run contains exactly the approved paths."
-    ],
-    "routes_elsewhere": [
-      "Use `manage-branches` for local branch lifecycle within one checkout.",
-      "Use `preserve-work` if the goal is merely to save current changes.",
-      "Use `diagnose-repository` for generic repository discovery.",
-      "Do not use broad prune as a cleanup shortcut."
-    ]
-  },
-  {
-    "name": "resolve-conflicts",
-    "title": "Resolve Git Conflicts",
-    "description": "Resolve semantic conflicts during merge, rebase, cherry-pick, revert, stash application, or sequencer operations. Use when the index has unmerged stages or Git has stopped for conflict resolution. Do not use merely to start an integration or to accept one side mechanically.",
-    "routes_from": [
-      "Rebase stopped with conflicts; help resolve them semantically.",
-      "ไฟล์นี้มี both modified และไม่รู้ ours/theirs ฝั่งไหนคืออะไร",
-      "Cherry-pick has a modify/delete conflict. Preserve the intended fix."
-    ],
-    "routes_elsewhere": [
-      "Use `integrate-branches` to choose and begin merge/rebase.",
-      "Use `transplant-commits` to choose and begin cherry-pick.",
-      "Use `undo-changes` when the desired outcome is only aborting a known operation.",
-      "Do not resolve by blanket `ours`/`theirs` without contract evidence."
-    ]
-  },
-  {
-    "name": "undo-changes",
-    "title": "Undo Known Changes",
-    "description": "Reverse a known local Git state change: unstage paths, restore tracked content, abort an in-progress operation, revert a known commit, or move an unpublished ref with an explicit preservation policy. Use when the target and desired earlier state are known. Do not use to discover lost work or rewrite published history.",
-    "routes_from": [
-      "Unstage config.yml but keep my edits.",
-      "Undo this published commit with a new inverse commit.",
-      "Abort the current cherry-pick and restore the pre-operation state."
-    ],
-    "routes_elsewhere": [
-      "Use `recover-lost-work` when the desired object/version is unknown or missing.",
-      "Use `edit-commit-history` for multi-commit or published rewrite.",
-      "Use `preserve-work` before reversal when current work must be captured.",
-      "Do not use broad hard reset or clean as a generic fix."
-    ]
-  },
-  {
-    "name": "recover-lost-work",
-    "title": "Recover Lost Work",
-    "description": "Find and restore commits, branches, staged blobs, or file content that became unreachable or disappeared after reset, rebase, branch deletion, detached HEAD, stash loss, or accidental overwrite. Use when the desired state is not currently named or its exact object is unknown. Do not use for ordinary reversal of known state.",
-    "routes_from": [
-      "I deleted a branch and need the commits back.",
-      "reset --hard ไปแล้ว หา commit เดิมให้หน่อย",
-      "I left detached HEAD and cannot find the commit I made."
-    ],
-    "routes_elsewhere": [
-      "Use `undo-changes` when the target state is known and reachable.",
-      "Use `preserve-work` before risk, not after loss.",
-      "Use `diagnose-repository` when the issue may be status/index semantics rather than missing content.",
-      "Do not run aggressive prune/gc or overwrite current state during investigation."
-    ]
-  },
-  {
-    "name": "transplant-commits",
-    "title": "Transplant Selected Commits",
-    "description": "Copy a selected set or range of exact commits onto another local line of history with cherry-pick, including ordering, provenance, empty commits, and conflict handling. Use when only particular commits should move. Do not use to integrate a whole branch, rewrite an existing series in place, or publish.",
-    "routes_from": [
-      "Backport these two exact fixes to the 1.x branch.",
-      "I committed on main by mistake; copy that commit to feature first.",
-      "Cherry-pick this merge commit after determining the correct mainline."
-    ],
-    "routes_elsewhere": [
-      "Use `integrate-branches` for a complete branch line.",
-      "Use `edit-commit-history` to reorder/squash/reword commits already on the target.",
-      "Use `resolve-conflicts` for deep semantic conflict work.",
-      "Do not assume cherry-pick always produces a different object ID."
-    ]
-  },
-  {
-    "name": "edit-commit-history",
-    "title": "Edit Commit History",
-    "description": "Reorder, squash, fixup, split, drop, reword, or otherwise rewrite an existing commit series, including controlled updates to a published branch with an exact force-with-lease. Use when commit topology or metadata must change. Do not use for ordinary amend of one unpublished tip, branch integration, or repository-wide filtering.",
-    "routes_from": [
-      "Squash and reorder these unpublished commits before review.",
-      "Rewrite this published branch only if origin still points to the exact fetched commit.",
-      "Split the third commit into implementation and tests."
-    ],
-    "routes_elsewhere": [
-      "Use `craft-commits` for new commits or a simple unpublished tip amend.",
-      "Use `integrate-branches` for routine local rebase/merge onto a base.",
-      "Use `migrate-repository` for repository-wide filter/rehosting work.",
-      "Use `undo-changes` for a known reset/revert without series editing."
-    ]
-  },
-  {
-    "name": "investigate-history",
-    "title": "Investigate Git History",
-    "description": "Trace when, why, and by whom code or repository state changed using log, show, blame, pickaxe, regex history search, path history, merge ancestry, and patch equivalence. Use for provenance and historical explanation. Do not use for executable regression bisection, mutation, or code-review judgment.",
-    "routes_from": [
-      "Which commit removed this validation and why?",
-      "หา commit ที่เพิ่ม string นี้ครั้งแรก แม้ไฟล์จะถูก rename",
-      "Did this patch already land under a different commit ID?"
-    ],
-    "routes_elsewhere": [
-      "Use `find-regression` when a reproducible good/bad test can locate a causal boundary.",
-      "Use `review-change-set` to assess correctness of a proposed diff.",
-      "Use `recover-lost-work` when the goal is to restore missing objects.",
-      "Do not alter refs, files, or remote state."
-    ]
-  },
-  {
-    "name": "find-regression",
-    "title": "Find a Regression",
-    "description": "Locate the first bad commit with Git bisect or an equivalent bounded search using a reproducible good/bad/skip classifier. Use when behavior can be tested across revisions. Do not use for open-ended history search, flaky tests without classification, or immediate code repair.",
-    "routes_from": [
-      "Find the first commit where this test starts failing.",
-      "ใช้ git bisect แต่บาง commit build ไม่ได้ให้ skip อย่างถูกต้อง",
-      "Automate the regression search with a timeout and restore my branch afterward."
-    ],
-    "routes_elsewhere": [
-      "Use `investigate-history` for text/provenance questions without an executable oracle.",
-      "Use `review-change-set` to inspect a known diff.",
-      "Use `diagnose-repository` when current repository state itself is confusing.",
-      "Do not patch the regression as part of the search unless separately requested."
-    ]
-  },
-  {
-    "name": "review-change-set",
-    "title": "Review a Change Set",
-    "description": "Review a branch, commit range, staged diff, or patch for correctness, regressions, security, compatibility, tests, and unnecessary complexity without changing the target repository. Use for evidence-backed findings on a bounded change set. Do not use to implement fixes, perform whole-repository audits, or run mutating checks in the original worktree.",
-    "routes_from": [
-      "Review this branch against main for correctness and missing tests.",
-      "ตรวจ staged diff นี้ ห้ามแก้ไฟล์",
-      "Review commits A..B and report only actionable defects."
-    ],
-    "routes_elsewhere": [
-      "Use a repository-specific review skill if the task is exclusively style or a specialized domain.",
-      "Use `investigate-history` for provenance rather than defect review.",
-      "Use implementation skills to apply fixes.",
-      "Do not review an unbounded entire repository under this skill."
-    ]
-  },
-  {
-    "name": "scan-secrets",
-    "title": "Scan for Secrets",
-    "description": "Inspect current files, staged changes, commits, or bounded history for credentials and other sensitive material; classify findings and plan containment without exposing secret values. Use before commit/release or after suspected leakage. Do not rotate credentials, rewrite history, or publish remediation under this skill.",
-    "routes_from": [
-      "Scan staged changes for secrets without printing any values.",
-      "We committed an API key yesterday; classify the exposure and tell us the next safe workflow.",
-      "Check this release range with a local scanner and report redacted findings."
-    ],
-    "routes_elsewhere": [
-      "Use provider/security operations to rotate or revoke credentials.",
-      "Use `edit-commit-history` or migration tooling for authorized removal from history.",
-      "Use `craft-commits` only after the secret risk is cleared.",
-      "Do not print, copy, transmit, or deterministically hash raw low-entropy secrets."
-    ]
-  },
-  {
-    "name": "manage-submodules",
-    "title": "Manage Submodules",
-    "description": "Add, initialize, update, synchronize, relocate, remove, and diagnose Git submodules and their gitlink commits. Use when a superproject tracks another repository by commit. Do not use for ordinary directories, subtree integration, or monorepo package management.",
-    "routes_from": [
-      "Update the submodule pointer to the reviewed commit and verify collaborators can fetch it.",
-      "Why is my submodule detached and showing modified?",
-      "Remove this submodule without deleting uncommitted nested work."
-    ],
-    "routes_elsewhere": [
-      "Use `manage-remotes` for the superproject's remotes.",
-      "Use `setup-repository` for a normal standalone clone.",
-      "Use `integrate-branches` for Git subtree or branch integration if that is the chosen model.",
-      "Do not commit nested repository content as ordinary files accidentally."
-    ]
-  },
-  {
-    "name": "manage-large-files",
-    "title": "Manage Large Files",
-    "description": "Diagnose and manage large or binary files with Git LFS or repository policy, including push-size rejection, missing LFS objects, pointer mismatches, tracking changes, and bounded migration of selected paths. Use when storage format or host size limits are the problem. Do not use for general repository performance tuning or arbitrary history rewrite.",
-    "routes_from": [
-      "GitHub rejected the push because one file is too large. Find the exact object and safest option.",
-      "Track only *.psd with LFS from now on.",
-      "This checkout contains an LFS pointer but the object is missing."
-    ],
-    "routes_elsewhere": [
-      "Use `optimize-large-repository` for sparse checkout, partial clone, maintenance, or general scale performance.",
-      "Use `edit-commit-history` for small local series rewriting unrelated to LFS.",
-      "Use `migrate-repository` for whole-host transfer.",
-      "Do not delete large files or rewrite all history merely to satisfy a push error."
-    ]
-  },
-  {
-    "name": "optimize-large-repository",
-    "title": "Optimize Large Repository",
-    "description": "Improve developer productivity in large repositories using measurement, sparse checkout, partial clone, scalar/maintenance, commit-graph, multi-pack-index, and bounded repository cleanup. Use when clone, status, checkout, fetch, or object maintenance is slow. Do not use for LFS storage policy or destructive pruning without evidence.",
-    "routes_from": [
-      "Status takes 20 seconds in this monorepo; measure and improve it.",
-      "Configure sparse checkout for only services/api and shared libraries.",
-      "Should we use partial clone or shallow clone for developers?"
-    ],
-    "routes_elsewhere": [
-      "Use `manage-large-files` for host size limits or LFS.",
-      "Use `setup-repository` for first-time clone choice when no repository exists yet.",
-      "Use `diagnose-repository` for correctness symptoms not shown to be performance-related.",
-      "Do not run aggressive gc/prune or delete worktrees/refs as a generic optimization."
-    ]
-  },
-  {
-    "name": "prepare-release",
-    "title": "Prepare a Release",
-    "description": "Prepare and verify local release changes and evidence: version files, changelog, generated artifacts, dependency locks, release notes inputs, and release commit readiness. Use before tagging or publication. Do not create/push tags, publish packages, or deploy.",
-    "routes_from": [
-      "Prepare version 2.1.0 locally, update the changelog, and verify artifacts. Do not tag.",
-      "Build release notes from v2.0.0 to the exact candidate commit.",
-      "Create a clean release preparation commit following this repository's history."
-    ],
-    "routes_elsewhere": [
-      "Use `manage-tags` to create or verify a tag.",
-      "Use deployment/package-specific workflows to publish artifacts.",
-      "Use `craft-commits` for ordinary non-release commits.",
-      "Do not push, upload, create hosted releases, or modify production."
-    ]
-  },
-  {
-    "name": "manage-tags",
-    "title": "Manage Git Tags",
-    "description": "Create, inspect, sign, verify, move, delete, and optionally publish one exact Git tag under explicit controls. Use when the desired outcome is a tag/ref and its object identity. Do not prepare release files, publish packages, or treat same peeled commit as automatically idempotent.",
-    "routes_from": [
-      "Create an annotated v2.1.0 tag at this exact commit but do not push.",
-      "Verify this signed tag and report the peeled commit.",
-      "Push only v2.1.0 to the verified origin."
-    ],
-    "routes_elsewhere": [
-      "Use `prepare-release` for version/changelog/artifact work.",
-      "Use `sync-branches` for branches.",
-      "Use package/deployment workflows for hosted releases or publication.",
-      "Do not silently move a published tag."
-    ]
-  },
-  {
-    "name": "migrate-repository",
-    "title": "Migrate a Repository",
-    "description": "Plan and execute a bounded repository migration or mirror between hosting systems, including refs, objects, LFS, submodules, default branch, protections, and post-cutover verification. Use for whole-repository transfer or repository-wide filtering tied to migration. Do not use for one remote edit, one branch push, or routine clone.",
-    "routes_from": [
-      "Migrate this repository and all approved branches/tags/LFS objects to the new organization.",
-      "Plan a zero-surprise cutover from GitLab to GitHub.",
-      "Mirror only the declared ref namespaces and verify a fresh clone."
-    ],
-    "routes_elsewhere": [
-      "Use `manage-remotes` to add/change one remote.",
-      "Use `sync-branches` to push one ordinary branch.",
-      "Use `setup-repository` for a development clone.",
-      "Use provider-specific tooling for issues/PRs/wiki/releases unless explicitly included and supported."
-    ]
-  }
-]
+  "skills": [
+    {
+      "name": "configure-git",
+      "path": "skills/configure-git",
+      "tier": "core"
+    },
+    {
+      "name": "craft-commits",
+      "path": "skills/craft-commits",
+      "tier": "core"
+    },
+    {
+      "name": "diagnose-repository",
+      "path": "skills/diagnose-repository",
+      "tier": "core"
+    },
+    {
+      "name": "edit-commit-history",
+      "path": "skills/edit-commit-history",
+      "tier": "core"
+    },
+    {
+      "name": "find-regression",
+      "path": "skills/find-regression",
+      "tier": "core"
+    },
+    {
+      "name": "integrate-branches",
+      "path": "skills/integrate-branches",
+      "tier": "core"
+    },
+    {
+      "name": "investigate-history",
+      "path": "skills/investigate-history",
+      "tier": "optional"
+    },
+    {
+      "name": "manage-branches",
+      "path": "skills/manage-branches",
+      "tier": "optional"
+    },
+    {
+      "name": "manage-large-files",
+      "path": "skills/manage-large-files",
+      "tier": "core"
+    },
+    {
+      "name": "manage-remotes",
+      "path": "skills/manage-remotes",
+      "tier": "optional"
+    },
+    {
+      "name": "manage-submodules",
+      "path": "skills/manage-submodules",
+      "tier": "core"
+    },
+    {
+      "name": "manage-tags",
+      "path": "skills/manage-tags",
+      "tier": "core"
+    },
+    {
+      "name": "manage-worktrees",
+      "path": "skills/manage-worktrees",
+      "tier": "core"
+    },
+    {
+      "name": "migrate-repository",
+      "path": "skills/migrate-repository",
+      "tier": "core"
+    },
+    {
+      "name": "optimize-large-repository",
+      "path": "skills/optimize-large-repository",
+      "tier": "optional"
+    },
+    {
+      "name": "preserve-work",
+      "path": "skills/preserve-work",
+      "tier": "optional"
+    },
+    {
+      "name": "recover-lost-work",
+      "path": "skills/recover-lost-work",
+      "tier": "core"
+    },
+    {
+      "name": "resolve-conflicts",
+      "path": "skills/resolve-conflicts",
+      "tier": "core"
+    },
+    {
+      "name": "setup-repository",
+      "path": "skills/setup-repository",
+      "tier": "optional"
+    },
+    {
+      "name": "sync-branches",
+      "path": "skills/sync-branches",
+      "tier": "core"
+    },
+    {
+      "name": "transplant-commits",
+      "path": "skills/transplant-commits",
+      "tier": "optional"
+    },
+    {
+      "name": "undo-changes",
+      "path": "skills/undo-changes",
+      "tier": "core"
+    }
+  ]
+}
