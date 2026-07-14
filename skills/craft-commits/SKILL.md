@@ -25,7 +25,7 @@ Turn selected local work into the smallest complete, reviewable sequence of comm
 
 - Use `edit-commit-history` to reorder, squash, split, or reword multiple existing commits.
 - Use `undo-changes` to unstage or discard known changes without creating a commit.
-- Use `scan-secrets` before committing when secret risk is material.
+- Use an approved deterministic secret scanner and security workflow before committing when secret risk is material.
 - Do not push, tag, merge, or alter unrelated working changes.
 
 ## Required Evidence

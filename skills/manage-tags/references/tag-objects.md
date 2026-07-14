@@ -18,3 +18,20 @@ configuration; it does not by itself prove release correctness or authorization.
 
 Never use broad `git push --tags` when the task names one tag. Push an exact
 `refs/tags/<name>:refs/tags/<name>` mapping after destination verification.
+
+For a published tag move or deletion, bind the mutation to the exact remote OID observed immediately
+before the action so concurrent changes are rejected rather than overwritten:
+
+```sh
+# Replace one published tag.
+git push <remote> \
+  refs/tags/<name>:refs/tags/<name> \
+  --force-with-lease=refs/tags/<name>:<exact-observed-oid>
+
+# Delete one published tag.
+git push <remote> \
+  :refs/tags/<name> \
+  --force-with-lease=refs/tags/<name>:<exact-observed-oid>
+```
+
+Re-query the remote ref after the push. A rejected lease means state changed; stop and re-inspect.

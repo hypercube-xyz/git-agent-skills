@@ -47,6 +47,7 @@ repository state establishes the evidence.
 - Fetch updates observations and remote-tracking refs but does not integrate the current branch.
 - Separate fetch and push URLs are legitimate; do not normalize them without intent.
 - Removing a remote deletes local remote-tracking refs/config, not the hosted repository.
+- Before pruning a refspec mapped into a shared namespace such as `refs/tags/*:refs/tags/*`, enumerate every local ref that could be removed and establish its provenance; tags may have originated elsewhere.
 
 ## Action Boundaries
 
@@ -65,8 +66,9 @@ or scope expansion. Use the narrowest operation that establishes the postconditi
 1. Run the redaction helper and inspect remote config/refspecs without exposing raw credentials.
 2. Resolve the intended remote role, exact destination, account/environment, and fetch versus push behavior.
 3. Inspect URL rewrite rules and existing remote-tracking refs.
-4. Apply one exact topology change or perform an authorized fetch.
-5. Re-inspect sanitized topology and verify only expected local refs changed.
+4. For prune or refspec changes, inspect the complete dry-run/candidate set, including shared namespaces such as tags.
+5. Apply one exact topology change or perform an authorized fetch.
+6. Re-inspect sanitized topology and verify only expected local refs changed.
 
 ## Stop and Reassess
 

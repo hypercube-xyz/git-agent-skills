@@ -30,7 +30,7 @@ Establish the requested linked-worktree topology while protecting every register
 
 Before deciding or acting, inspect:
 
-- `git worktree list --porcelain`, common dir, exact paths, branch/OID, lock/prunable fields
+- `git worktree list --porcelain -z` for machine parsing (or stable porcelain output for direct human inspection), common dir, exact paths, branch/OID, lock/prunable fields
 - status and untracked inventory inside every worktree that could be affected
 - filesystem existence, ownership, mount/removable-media state, and destination collisions
 - complete `git worktree prune --dry-run --verbose` candidate set when pruning

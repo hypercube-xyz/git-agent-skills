@@ -23,7 +23,7 @@ Identify a minimal causal boundary with a trustworthy test oracle and leave the 
 ## Do Not Use / Route Elsewhere
 
 - Use `investigate-history` for text/provenance questions without an executable oracle.
-- Use `review-change-set` to inspect a known diff.
+- Use a dedicated SWE review workflow to assess a known diff for product correctness.
 - Use `diagnose-repository` when current repository state itself is confusing.
 - Do not patch the regression as part of the search unless separately requested.
 

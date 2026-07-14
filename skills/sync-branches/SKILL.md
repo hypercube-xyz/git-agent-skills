@@ -67,7 +67,8 @@ or scope expansion. Use the narrowest operation that establishes the postconditi
 2. Inspect working state, fetch freshness, OIDs, merge base, and ahead/behind commits.
 3. Classify: equal, local ahead, remote ahead, diverged, missing upstream, or stale/deleted remote ref.
 4. Choose fast-forward, explicit merge, explicit rebase, or bounded ordinary push according to intent and policy.
-5. Execute one path and verify local and remote observations at the affected boundary.
+5. Immediately before an ordinary push, make the external action observable: exact local OID, remote/account, destination ref, currently observed remote OID or absence, refspec, and proof that the update is fast-forward. The current user request may already supply confirmation when these elements and the consequence are clear.
+6. Execute one path. After a push, query the remote ref again and require it to equal the intended local OID; do not treat the push exit code alone as task completion.
 
 ## Stop and Reassess
 
@@ -87,6 +88,7 @@ Verify:
 
 - expected commits are reachable from the intended tips
 - upstream metadata and ahead/behind state match the result
+- a fresh remote query matches the intended OID after publication
 - no unrelated local or remote ref moved and no credential was exposed
 
 Command completion is evidence only for what the command actually demonstrates.
