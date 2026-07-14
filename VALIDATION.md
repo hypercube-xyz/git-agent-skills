@@ -1,127 +1,49 @@
 # Validation Report
 
-Date: 2026-07-15
-
-Package: `git-agent-skills`
-
+Date: 2026-07-15  
+Package: `git-agent-skills`  
 Plugin version: `1.0.0`
 
-This report distinguishes package checks, Git semantic tests, installer/plugin compatibility checks,
-and evaluation that has **not** been performed.
-
-## Performed
-
-### Package and routing structure
+## Results
 
 ```text
-PASS: 25 skills
-PASS: plugin, filesystem, catalog.json, frontmatter, and README catalogs
-PASS: 125 routing fixtures
-PASS: 50 boundary/failure scenarios
-PASS: positive/negative coverage, symptom phrasing, multilingual signal, and uniqueness
-```
-
-Command:
-
-```sh
-python3 scripts/validate_skills.py
-python3 scripts/evaluate_fixtures.py
-```
-
-The routing fixtures are static cases. They establish coverage and test-data quality, not actual
-model routing accuracy.
-
-### Local Git semantic smoke tests
-
-```text
-PASS: 20 local Git semantic smoke tests
-```
-
-Covered invariants include:
-
-- unborn branch and porcelain-v2 signals;
-- configuration origin/scope;
-- fail-closed remote credential redaction;
-- selected atomic commit scope and protected untracked work;
-- branch deletion ancestry and linked-worktree protection;
-- fast-forward versus diverged remote synchronization;
-- fast-forward integration;
-- non-destructive patch preservation;
-- complete worktree-prune candidate observation;
-- conflict index stages and abort;
-- unstage while preserving worktree content;
-- reflog-based recovery to a new ref;
-- cherry-pick parent/topology and already-applied empty result;
-- exact force-with-lease rejection after concurrent remote movement;
-- pickaxe history search;
-- automated bisect boundary;
-- annotated versus lightweight tag objects and peeling;
-- sparse checkout preserving object content;
-- submodule gitlink mode/OID;
-- explicit-ref bundle transfer.
-
-Command:
-
-```sh
-python3 scripts/smoke_test_git.py
-```
-
-These tests establish selected Git/tool semantics. They do not execute an LLM or prove the agent
-will choose the correct skill, inspect enough evidence, or follow every boundary.
-
-### Reproducible release archive
-
-```text
-PASS: two independently generated archives were byte-identical
-```
-
-Command:
-
-```sh
-python3 scripts/build_release.py --check
-```
-
-The final artifact SHA-256 is recorded in the generated `.sha256` sidecar.
-
-### Installer and plugin compatibility
-
-Tested with:
-
-```text
-Skills CLI: 1.5.17
-Claude Code: 2.1.209
+PASS: 22 skill packages and catalog groups
+PASS: 111 routing fixtures
+PASS: 52 boundary/failure scenarios
+PASS: 27 local Git/package semantic smoke tests
+PASS: deterministic release archive generation with exactly one embedded manifest
 ```
 
 Commands:
 
 ```sh
-CI=1 npx --yes skills@1.5.17 add . --list
-npx --yes @anthropic-ai/claude-code@2.1.209 plugin validate . --strict
+python3 scripts/validate_skills.py
+python3 scripts/evaluate_fixtures.py
+python3 scripts/smoke_test_git.py
+python3 scripts/build_release.py --check
 ```
 
-Observed:
+The semantic suite covers exact branch/tag lease rejection after concurrent movement, ordinary
+post-push remote verification, tag object/peeling semantics, NUL-safe worktree and pathological
+filename handling, destructive-clean preview, both non-obstructing and obstructing hard-reset cases,
+conflict stages and abort, shared-tag-namespace prune candidates, reflog recovery, atomic multi-ref
+push, submodule gitlinks, corrected history pickaxe/bisect behavior, remote names containing dots or
+slashes, malformed remote URL isolation, fail-closed remote redaction, tracked-only release inputs,
+tracked-symlink rejection, skipped-validation sidecar metadata, and installer preflight/rollback
+behavior.
 
-```text
-PASS: Skills CLI discovered 25 skills
-PASS: skills were grouped under Git Agent Skills
-PASS: Claude Code plugin manifest strict validation
-```
+## Agent-runtime cases
 
-The GitHub shorthand installation cannot be tested until this exact package is pushed to the
-target repository.
+`tests/agent-runtime-cases.json` defines cases for untrusted routing keywords, stale remote state,
+exact lease behavior, pathological filenames, and migration phase separation. These cases were not
+run in this report.
 
-## Not performed
+## Tests not run
 
-- real-agent routing evaluation;
-- tool-call and observable execution review across model tiers;
-- with-skill versus no-skill productivity comparison;
-- GitHub/GitLab/Bitbucket authentication and policy behavior;
-- live branch protection, signed commit/tag trust, LFS provider, package registry, or deployment;
-- production migration/cutover or destructive recovery tests;
-- guarantees for every LLM or agent runtime.
+- model routing and tool-use evaluation;
+- with-skill versus no-skill comparison;
+- provider authentication, branch protection, hosted release, and migration policy behavior;
+- macOS and Windows execution.
 
-## Required before strong behavioral claims
-
-Run the matrix in [`docs/VALIDATION-PLAN.md`](docs/VALIDATION-PLAN.md) and record immutable source
-commit, model/runtime/tool versions, task fixtures, observable execution evidence, measurements,
-failures, and bounded conclusions.
+The embedded package manifest records source-derived identity and compatibility metadata. The
+sidecar release record adds the archive hash, build environment, and validation results.

@@ -22,7 +22,7 @@ Establish the exact requested tag object/ref locally or at a verified remote wit
 
 ## Do Not Use / Route Elsewhere
 
-- Use `prepare-release` for version/changelog/artifact work.
+- Use the repository-specific release procedure for version, changelog, build, and artifact work.
 - Use `sync-branches` for branches.
 - Use package/deployment workflows for hosted releases or publication.
 - Do not silently move a published tag.
@@ -62,11 +62,15 @@ or scope expansion. Use the narrowest operation that establishes the postconditi
 
 ## Workflow
 
-1. Resolve tag name, exact object, type, annotation/signature requirements, and local versus remote scope.
-2. Inspect existing local/remote tag objects and peeled targets.
-3. Create/verify locally; compare the full desired postcondition for idempotence.
-4. For remote mutation, present the exact ref/action/consequence and establish controls.
-5. Publish/delete one explicit tag ref and verify remote object identity.
+Choose the narrowest path:
+
+1. **Inspect:** resolve tag name and compare local/remote ref OIDs, object type, peeled target, annotation, tagger, and signature evidence.
+2. **Create locally:** create one exact lightweight, annotated, or signed tag and verify its complete postcondition.
+3. **Publish a new tag:** confirm the exact destination/refspec and publish only `refs/tags/<name>`; query the remote object afterward.
+4. **Move a published tag:** record old/new tag object OIDs and peeled targets, downstream release/artifact consumers, communication and recovery plan, then replace the exact ref with `--force-with-lease=refs/tags/<name>:<exact-observed-oid>` after required approval/confirmation.
+5. **Delete a remote tag:** verify the exact existing remote OID, disclose downstream impact and recovery limitation, delete one explicit ref with `--force-with-lease=refs/tags/<name>:<exact-observed-oid>`, and confirm remote absence.
+
+A create/publish approval does not authorize a later move or deletion.
 
 ## Stop and Reassess
 
@@ -86,7 +90,8 @@ Verify:
 
 - tag ref and object type/peeled target match
 - annotation/signature verification meets policy
-- only the intended tag changed locally/remotely
+- a fresh remote query proves the intended tag object or absence, and only that tag changed locally/remotely
+- linked release or artifact metadata remains consistent where it is part of the declared postcondition
 
 Command completion is evidence only for what the command actually demonstrates.
 

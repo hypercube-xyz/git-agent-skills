@@ -4,7 +4,10 @@ Inspect from the superproject:
 
 ```sh
 git submodule status --recursive
-git submodule summary --cached --files
+# Compare the staged gitlink with HEAD.
+git submodule summary --cached
+# Compare the nested worktree with the index.
+git submodule summary --files
 git ls-files --stage -- <path>
 git config -f .gitmodules --get-regexp '^submodule\.'
 ```

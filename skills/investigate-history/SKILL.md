@@ -23,7 +23,7 @@ Produce an evidence-backed history explanation with exact commits, paths, ranges
 ## Do Not Use / Route Elsewhere
 
 - Use `find-regression` when a reproducible good/bad test can locate a causal boundary.
-- Use `review-change-set` to assess correctness of a proposed diff.
+- Use a dedicated SWE review workflow to assess correctness of a proposed diff.
 - Use `recover-lost-work` when the goal is to restore missing objects.
 - Do not alter refs, files, or remote state.
 
@@ -53,8 +53,8 @@ repository state establishes the evidence.
 ### Scope Contract
 
 - **Desired postcondition:** the requested provenance question is answered with exact evidence and bounded confidence
-- **Expected incidental effects:** read-only traversal and optional authorized fetch when explicitly needed for history completeness
-- **Protected state:** refs, index, worktree, configuration, and remote state
+- **Expected incidental effects:** read-only traversal and, when explicitly authorized, bounded object transfer plus updates to the declared remote-tracking refs needed for history completeness
+- **Protected state:** local branches/tags, unrelated remote-tracking refs, index, worktree, configuration, and remote server state
 - **Prohibited effects:** mutation, unsupported causality claim, broad data exposure, or hidden network access
 
 Activation routes this procedure; it does not authorize mutation, network access, publication,
@@ -86,7 +86,7 @@ Verify:
 
 - cited commits actually contain the relevant change and topology
 - alternative candidates were distinguished where material
-- repository state remains unchanged
+- local branches/tags, index, worktree, configuration, remote server state, and unrelated remote-tracking refs remain unchanged; any authorized fetch changed only the declared refs/object store
 
 Command completion is evidence only for what the command actually demonstrates.
 

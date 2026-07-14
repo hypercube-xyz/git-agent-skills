@@ -62,11 +62,13 @@ or scope expansion. Use the narrowest operation that establishes the postconditi
 
 ## Workflow
 
-1. Resolve the behavior, exact key/file, ownership scope, and whether repository policy already controls it.
-2. Inspect all effective values and origins, including multiple values and conditional includes.
-3. Choose the smallest edit and preview tracked-file changes when applicable.
-4. Apply the exact setting or file change.
-5. Re-read the effective value and run a focused behavior check when safe.
+Choose the path by reachable effect:
+
+1. **Diagnosis:** inspect effective values, origins, includes, environment, and platform behavior without mutation.
+2. **Ordinary reversible configuration:** resolve the exact key/file and ownership scope, preview the smallest edit, apply it, and re-read the effective value.
+3. **Policy-sensitive configuration:** for hooks, shell aliases, credential helpers, `safe.directory`, signing/trust configuration, tracked policy, or other future-behavior controls, disclose executable/network/trust effects; establish the required authorization and review; apply one exact change; and run behavioral regression checks.
+
+Do not broaden a task from ordinary configuration into policy-sensitive mutation merely to make another workflow pass.
 
 ## Stop and Reassess
 
@@ -86,7 +88,8 @@ Verify:
 
 - the effective value and origin match the intended scope
 - tracked policy diff contains no unrelated changes
-- unrelated configuration and secrets remain unchanged
+- hooks/aliases/helpers or trust settings have only the disclosed executable, network, and permission effects
+- unrelated configuration, future agent behavior, and secrets remain unchanged
 
 Command completion is evidence only for what the command actually demonstrates.
 

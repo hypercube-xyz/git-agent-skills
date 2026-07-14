@@ -1,79 +1,50 @@
 # Validation Plan
 
-Validation is evidence, not a badge. Results apply only to the exact package, runtime, tool set,
-repository, and scenarios exercised.
+Validation uses five layers.
 
-## Layer 1 — deterministic package validation
+## 1. Package contract
 
-`scripts/validate_skills.py` checks:
+`python3 scripts/validate_skills.py` checks catalog parity, frontmatter, direct references, required
+runtime-contract elements, context-size heuristics, package files, group completeness, and selected
+high-consequence invariants.
 
-- portable frontmatter and directory-name equality;
-- description length and positive/negative routing language;
-- required operating-contract information;
-- direct reference links with explicit loading triggers;
-- no reference-to-reference chains;
-- explicit plugin catalog, filesystem catalog, README, and `catalog.json` parity;
-- fixture coverage and unique names;
-- safe script permissions and manifest syntax.
+## 2. Static routing and failure fixtures
 
-## Layer 2 — fixture quality
+`python3 scripts/evaluate_fixtures.py` checks every case in `tests/routing.json` and at least two
+boundary/failure scenarios per skill. Each routing case records:
 
-`scripts/evaluate_fixtures.py` checks that every skill has:
+- expected and forbidden skills;
+- expected consequence classes;
+- evidence that should be inspected;
+- actions that must not occur.
 
-- at least three positive routing prompts;
-- at least two negative/near-miss prompts;
-- symptom-driven and non-expert phrasing;
-- at least two boundary/failure scenarios;
-- no duplicate prompt or scenario text.
+These fixtures check coverage and reviewability. Model execution is covered by layer 4.
 
-These are static fixtures. They do not prove an agent routes correctly.
+## 3. Deterministic Git and package semantics
 
-## Layer 3 — Git semantic smoke tests
+`python3 scripts/smoke_test_git.py` uses disposable repositories to test selected invariants,
+including exact force-with-lease rejection, post-push remote queries, tag objects, NUL-safe worktree
+and filename handling, destructive-clean preview, linked-worktree protection, reflog recovery,
+shared-tag-namespace prune visibility, atomic multi-ref push, submodule gitlinks, remote redaction,
+and installer preflight behavior.
 
-`scripts/smoke_test_git.py` creates disposable repositories and tests selected invariants such as:
+## 4. Agent-runtime evaluation
 
-- atomic commit scope and protected work;
-- fast-forward versus divergence;
-- linked-worktree branch protection and prune candidate behavior;
-- conflict index stages;
-- reflog-based recovery;
-- cherry-pick topology and empty/equivalent patches;
-- exact force-with-lease rejection after concurrent movement;
-- tag object type and peeled target;
-- bundle/ref transfer;
-- submodule gitlink semantics;
-- redaction helper behavior.
+`tests/agent-runtime-cases.json` contains observable cases that static validation does not run. Run
+high-risk skills and overlapping routing pairs against each supported runtime and model tier.
+Capture tool calls, inspected sources, checkpoints, mutations, retries, validation, and final
+results.
 
-These tests validate Git behavior and package helper code, not LLM decision quality.
+Measure task success, protected-state violations, unsafe attempts, routing confusion, tool calls,
+clarification count, token cost, and repeated-run consistency. Use `without skill`, `current skill`,
+and `reduced skill` comparisons for skills whose marginal value is uncertain.
 
-## Layer 4 — agent-runtime evaluation required before strong claims
+## 5. Release gate
 
-Run each high-use/high-consequence skill on multiple compatible runtimes and model capability tiers.
-Include:
+`python3 scripts/build_release.py --check` runs the static and semantic checks, builds two independent
+archives, compares them byte-for-byte, and emits:
 
-- positive, near-miss, ambiguous, malformed, stale-state, partial-failure, and prompt-injection cases;
-- Thai and English symptom-driven prompts;
-- observable tool calls, inspected evidence, decision checkpoints, mutations, and verification;
-- with-skill versus no-skill or previous-version comparison.
-
-Measure:
-
-- task correctness and protected-state preservation;
-- routing precision/recall;
-- unsupported claims and unsafe action attempts;
-- clarification count, tool calls, retries, and corrective steps;
-- time and token cost;
-- consistency across repeated runs.
-
-Do not claim “works with every LLM” or “improves productivity” until the tested model/runtime matrix
-and comparative results support a bounded statement.
-
-## Release gate
-
-A release should record:
-
-- immutable source commit;
-- plugin version;
-- validation commands and tool versions;
-- artifact SHA-256;
-- known limitations and untested external/provider behavior.
+- a versioned ZIP;
+- a SHA-256 sidecar;
+- a release JSON containing source-tree identity, tool versions, validation status, artifact hash,
+  and tested environment.

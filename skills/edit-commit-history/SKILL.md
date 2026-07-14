@@ -46,8 +46,9 @@ repository state establishes the evidence.
 - Every rewritten commit and descendant gets a new identity unless the serialized object is identical; assume consumers are affected.
 - Design the todo/result before mutation and create an explicit backup ref.
 - Do not weaken tests/evaluators to make the rewrite appear valid.
-- For published update, use `--force-with-lease=<ref>:<exact-observed-oid>`; never implicit lease or `--force`.
-- Re-fetch and invalidate the plan if the remote moved.
+- For a published update, bind the lease to the exact verified destination ref and OID; never use an implicit lease or `--force`.
+- A compact publication checkpoint must identify the old tip, proposed tip, exact rewritten range, destination/account, expected remote OID, affected consumers, recovery ref, and verification plan.
+- Re-fetch and invalidate the plan if the remote moved. A broader rewrite or destination does not inherit approval or confirmation from a narrower plan.
 
 ## Action Boundaries
 
@@ -67,8 +68,15 @@ or scope expansion. Use the narrowest operation that establishes the postconditi
 2. Inspect commits/diffs/signatures and create a backup ref at the original tip.
 3. Prepare an explicit rewrite plan and verification mapping from old intent to new commits.
 4. Execute locally; inspect each changed commit and final range-diff/content.
-5. If publication is authorized, fetch, confirm the exact remote OID, and push with an explicit lease.
-6. Verify remote/local refs and retain recovery information until downstream acceptance.
+5. If publication is authorized, fetch and record the exact remote OID, then use an explicit lease such as:
+
+   ```sh
+   git push <remote> <new-tip>:refs/heads/<branch> \
+     --force-with-lease=refs/heads/<branch>:<exact-fetched-oid>
+   ```
+
+6. Query the remote ref after the push, verify it equals the proposed tip, and retain recovery information until downstream acceptance.
+7. Remove recovery refs only as a separate, explicitly scoped cleanup after acceptance.
 
 ## Stop and Reassess
 
@@ -88,7 +96,7 @@ Verify:
 
 - new series contains every intended change exactly once
 - range-diff/tests and message/signature policy meet the postcondition
-- backup ref resolves and unrelated/concurrent refs remain unchanged
+- backup ref resolves, the queried remote ref equals the proposed tip when published, and unrelated/concurrent refs remain unchanged
 
 Command completion is evidence only for what the command actually demonstrates.
 

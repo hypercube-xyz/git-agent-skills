@@ -63,12 +63,15 @@ or scope expansion. Use the narrowest operation that establishes the postconditi
 
 ## Workflow
 
-1. Define exact source/destination, included/excluded data classes, freeze/cutover, and acceptance criteria.
-2. Inventory refs/OIDs, LFS, submodules, host metadata, policies, integrations, and limits.
-3. Create verified backups and a dry-run/comparison plan; establish authorization, approval, and confirmation.
-4. Transfer in stages with bounded credentials and capture observable results.
-5. Reconcile concurrent changes, verify destination refs/objects/LFS/policies with a fresh clone, then perform controlled cutover.
-6. Retain source/rollback path until acceptance and communicate unsupported metadata.
+Use separate phases so a low-consequence discovery or dry run cannot silently authorize cutover or source cleanup.
+
+1. **Discovery:** verify source, destination, account/environment, owners, included/excluded data classes, provider metadata, and acceptance criteria.
+2. **Dry run:** inventory exact refs/OIDs, destination collisions, LFS/submodule availability, limits, and unsupported metadata without mutating the destination where possible.
+3. **Staged transfer:** create verified backups and transfer additive data with bounded credentials; record per-data-class results.
+4. **Reconciliation:** freeze writes or compare source/destination again close to cutover; invalidate the plan on unexplained drift.
+5. **Cutover:** establish a reviewable checkpoint containing exact source/destination, target ref set, expected deletions, recovery path, approval/confirmation, and acceptance checks; then perform the bounded cutover.
+6. **Acceptance:** verify refs/objects/LFS/submodules and policy from an ordinary fresh clone and, when relevant, a CI-like shallow/partial/recursive checkout.
+7. **Source cleanup:** keep source and rollback state until acceptance. Any destructive disablement or deletion of source state is a separate critical action with renewed scope and controls.
 
 ## Stop and Reassess
 
@@ -87,7 +90,7 @@ effects, preserve diagnostic evidence, and report the resulting state without cl
 Verify:
 
 - every included ref has the expected OID and excluded refs were not altered
-- fresh destination clone obtains required Git/LFS/submodule content
+- ordinary fresh clone, and any declared CI-like clone mode, obtain required Git/LFS/submodule content
 - policies/default branch/integrations meet declared acceptance criteria or limitations are explicit
 
 Command completion is evidence only for what the command actually demonstrates.

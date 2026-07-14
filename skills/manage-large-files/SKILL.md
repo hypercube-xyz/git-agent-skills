@@ -63,11 +63,14 @@ or scope expansion. Use the narrowest operation that establishes the postconditi
 
 ## Workflow
 
-1. Identify exact failing object/path, host policy, desired storage model, and publication boundary.
-2. Inspect attributes, pointer/object state, history occurrence, and remote LFS configuration.
-3. Choose future-only tracking, content repair, or explicitly scoped migration.
-4. Preserve originals and execute the narrowest path with destination controls.
-5. Verify pointers, object hashes, checkout/smudge behavior, and remote availability.
+Choose one path; do not escalate from diagnosis or future tracking into history rewriting:
+
+1. **Inspect:** identify the exact blob/path/commit, host limit, attributes, pointer, local object, and verified LFS destination.
+2. **Future-only tracking:** update the narrowest `.gitattributes` pattern, re-add selected paths, and verify pointer generation without rewriting prior commits.
+3. **Object repair:** preserve known-good content, fetch or restore from an authorized source, verify SHA-256/object integrity, and test checkout/smudge behavior.
+4. **Unpublished migration:** define exact paths/refs and recovery refs, migrate locally, and verify content and rewritten topology before any publication decision.
+5. **Published migration:** treat as shared external and critical-impact work; record exact affected refs/OIDs, consumers, storage/bandwidth limits, branch policy, recovery, and destination object completeness; use the history-publication controls from `edit-commit-history`.
+6. Verify pointers, object hashes, remote LFS availability, and an ordinary fresh checkout. Add a CI-like shallow/partial/recursive checkout only when that mode is part of the supported workflow.
 
 ## Stop and Reassess
 
@@ -86,7 +89,7 @@ effects, preserve diagnostic evidence, and report the resulting state without cl
 Verify:
 
 - pointer and object integrity match
-- fresh checkout or explicit LFS fetch can obtain required content where authorized
+- ordinary fresh checkout or explicit LFS fetch can obtain required content where authorized, and any declared CI-like clone mode also succeeds
 - unrelated history and paths remain unchanged unless explicitly in migration scope
 
 Command completion is evidence only for what the command actually demonstrates.

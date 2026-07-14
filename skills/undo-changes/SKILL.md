@@ -45,7 +45,7 @@ repository state establishes the evidence.
 - Translate verbs like undo/reset into an explicit postcondition for HEAD, index, and worktree.
 - Prefer restore/unstage/revert over ref movement when they satisfy intent.
 - Revert preserves public history; reset changes a ref and may make commits unreachable.
-- `--hard` affects tracked worktree content; `git clean` affects untracked/ignored content and is a separate destructive action.
+- `--hard` replaces tracked index/worktree state and can delete untracked files or directories that obstruct paths required by the target tree; `git clean` is a separate destructive action for selected untracked/ignored content.
 - Abort only the operation currently established; do not delete unrelated state.
 
 ## Action Boundaries
@@ -62,11 +62,20 @@ or scope expansion. Use the narrowest operation that establishes the postconditi
 
 ## Workflow
 
-1. Define the desired postcondition separately for ref, index, worktree, and untracked files.
-2. Inspect exact targets, unique commits, operation state, and publication boundary.
-3. Create a recovery anchor when consequence warrants it.
-4. Execute the narrowest reversal.
-5. Inspect all four state layers and run focused verification.
+1. Define the desired postcondition separately for ref, index, worktree, untracked, and ignored files.
+2. Inspect exact targets, unique commits, operation state, publication boundary, and every candidate that a destructive operation could remove.
+3. Prefer the least destructive ladder that satisfies the outcome: unstage; restore tracked content; revert; abort the established operation; reset with retained state and a recovery anchor; hard reset; then clean only as a separate last resort.
+4. Before `reset --hard`, enumerate tracked changes and untracked/ignored path obstructions that the target tree can overwrite or remove, then create a recovery anchor or state the verified no-recovery limitation.
+5. Before clean, use the narrowest pathspec and preview first:
+
+   ```sh
+   git clean -n -- <pathspec>
+   git clean -i -- <pathspec>   # when interactive review is appropriate
+   git clean -f -- <pathspec>
+   ```
+
+   Treat `-d`, `-x`, `-X`, and nested repositories as separate scope expansions requiring their own candidate inventory and confirmation when material.
+6. Execute one bounded reversal, then inspect all state layers and perform negative verification for protected files, refs, and worktrees.
 
 ## Stop and Reassess
 
@@ -86,7 +95,8 @@ Verify:
 
 - target state matches the explicit ref/index/worktree postcondition
 - retained and protected work remains present
-- no unrelated ref, path, or remote state changed
+- no unrelated ref, path, untracked/ignored item, linked worktree, or remote state changed
+- destructive candidate sets match what was actually removed or overwritten
 
 Command completion is evidence only for what the command actually demonstrates.
 

@@ -14,3 +14,7 @@ exists, and set restrictive permissions.
 
 A stash application can conflict. Keep the stash entry until restoration is verified; do not use a
 destructive pop as the first recovery attempt when the state is valuable.
+
+## Path and output safety
+
+When paths or ref names can be user-controlled, pass command arguments as arrays rather than shell-concatenated strings, use `--` before pathspecs, and use NUL-delimited output (`-z`) for machine parsing. Do not split filenames on whitespace or newlines. Test names beginning with `-`, whitespace/newlines, Unicode, symlinks, nested repositories, and case-collision scenarios where the platform permits them.
