@@ -10,9 +10,8 @@
 - Add exact force-with-lease and post-publication remote verification requirements.
 - Add safe clean/reset ladders, shared-tag-namespace prune warnings, NUL-safe worktree parsing, and
   pathological path handling guidance.
-- Remove general code review, secret scanning, and release preparation from the Git package;
-  document routing to dedicated SWE review, deterministic security scanning, and repository-specific
-  release workflows.
+- Focus the package on Git-owned workflows and document boundaries for code review, secret scanning,
+  and repository-specific release preparation.
 - Add catalog groups, compatibility documentation, cross-skill handoff rules, security reporting,
   stronger routing/scenario fixtures, a fail-closed remote inspection helper, and transactional
   local skill linking.

@@ -37,6 +37,38 @@ def run(cmd: list[str]) -> None:
         raise SystemExit(proc.returncode)
 
 
+def require_clean_tracked_state(root: Path = ROOT) -> None:
+    """Reject staged or unstaged changes to tracked release inputs."""
+    checks = [
+        ["diff", "--quiet", "--no-ext-diff", "--"],
+        ["diff", "--cached", "--quiet", "--no-ext-diff", "HEAD", "--"],
+    ]
+    for args in checks:
+        proc = subprocess.run(
+            ["git", "-C", str(root), *args],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        if proc.returncode == 1:
+            raise SystemExit("release build requires committed tracked files")
+        if proc.returncode != 0:
+            raise SystemExit("unable to inspect tracked release state")
+
+
+def source_revision(root: Path = ROOT) -> str:
+    proc = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--verify", "HEAD"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise SystemExit("unable to resolve release source revision")
+    return proc.stdout.strip()
+
+
 def tracked_files(root: Path = ROOT) -> list[Entry]:
     """Return tracked regular files with executable modes from the Git index.
 
@@ -161,6 +193,7 @@ def release_record(
     artifact: dict[str, object],
 ) -> dict[str, object]:
     record = package_manifest(entries, version)
+    record["source_revision"] = {"commit": source_revision()}
     record["build_environment"] = {
         "python": sys.version.split()[0],
         "git": tool_version(["git", "--version"]),
@@ -197,6 +230,7 @@ def main() -> int:
             run(cmd)
     validation_executed = not args.skip_validation
 
+    require_clean_tracked_state()
     entries = tracked_files()
     first = archive_bytes(entries, version)
     if args.check:

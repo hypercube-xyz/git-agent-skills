@@ -228,6 +228,26 @@ def t_release_inputs_exclude_untracked_and_reject_symlinks(tmp):
         raise TestFailure('tracked symlink was accepted as a release input')
 
 
+def t_release_rejects_dirty_tracked_state(tmp):
+    repo=tmp/'repo';init(repo);commit(repo)
+    (repo/'file.txt').write_text('unstaged change\n')
+    try:
+        build_release.require_clean_tracked_state(repo)
+    except SystemExit as exc:
+        assert_('committed tracked files' in str(exc),'unstaged change failed for the wrong reason')
+    else:
+        raise TestFailure('unstaged tracked change was accepted for release')
+
+    run('git','restore','--','file.txt',cwd=repo)
+    (repo/'file.txt').write_text('staged change\n');run('git','add','--','file.txt',cwd=repo)
+    try:
+        build_release.require_clean_tracked_state(repo)
+    except SystemExit as exc:
+        assert_('committed tracked files' in str(exc),'staged change failed for the wrong reason')
+    else:
+        raise TestFailure('staged tracked change was accepted for release')
+
+
 def t_release_manifest_marks_skipped_validation(tmp):
     run(sys.executable,ROOT/'scripts/build_release.py','--check','--skip-validation',cwd=ROOT)
     catalog=json.loads((ROOT/'skills/catalog.json').read_text())
@@ -235,6 +255,8 @@ def t_release_manifest_marks_skipped_validation(tmp):
     archive=ROOT/f'dist/git-agent-skills-{version}.zip'
     sidecar=json.loads((ROOT/f'dist/git-agent-skills-{version}.release.json').read_text())
     validation=sidecar['validation']
+    expected_revision=run('git','rev-parse','HEAD',cwd=ROOT).stdout.strip()
+    assert_(sidecar['source_revision']['commit']==expected_revision,'sidecar source revision mismatch')
     assert_(validation['result']=='skipped' and validation['commands_executed']==[] and validation['reproducibility_check']=='passed','skipped validation was reported as passed')
     with zipfile.ZipFile(archive) as z:
         embedded=json.loads(z.read(f'git-agent-skills-{version}/RELEASE-MANIFEST.json'))
@@ -253,7 +275,8 @@ TESTS=[
  t_unstage_preserves_worktree,t_reflog_recovery,t_conflict_stages_and_abort,t_tag_prune_dry_run_shared_namespace,
  t_atomic_multiref_push,t_submodule_gitlink,t_pickaxe,t_bisect_boundary,t_installer_preflight_no_partial,
  t_installer_dry_run,t_installer_restores_foreign_symlink_on_mid_item_failure,
- t_release_inputs_exclude_untracked_and_reject_symlinks,t_release_manifest_marks_skipped_validation,t_frontmatter_no_mutation_claim]
+ t_release_inputs_exclude_untracked_and_reject_symlinks,t_release_rejects_dirty_tracked_state,
+ t_release_manifest_marks_skipped_validation,t_frontmatter_no_mutation_claim]
 
 def main():
     failures=[]
