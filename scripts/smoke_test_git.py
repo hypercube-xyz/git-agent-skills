@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import importlib.util, json, os, shutil, subprocess, sys, tempfile, zipfile
+
+import build_release
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -196,13 +198,37 @@ def t_installer_restores_foreign_symlink_on_mid_item_failure(tmp):
     assert_(rc==3 and dest.is_symlink() and (dest.parent/os.readlink(dest)).resolve(strict=False)==old_target.resolve(),'foreign symlink was not restored')
 
 
+def t_release_inputs_exclude_untracked_and_reject_symlinks(tmp):
+    repo=tmp/'repo';init(repo)
+    tracked=repo/'tracked.txt';tracked.write_text('tracked\n')
+    run('git','add','--','tracked.txt',cwd=repo)
+    (repo/'.env').write_text('secret=untracked\n')
+
+    entries=build_release.tracked_files(repo)
+    assert_([entry.rel.as_posix() for entry in entries]==['tracked.txt'],'untracked file entered release inputs')
+
+    external=tmp/'external-secret';external.write_text('outside repository\n')
+    leak=repo/'leak';leak.symlink_to(external)
+    run('git','add','--','leak',cwd=repo)
+    try:
+        build_release.tracked_files(repo)
+    except SystemExit as exc:
+        assert_('tracked symlink' in str(exc),'tracked symlink failed for the wrong reason')
+    else:
+        raise TestFailure('tracked symlink was accepted as a release input')
+
+
 def t_release_manifest_marks_skipped_validation(tmp):
-    p=run(sys.executable,ROOT/'scripts/build_release.py','--check','--skip-validation',cwd=ROOT)
-    archive=ROOT/'dist/git-agent-skills-1.0.0.zip'
-    with zipfile.ZipFile(archive) as z:
-        manifest=json.loads(z.read('git-agent-skills-1.0.0/RELEASE-MANIFEST.json'))
-    validation=manifest['validation']
+    run(sys.executable,ROOT/'scripts/build_release.py','--check','--skip-validation',cwd=ROOT)
+    catalog=json.loads((ROOT/'skills/catalog.json').read_text())
+    version=catalog['package_version']
+    archive=ROOT/f'dist/git-agent-skills-{version}.zip'
+    sidecar=json.loads((ROOT/f'dist/git-agent-skills-{version}.release.json').read_text())
+    validation=sidecar['validation']
     assert_(validation['result']=='skipped' and validation['commands_executed']==[] and validation['reproducibility_check']=='passed','skipped validation was reported as passed')
+    with zipfile.ZipFile(archive) as z:
+        embedded=json.loads(z.read(f'git-agent-skills-{version}/RELEASE-MANIFEST.json'))
+    assert_('validation' not in embedded and 'build_environment' not in embedded,'environment-dependent metadata entered the archive')
 
 def t_frontmatter_no_mutation_claim(tmp):
     # Mechanical package invariant included in smoke suite for a stable count.
@@ -217,7 +243,7 @@ TESTS=[
  t_unstage_preserves_worktree,t_reflog_recovery,t_conflict_stages_and_abort,t_tag_prune_dry_run_shared_namespace,
  t_atomic_multiref_push,t_submodule_gitlink,t_pickaxe,t_bisect_boundary,t_installer_preflight_no_partial,
  t_installer_dry_run,t_installer_restores_foreign_symlink_on_mid_item_failure,
- t_release_manifest_marks_skipped_validation,t_frontmatter_no_mutation_claim]
+ t_release_inputs_exclude_untracked_and_reject_symlinks,t_release_manifest_marks_skipped_validation,t_frontmatter_no_mutation_claim]
 
 def main():
     failures=[]
