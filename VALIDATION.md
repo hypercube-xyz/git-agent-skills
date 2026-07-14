@@ -10,7 +10,7 @@ Plugin version: `1.0.0`
 PASS: 22 skill packages and catalog groups
 PASS: 111 routing fixtures
 PASS: 52 boundary/failure scenarios
-PASS: 27 local Git/package semantic smoke tests
+PASS: 28 local Git/package semantic smoke tests
 PASS: deterministic release archive generation with exactly one embedded manifest
 ```
 
