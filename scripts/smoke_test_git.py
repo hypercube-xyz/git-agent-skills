@@ -1,378 +1,233 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-
-import json
-import os
-import shutil
-import subprocess
-import tempfile
+import importlib.util, json, os, shutil, subprocess, sys, tempfile, zipfile
 from pathlib import Path
+ROOT=Path(__file__).resolve().parents[1]
 
-ROOT = Path(__file__).resolve().parents[1]
+class TestFailure(RuntimeError): pass
 
-
-class TestFailure(RuntimeError):
-    pass
-
-
-def run(cwd: Path, *args: str, check: bool = True, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
-    proc = subprocess.run(
-        list(args),
-        cwd=cwd,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env={**os.environ, **(env or {})},
-    )
+def run(*args, cwd=None, check=True, env=None, text=True):
+    proc=subprocess.run([str(a) for a in args],cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=text,env=env)
     if check and proc.returncode:
-        raise TestFailure(
-            f"command failed ({proc.returncode}) in {cwd}: {' '.join(args)}\n"
-            f"stdout:\n{proc.stdout}\nstderr:\n{proc.stderr}"
-        )
+        raise TestFailure(f"command failed ({proc.returncode}): {' '.join(map(str,args))}\nstdout={proc.stdout}\nstderr={proc.stderr}")
     return proc
 
-
-def git(cwd: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-    return run(cwd, "git", *args, check=check)
-
-
-def init_repo(path: Path, *, bare: bool = False) -> Path:
-    path.mkdir(parents=True, exist_ok=True)
+def init(path:Path, bare=False):
+    path.mkdir(parents=True,exist_ok=True)
+    run('git','init','--bare' if bare else '--initial-branch=main',path)
     if bare:
-        git(path, "init", "--bare", "--initial-branch=main")
-    else:
-        git(path, "init", "--initial-branch=main")
-        git(path, "config", "user.name", "Smoke Test")
-        git(path, "config", "user.email", "smoke@example.invalid")
-    return path
+        run('git','symbolic-ref','HEAD','refs/heads/main',cwd=path)
+    if not bare:
+        run('git','config','user.name','Test User',cwd=path);run('git','config','user.email','test@example.invalid',cwd=path)
+
+def commit(repo:Path,name='file.txt',content='one\n',message='commit'):
+    p=repo/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(content)
+    run('git','add','--',name,cwd=repo);run('git','commit','-m',message,cwd=repo)
+    return run('git','rev-parse','HEAD',cwd=repo).stdout.strip()
+
+def clone(src:Path,dst:Path):
+    run('git','clone',str(src),str(dst));run('git','config','user.name','Test User',cwd=dst);run('git','config','user.email','test@example.invalid',cwd=dst)
+
+def assert_(cond,msg):
+    if not cond: raise TestFailure(msg)
+
+def t_remote_helper_redaction(tmp):
+    repo=tmp/'repo';init(repo)
+    run('git','remote','add','origin','https://user:token@example.com/team/repo.git?secret=yes',cwd=repo)
+    p=run(sys.executable,ROOT/'skills/manage-remotes/scripts/inspect_remotes.py',repo).stdout
+    assert_('token' not in p and 'secret=yes' not in p and '<redacted-user>@example.com' in p,'credential redaction failed')
+    data=json.loads(p);e=data['remotes']['origin']['url'][0]
+    assert_(e['scope']=='local' and 'config' in e['origin'],'scope/origin missing')
+
+def t_remote_helper_opaque(tmp):
+    repo=tmp/'repo';init(repo);run('git','remote','add','opaque','helper::credential-payload',cwd=repo)
+    p=run(sys.executable,ROOT/'skills/manage-remotes/scripts/inspect_remotes.py',repo).stdout
+    assert_('credential-payload' not in p and '<redacted-opaque>' in p,'opaque value echoed')
+
+def t_remote_helper_names_with_separators(tmp):
+    repo=tmp/'repo';init(repo)
+    run('git','remote','add','team.prod','https://example.com/team/prod.git',cwd=repo)
+    run('git','remote','add','team/prod','https://example.com/team/slash.git',cwd=repo)
+    data=json.loads(run(sys.executable,ROOT/'skills/manage-remotes/scripts/inspect_remotes.py',repo).stdout)
+    assert_('team.prod' in data['remotes'] and 'team/prod' in data['remotes'],'remote names with dot/slash were lost')
+
+def t_force_with_lease_rejects_stale(tmp):
+    bare=tmp/'remote.git';init(bare,True)
+    seed=tmp/'seed';init(seed);old=commit(seed);run('git','remote','add','origin',bare,cwd=seed);run('git','push','-u','origin','main',cwd=seed)
+    a=tmp/'a';b=tmp/'b';clone(bare,a);clone(bare,b)
+    expected=run('git','rev-parse','origin/main',cwd=a).stdout.strip()
+    commit(b,'b.txt','b\n','concurrent');run('git','push','origin','main',cwd=b)
+    commit(a,'a.txt','a\n','rewrite candidate')
+    p=run('git','push','origin','HEAD:refs/heads/main',f'--force-with-lease=refs/heads/main:{expected}',cwd=a,check=False)
+    assert_(p.returncode!=0,'stale exact lease unexpectedly succeeded')
+    remote=run('git','ls-remote',bare,'refs/heads/main').stdout.split()[0]
+    assert_(remote!=expected and remote!=run('git','rev-parse','HEAD',cwd=a).stdout.strip(),'remote state wrong')
+
+def t_normal_push_remote_query(tmp):
+    bare=tmp/'r.git';init(bare,True);repo=tmp/'repo';init(repo);oid=commit(repo);run('git','remote','add','origin',bare,cwd=repo);run('git','push','origin','main',cwd=repo)
+    observed=run('git','ls-remote','origin','refs/heads/main',cwd=repo).stdout.split()[0]
+    assert_(observed==oid,'post-push remote query mismatch')
+
+def t_tag_objects(tmp):
+    repo=tmp/'repo';init(repo);oid=commit(repo)
+    run('git','tag','light',oid,cwd=repo);run('git','tag','-a','annotated','-m','release',oid,cwd=repo)
+    assert_(run('git','cat-file','-t','light',cwd=repo).stdout.strip()=='commit','lightweight tag type')
+    assert_(run('git','cat-file','-t','annotated',cwd=repo).stdout.strip()=='tag','annotated tag type')
+    assert_(run('git','rev-parse','annotated^{}',cwd=repo).stdout.strip()==oid,'peeled target mismatch')
+
+def t_tag_exact_lease_rejects_stale_move_and_delete(tmp):
+    bare=tmp/'r.git';init(bare,True);seed=tmp/'seed';init(seed);commit(seed);run('git','tag','release',cwd=seed);run('git','remote','add','origin',bare,cwd=seed);run('git','push','origin','main','refs/tags/release',cwd=seed)
+    a=tmp/'a';b=tmp/'b';clone(bare,a);clone(bare,b);run('git','fetch','origin','refs/tags/release:refs/tags/release',cwd=a);run('git','fetch','origin','refs/tags/release:refs/tags/release',cwd=b)
+    expected=run('git','ls-remote','origin','refs/tags/release',cwd=a).stdout.split()[0]
+    concurrent=commit(b,'concurrent.txt','new\n','new tag target');run('git','tag','-f','release',concurrent,cwd=b);run('git','push','--force','origin','refs/tags/release:refs/tags/release',cwd=b)
+    replacement=commit(a,'replacement.txt','candidate\n','candidate tag target');run('git','tag','-f','release',replacement,cwd=a)
+    move=run('git','push','origin','refs/tags/release:refs/tags/release',f'--force-with-lease=refs/tags/release:{expected}',cwd=a,check=False)
+    delete=run('git','push','origin',':refs/tags/release',f'--force-with-lease=refs/tags/release:{expected}',cwd=a,check=False)
+    observed=run('git','ls-remote','origin','refs/tags/release',cwd=a).stdout.split()[0]
+    assert_(move.returncode!=0 and delete.returncode!=0 and observed==concurrent,'stale tag lease did not protect concurrent remote state')
+
+def t_worktree_porcelain_z(tmp):
+    repo=tmp/'repo';init(repo);commit(repo);run('git','branch','feature',cwd=repo)
+    path=tmp/'wt with space';run('git','worktree','add',path,'feature',cwd=repo)
+    raw=run('git','worktree','list','--porcelain','-z',cwd=repo,text=False).stdout
+    assert_(b'\0' in raw and str(path).encode() in raw,'porcelain -z missing path or NUL')
+
+def t_worktree_branch_delete_blocked(tmp):
+    repo=tmp/'repo';init(repo);commit(repo);run('git','branch','feature',cwd=repo);wt=tmp/'wt';run('git','worktree','add',wt,'feature',cwd=repo)
+    p=run('git','branch','-D','feature',cwd=repo,check=False)
+    assert_(p.returncode!=0,'deleted branch checked out in linked worktree')
+
+def t_clean_preview_pathological(tmp):
+    repo=tmp/'repo';init(repo);commit(repo)
+    names=['-cache','line\nbreak.tmp','keep.txt']
+    for n in names:(repo/n).write_text('x')
+    raw=run('git','status','--porcelain=v1','-z','--untracked-files=all',cwd=repo,text=False).stdout
+    assert_(b'-cache' in raw and b'line\nbreak.tmp' in raw,'NUL inventory lost names')
+    preview=run('git','clean','-n','--','-cache',cwd=repo).stdout
+    assert_('-cache' in preview and (repo/'-cache').exists(),'clean preview incorrect')
+    run('git','clean','-f','--','-cache',cwd=repo)
+    assert_(not (repo/'-cache').exists() and (repo/'line\nbreak.tmp').exists() and (repo/'keep.txt').exists(),'exact clean changed protected files')
+
+def t_reset_hard_preserves_non_obstructing_untracked(tmp):
+    repo=tmp/'repo';init(repo);commit(repo,content='base\n');(repo/'file.txt').write_text('changed\n');(repo/'untracked').write_text('keep')
+    run('git','reset','--hard','HEAD',cwd=repo)
+    assert_((repo/'file.txt').read_text()=='base\n' and (repo/'untracked').exists(),'non-obstructing untracked path should survive')
 
 
-def commit_file(repo: Path, name: str, content: str, message: str) -> str:
-    p = repo / name
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(content)
-    git(repo, "add", "--", name)
-    git(repo, "commit", "-m", message)
-    return git(repo, "rev-parse", "HEAD").stdout.strip()
+def t_reset_hard_removes_untracked_obstruction(tmp):
+    repo=tmp/'repo';init(repo);base=commit(repo)
+    (repo/'obstacle').write_text('tracked target\n');run('git','add','--','obstacle',cwd=repo);run('git','commit','-m','add obstacle',cwd=repo)
+    target=run('git','rev-parse','HEAD',cwd=repo).stdout.strip();run('git','reset','--hard',base,cwd=repo)
+    (repo/'obstacle').mkdir();(repo/'obstacle'/'unique.txt').write_text('untracked\n')
+    run('git','reset','--hard',target,cwd=repo)
+    assert_((repo/'obstacle').is_file() and not (repo/'obstacle'/'unique.txt').exists(),'obstructing untracked directory was not replaced as documented')
+
+def t_unstage_preserves_worktree(tmp):
+    repo=tmp/'repo';init(repo);commit(repo);(repo/'file.txt').write_text('edited\n');run('git','add','--','file.txt',cwd=repo);run('git','restore','--staged','--','file.txt',cwd=repo)
+    assert_((repo/'file.txt').read_text()=='edited\n','worktree edit lost');assert_(run('git','diff','--cached','--quiet',cwd=repo,check=False).returncode==0,'index still staged')
+
+def t_reflog_recovery(tmp):
+    repo=tmp/'repo';init(repo);base=commit(repo);lost=commit(repo,'lost.txt','valuable\n','lost');run('git','reset','--hard',base,cwd=repo)
+    run('git','branch','recovered',lost,cwd=repo);assert_(run('git','show','recovered:lost.txt',cwd=repo).stdout=='valuable\n','recovery ref failed')
+
+def t_conflict_stages_and_abort(tmp):
+    repo=tmp/'repo';init(repo);commit(repo,content='base\n');run('git','checkout','-b','side',cwd=repo);commit(repo,content='side\n',message='side');run('git','checkout','main',cwd=repo);commit(repo,content='main\n',message='main')
+    p=run('git','merge','side',cwd=repo,check=False);assert_(p.returncode!=0,'expected conflict')
+    stages=run('git','ls-files','-u',cwd=repo).stdout;assert_('\tfile.txt' in stages,'conflict stages missing');run('git','merge','--abort',cwd=repo);assert_((repo/'file.txt').read_text()=='main\n','abort did not restore')
+
+def t_tag_prune_dry_run_shared_namespace(tmp):
+    bare=tmp/'r.git';init(bare,True);seed=tmp/'seed';init(seed);commit(seed);run('git','tag','remote-tag',cwd=seed);run('git','remote','add','origin',bare,cwd=seed);run('git','push','origin','main','refs/tags/remote-tag',cwd=seed)
+    repo=tmp/'repo';clone(bare,repo);run('git','tag','local-only',cwd=repo);run('git','config','--unset-all','remote.origin.fetch',cwd=repo);run('git','config','--add','remote.origin.fetch','+refs/heads/*:refs/remotes/origin/*',cwd=repo);run('git','config','--add','remote.origin.fetch','+refs/tags/*:refs/tags/*',cwd=repo)
+    p=run('git','fetch','--prune','--dry-run','origin',cwd=repo)
+    combined=p.stdout+p.stderr
+    assert_('local-only' in combined,'dry-run did not expose shared-namespace prune candidate')
+    assert_(run('git','rev-parse','refs/tags/local-only',cwd=repo).returncode==0,'dry-run mutated tag')
+
+def t_atomic_multiref_push(tmp):
+    bare=tmp/'r.git';init(bare,True);repo=tmp/'repo';init(repo);commit(repo);run('git','branch','a',cwd=repo);run('git','branch','b',cwd=repo);run('git','remote','add','origin',bare,cwd=repo)
+    run('git','push','--atomic','origin','refs/heads/a','refs/heads/b',cwd=repo)
+    out=run('git','ls-remote','origin','refs/heads/a','refs/heads/b',cwd=repo).stdout;assert_(out.count('\n')==2,'atomic multi-ref push incomplete')
+
+def t_submodule_gitlink(tmp):
+    sub=tmp/'sub';init(sub);soid=commit(sub,'sub.txt','sub\n')
+    parent=tmp/'parent';init(parent);commit(parent)
+    env=os.environ.copy();env['GIT_ALLOW_PROTOCOL']='file'
+    run('git','-c','protocol.file.allow=always','submodule','add',sub,'deps/sub',cwd=parent,env=env);run('git','commit','-am','add submodule',cwd=parent)
+    mode_oid=run('git','ls-files','-s','deps/sub',cwd=parent).stdout.split()
+    assert_(mode_oid[0]=='160000' and mode_oid[1]==soid,'gitlink mode/OID mismatch')
+
+def t_pickaxe(tmp):
+    repo=tmp/'repo';init(repo);commit(repo,content='base\n');target=commit(repo,content='base\nneedle\n',message='add needle')
+    out=run('git','log','-Sneedle','--format=%H','--','file.txt',cwd=repo).stdout.strip().splitlines();assert_(target in out,'pickaxe missed commit')
+
+def t_bisect_boundary(tmp):
+    repo=tmp/'repo';init(repo)
+    first=commit(repo,content='0\n',message='good');commit(repo,content='1\n',message='good2');bad=commit(repo,content='BAD\n',message='bad');commit(repo,content='BAD2\n',message='bad2')
+    script=tmp/'oracle.sh';script.write_text('#!/bin/sh\nif grep -q BAD file.txt; then exit 1; fi\nexit 0\n');script.chmod(0o755)
+    run('git','bisect','start','HEAD',first,cwd=repo);run('git','bisect','run',script,cwd=repo)
+    observed=run('git','rev-parse','refs/bisect/bad',cwd=repo).stdout.strip()
+    assert_(observed==bad,'bisect identified the wrong first-bad commit');run('git','bisect','reset',cwd=repo)
+
+def t_installer_preflight_no_partial(tmp):
+    target=tmp/'skills';target.mkdir();names=json.loads((ROOT/'skills/catalog.json').read_text())['skills'];last=target/names[-1]['name'];last.mkdir()
+    p=run(sys.executable,ROOT/'scripts/link_skills.py','--target',target,cwd=ROOT,check=False)
+    assert_(p.returncode!=0,'preflight should fail')
+    created=[x for x in target.iterdir() if x.is_symlink()]
+    assert_(not created,'installer partially mutated before conflict')
+
+def t_installer_dry_run(tmp):
+    target=tmp/'skills';p=run(sys.executable,ROOT/'scripts/link_skills.py','--target',target,'--dry-run',cwd=ROOT)
+    assert_('WOULD LINK' in p.stdout and not target.exists(),'dry-run mutated target')
+
+def t_installer_restores_foreign_symlink_on_mid_item_failure(tmp):
+    target=tmp/'skills';target.mkdir();catalog=json.loads((ROOT/'skills/catalog.json').read_text())['skills'];name=catalog[0]['name']
+    old_target=tmp/'old-skill';old_target.mkdir();dest=target/name;dest.symlink_to(old_target,target_is_directory=True)
+    spec=importlib.util.spec_from_file_location('link_skills_test',ROOT/'scripts/link_skills.py');module=importlib.util.module_from_spec(spec);assert_(spec.loader is not None,'loader unavailable');spec.loader.exec_module(module)
+    original=Path.symlink_to
+    def failing_symlink(self,target_value,*args,**kwargs):
+        if self==dest and Path(target_value).resolve(strict=False)!=(old_target.resolve(strict=False)):
+            raise OSError('injected replacement failure')
+        return original(self,target_value,*args,**kwargs)
+    old_argv=sys.argv[:];Path.symlink_to=failing_symlink
+    try:
+        sys.argv=['link_skills.py','--target',str(target),'--force-symlinks'];rc=module.main()
+    finally:
+        Path.symlink_to=original;sys.argv=old_argv
+    assert_(rc==3 and dest.is_symlink() and (dest.parent/os.readlink(dest)).resolve(strict=False)==old_target.resolve(),'foreign symlink was not restored')
 
 
-def status(repo: Path) -> str:
-    return git(repo, "status", "--porcelain=v1", "--untracked-files=all").stdout
+def t_release_manifest_marks_skipped_validation(tmp):
+    p=run(sys.executable,ROOT/'scripts/build_release.py','--check','--skip-validation',cwd=ROOT)
+    archive=ROOT/'dist/git-agent-skills-1.0.0.zip'
+    with zipfile.ZipFile(archive) as z:
+        manifest=json.loads(z.read('git-agent-skills-1.0.0/RELEASE-MANIFEST.json'))
+    validation=manifest['validation']
+    assert_(validation['result']=='skipped' and validation['commands_executed']==[] and validation['reproducibility_check']=='passed','skipped validation was reported as passed')
 
+def t_frontmatter_no_mutation_claim(tmp):
+    # Mechanical package invariant included in smoke suite for a stable count.
+    for p in (ROOT/'skills').glob('*/SKILL.md'):
+        t=p.read_text();assert_('Activation routes this procedure; it does not authorize' in t,f'{p} lacks boundary')
 
-def test_unborn_and_porcelain(tmp: Path) -> None:
-    repo = init_repo(tmp / "unborn")
-    out = git(repo, "status", "--porcelain=v2", "--branch").stdout
-    assert "# branch.oid (initial)" in out
-    assert "# branch.head main" in out
+TESTS=[
+ t_remote_helper_redaction,t_remote_helper_opaque,t_remote_helper_names_with_separators,
+ t_force_with_lease_rejects_stale,t_normal_push_remote_query,t_tag_objects,t_tag_exact_lease_rejects_stale_move_and_delete,
+ t_worktree_porcelain_z,t_worktree_branch_delete_blocked,t_clean_preview_pathological,
+ t_reset_hard_preserves_non_obstructing_untracked,t_reset_hard_removes_untracked_obstruction,
+ t_unstage_preserves_worktree,t_reflog_recovery,t_conflict_stages_and_abort,t_tag_prune_dry_run_shared_namespace,
+ t_atomic_multiref_push,t_submodule_gitlink,t_pickaxe,t_bisect_boundary,t_installer_preflight_no_partial,
+ t_installer_dry_run,t_installer_restores_foreign_symlink_on_mid_item_failure,
+ t_release_manifest_marks_skipped_validation,t_frontmatter_no_mutation_claim]
 
-
-def test_config_origin(tmp: Path) -> None:
-    repo = init_repo(tmp / "config")
-    git(repo, "config", "--local", "pull.rebase", "true")
-    out = git(repo, "config", "--show-origin", "--show-scope", "--get-all", "pull.rebase").stdout
-    assert "local" in out and "true" in out
-
-
-def test_remote_redaction(tmp: Path) -> None:
-    repo = init_repo(tmp / "remote")
-    git(repo, "remote", "add", "origin", "https://user:supersecret@example.com/org/repo.git?token=abc")
-    git(repo, "remote", "set-url", "--add", "--push", "origin", "custom::token@example.com/private")
-    helper = ROOT / "skills" / "manage-remotes" / "scripts" / "inspect_remotes.py"
-    out = run(repo, "python3", str(helper)).stdout
-    assert "supersecret" not in out and "token@example" not in out and "token=abc" not in out
-    data = json.loads(out)
-    values = [x["value"] for x in data]
-    assert any("example.com/org/repo.git" in v for v in values)
-    assert any("<redacted-opaque-address>" in v for v in values)
-
-
-def test_atomic_commit_protects_unselected(tmp: Path) -> None:
-    repo = init_repo(tmp / "atomic")
-    commit_file(repo, "a.txt", "base\n", "chore: base")
-    (repo / "a.txt").write_text("base\nselected\n")
-    (repo / "unrelated.txt").write_text("keep local\n")
-    git(repo, "add", "--", "a.txt")
-    staged = git(repo, "diff", "--cached", "--name-only").stdout.splitlines()
-    assert staged == ["a.txt"]
-    git(repo, "commit", "-m", "feat: add selected change")
-    assert (repo / "unrelated.txt").read_text() == "keep local\n"
-    assert "?? unrelated.txt" in status(repo)
-
-
-def test_branch_delete_proof(tmp: Path) -> None:
-    repo = init_repo(tmp / "branch")
-    commit_file(repo, "base", "1\n", "base")
-    git(repo, "switch", "-c", "feature")
-    feature = commit_file(repo, "f", "x\n", "feature")
-    git(repo, "switch", "main")
-    assert git(repo, "merge-base", "--is-ancestor", feature, "main", check=False).returncode != 0
-    assert git(repo, "branch", "-d", "feature", check=False).returncode != 0
-    git(repo, "merge", "--ff-only", "feature")
-    assert git(repo, "merge-base", "--is-ancestor", feature, "main").returncode == 0
-    git(repo, "branch", "-d", "feature")
-
-
-def test_sync_fast_forward_and_divergence(tmp: Path) -> None:
-    remote = init_repo(tmp / "sync-remote.git", bare=True)
-    seed = init_repo(tmp / "sync-seed")
-    commit_file(seed, "f", "base\n", "base")
-    git(seed, "remote", "add", "origin", str(remote))
-    git(seed, "push", "-u", "origin", "main")
-    a = tmp / "sync-a"
-    b = tmp / "sync-b"
-    git(tmp, "clone", str(remote), str(a))
-    git(tmp, "clone", str(remote), str(b))
-    for repo in (a, b):
-        git(repo, "config", "user.name", "Smoke")
-        git(repo, "config", "user.email", "smoke@example.invalid")
-    commit_file(a, "a", "a\n", "a")
-    git(a, "push", "origin", "main")
-    git(b, "fetch", "origin")
-    counts = git(b, "rev-list", "--left-right", "--count", "main...origin/main").stdout.strip()
-    assert counts == "0\t1"
-    git(b, "merge", "--ff-only", "origin/main")
-    commit_file(a, "a2", "a2\n", "a2")
-    commit_file(b, "b", "b\n", "b")
-    git(a, "push", "origin", "main")
-    git(b, "fetch", "origin")
-    left, right = map(int, git(b, "rev-list", "--left-right", "--count", "main...origin/main").stdout.split())
-    assert left == 1 and right == 1
-
-
-def test_merge_fast_forward(tmp: Path) -> None:
-    repo = init_repo(tmp / "merge")
-    commit_file(repo, "f", "0\n", "base")
-    git(repo, "switch", "-c", "topic")
-    tip = commit_file(repo, "f", "0\n1\n", "topic")
-    git(repo, "switch", "main")
-    before_count = int(git(repo, "rev-list", "--count", "HEAD").stdout)
-    git(repo, "merge", "--ff-only", "topic")
-    assert git(repo, "rev-parse", "HEAD").stdout.strip() == tip
-    assert int(git(repo, "rev-list", "--count", "HEAD").stdout) == before_count + 1
-
-
-def test_preservation_patch_does_not_clean(tmp: Path) -> None:
-    repo = init_repo(tmp / "preserve")
-    commit_file(repo, "f", "base\n", "base")
-    (repo / "f").write_text("base\nchange\n")
-    (repo / "u").write_text("untracked\n")
-    patch = tmp / "work.patch"
-    proc = run(repo, "git", "diff", check=True)
-    patch.write_text(proc.stdout)
-    assert patch.stat().st_size > 0
-    assert (repo / "f").read_text().endswith("change\n")
-    assert (repo / "u").exists()
-
-
-def test_worktree_branch_protection_and_prune(tmp: Path) -> None:
-    repo = init_repo(tmp / "worktree")
-    commit_file(repo, "f", "x\n", "base")
-    wt = tmp / "linked"
-    git(repo, "worktree", "add", "-b", "topic", str(wt), "HEAD")
-    assert git(repo, "branch", "-d", "topic", check=False).returncode != 0
-    shutil.rmtree(wt)
-    dry_proc = git(repo, "worktree", "prune", "--dry-run", "--verbose")
-    dry = dry_proc.stdout + dry_proc.stderr
-    assert "Removing" in dry and "linked" in dry
-    git(repo, "worktree", "prune")
-    assert str(wt) not in git(repo, "worktree", "list", "--porcelain").stdout
-
-
-def test_conflict_stages(tmp: Path) -> None:
-    repo = init_repo(tmp / "conflict")
-    commit_file(repo, "f", "base\n", "base")
-    git(repo, "switch", "-c", "side")
-    commit_file(repo, "f", "side\n", "side")
-    git(repo, "switch", "main")
-    commit_file(repo, "f", "main\n", "main")
-    proc = git(repo, "merge", "side", check=False)
-    assert proc.returncode != 0
-    stages = {line.split()[2] for line in git(repo, "ls-files", "-u", "--", "f").stdout.splitlines()}
-    assert stages == {"1", "2", "3"}
-    git(repo, "merge", "--abort")
-    assert not git(repo, "ls-files", "-u").stdout
-
-
-def test_unstage_preserves_worktree(tmp: Path) -> None:
-    repo = init_repo(tmp / "undo")
-    commit_file(repo, "f", "base\n", "base")
-    (repo / "f").write_text("changed\n")
-    git(repo, "add", "f")
-    git(repo, "restore", "--staged", "--", "f")
-    assert git(repo, "diff", "--cached", "--name-only").stdout == ""
-    assert git(repo, "diff", "--name-only").stdout.strip() == "f"
-    assert (repo / "f").read_text() == "changed\n"
-
-
-def test_reflog_recovery(tmp: Path) -> None:
-    repo = init_repo(tmp / "recover")
-    base = commit_file(repo, "f", "base\n", "base")
-    lost = commit_file(repo, "f", "base\nlost\n", "lost")
-    git(repo, "reset", "--hard", base)
-    assert lost in git(repo, "reflog", "show", "--all", "--format=%H").stdout
-    git(repo, "branch", "recovery/lost", lost)
-    assert git(repo, "rev-parse", "recovery/lost").stdout.strip() == lost
-
-
-def test_cherry_pick_diverged_and_equivalent(tmp: Path) -> None:
-    repo = init_repo(tmp / "pick")
-    base = commit_file(repo, "f", "base\n", "base")
-    git(repo, "switch", "-c", "source")
-    source = commit_file(repo, "f", "base\nfix\n", "fix")
-    git(repo, "switch", "-c", "dest", base)
-    commit_file(repo, "other", "dest\n", "dest diverges")
-    parent = git(repo, "rev-parse", "HEAD").stdout.strip()
-    git(repo, "cherry-pick", source)
-    new = git(repo, "rev-parse", "HEAD").stdout.strip()
-    assert new != source
-    assert git(repo, "rev-parse", "HEAD^").stdout.strip() == parent
-    assert (repo / "f").read_text() == "base\nfix\n"
-    # Replaying the same patch is empty and must be interpreted, not silently claimed successful.
-    proc = git(repo, "cherry-pick", source, check=False)
-    assert proc.returncode != 0
-    assert git(repo, "status", "--porcelain").stdout == ""
-    git(repo, "cherry-pick", "--abort")
-
-
-def test_exact_force_with_lease_rejects_race(tmp: Path) -> None:
-    remote = init_repo(tmp / "lease.git", bare=True)
-    seed = init_repo(tmp / "lease-seed")
-    commit_file(seed, "f", "base\n", "base")
-    git(seed, "remote", "add", "origin", str(remote))
-    git(seed, "push", "-u", "origin", "main")
-    a, b = tmp / "lease-a", tmp / "lease-b"
-    git(tmp, "clone", str(remote), str(a))
-    git(tmp, "clone", str(remote), str(b))
-    for repo in (a,b):
-        git(repo, "config", "user.name", "Smoke")
-        git(repo, "config", "user.email", "smoke@example.invalid")
-    observed = git(a, "rev-parse", "origin/main").stdout.strip()
-    commit_file(a, "a", "a\n", "a")
-    commit_file(b, "b", "b\n", "b")
-    git(b, "push", "origin", "main")
-    proc = git(
-        a, "push", "origin", "HEAD:refs/heads/main",
-        f"--force-with-lease=refs/heads/main:{observed}",
-        check=False,
-    )
-    assert proc.returncode != 0
-    remote_tip = git(remote, "rev-parse", "refs/heads/main").stdout.strip()
-    assert remote_tip == git(b, "rev-parse", "HEAD").stdout.strip()
-
-
-def test_history_pickaxe(tmp: Path) -> None:
-    repo = init_repo(tmp / "history")
-    commit_file(repo, "f", "alpha\n", "base")
-    added = commit_file(repo, "f", "alpha\nneedle\n", "add needle")
-    found = git(repo, "log", "-Sneedle", "--format=%H", "--", "f").stdout.splitlines()
-    assert found and found[0] == added
-
-
-def test_bisect_oracle(tmp: Path) -> None:
-    repo = init_repo(tmp / "bisect")
-    commits = []
-    for i in range(6):
-        commits.append(commit_file(repo, "n", f"{i}\n", f"n={i}"))
-    bad = commits[-1]
-    good = commits[1]
-    oracle = tmp / "oracle.sh"
-    oracle.write_text("#!/bin/sh\nn=$(cat n)\n[ \"$n\" -lt 3 ]\n")
-    oracle.chmod(0o755)
-    git(repo, "bisect", "start", bad, good)
-    proc = run(repo, "git", "bisect", "run", str(oracle), check=False)
-    assert proc.returncode == 0
-    out = proc.stdout + proc.stderr
-    assert commits[3] in out
-    git(repo, "bisect", "reset")
-    assert git(repo, "rev-parse", "HEAD").stdout.strip() == bad
-
-
-def test_tag_object_and_peeling(tmp: Path) -> None:
-    repo = init_repo(tmp / "tag")
-    target = commit_file(repo, "f", "x\n", "base")
-    git(repo, "tag", "-a", "v1.0.0", "-m", "v1.0.0", target)
-    assert git(repo, "cat-file", "-t", "refs/tags/v1.0.0").stdout.strip() == "tag"
-    assert git(repo, "rev-parse", "refs/tags/v1.0.0^{}").stdout.strip() == target
-    git(repo, "tag", "light", target)
-    assert git(repo, "cat-file", "-t", "refs/tags/light").stdout.strip() == "commit"
-
-
-def test_sparse_checkout(tmp: Path) -> None:
-    repo = init_repo(tmp / "sparse")
-    commit_file(repo, "services/api/a", "a\n", "api")
-    commit_file(repo, "services/web/w", "w\n", "web")
-    git(repo, "sparse-checkout", "init", "--cone")
-    git(repo, "sparse-checkout", "set", "services/api")
-    assert (repo / "services/api/a").exists()
-    assert not (repo / "services/web/w").exists()
-    assert git(repo, "show", "HEAD:services/web/w").stdout == "w\n"
-
-
-def test_submodule_gitlink(tmp: Path) -> None:
-    child = init_repo(tmp / "child")
-    child_tip = commit_file(child, "c", "child\n", "child")
-    parent = init_repo(tmp / "parent")
-    commit_file(parent, "p", "parent\n", "parent")
-    git(parent, "-c", "protocol.file.allow=always", "submodule", "add", str(child), "deps/child")
-    git(parent, "commit", "-m", "add submodule")
-    line = git(parent, "ls-files", "--stage", "--", "deps/child").stdout.strip()
-    mode, oid, stage, path = line.split(maxsplit=3)
-    assert mode == "160000" and oid == child_tip and stage == "0" and path == "deps/child"
-
-
-def test_bundle_explicit_ref(tmp: Path) -> None:
-    repo = init_repo(tmp / "bundle-src")
-    tip = commit_file(repo, "f", "x\n", "base")
-    bundle = tmp / "main.bundle"
-    git(repo, "bundle", "create", str(bundle), "refs/heads/main")
-    git(repo, "bundle", "verify", str(bundle))
-    dst = tmp / "bundle-dst"
-    git(tmp, "clone", str(bundle), str(dst))
-    assert git(dst, "rev-parse", "refs/remotes/origin/main").stdout.strip() == tip
-    git(dst, "switch", "-c", "main", "--track", "origin/main")
-    assert git(dst, "rev-parse", "HEAD").stdout.strip() == tip
-
-
-TESTS = [
-    test_unborn_and_porcelain,
-    test_config_origin,
-    test_remote_redaction,
-    test_atomic_commit_protects_unselected,
-    test_branch_delete_proof,
-    test_sync_fast_forward_and_divergence,
-    test_merge_fast_forward,
-    test_preservation_patch_does_not_clean,
-    test_worktree_branch_protection_and_prune,
-    test_conflict_stages,
-    test_unstage_preserves_worktree,
-    test_reflog_recovery,
-    test_cherry_pick_diverged_and_equivalent,
-    test_exact_force_with_lease_rejects_race,
-    test_history_pickaxe,
-    test_bisect_oracle,
-    test_tag_object_and_peeling,
-    test_sparse_checkout,
-    test_submodule_gitlink,
-    test_bundle_explicit_ref,
-]
-
-
-def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="git-agent-skills-smoke-") as raw:
-        base = Path(raw)
+def main():
+    failures=[]
+    with tempfile.TemporaryDirectory(prefix='git-skill-smoke-') as d:
+        base=Path(d)
         for test in TESTS:
-            case = base / test.__name__
-            case.mkdir()
-            try:
-                test(case)
-            except Exception as exc:
-                print(f"FAIL: {test.__name__}: {exc}")
-                return 1
-            print(f"PASS: {test.__name__}")
-    print(f"PASS: {len(TESTS)} local Git semantic smoke tests")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+            td=base/test.__name__;td.mkdir()
+            try:test(td);print(f'PASS: {test.__name__}')
+            except Exception as e:failures.append((test.__name__,str(e)));print(f'FAIL: {test.__name__}: {e}')
+    if failures:
+        print(f'{len(failures)} failures',file=sys.stderr);return 1
+    print(f'PASS: {len(TESTS)} local Git/package semantic smoke tests');return 0
+if __name__=='__main__':raise SystemExit(main())
