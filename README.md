@@ -49,7 +49,7 @@ support explicit selection.
 | [`manage-tags`](skills/manage-tags/SKILL.md) | Establish the exact requested tag object/ref locally or at a verified remote with correct type, target, annotation, signature, and immutability policy. |
 | [`migrate-repository`](skills/migrate-repository/SKILL.md) | Transfer the explicitly selected repository state to a verified destination with auditable completeness, no credential leakage, and a controlled cutover/recovery plan. |
 
-### Optional
+### Compact / optional
 
 | Skill | Scope |
 |---|---|
@@ -72,6 +72,8 @@ See [`docs/SKILL-CATALOG.md`](docs/SKILL-CATALOG.md) for routing boundaries,
 [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md) for supported environments.
 
 ## Development
+
+Generate release archives from a Git checkout. The builder uses the Git index to select package files.
 
 ```sh
 python3 scripts/validate_skills.py
