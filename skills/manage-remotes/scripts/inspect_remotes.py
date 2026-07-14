@@ -12,6 +12,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Union
 from urllib.parse import urlsplit, urlunsplit
 
 REMOTE_KEY = re.compile(r"^remote\.(.+)\.(url|pushurl|fetch)$", re.IGNORECASE)
@@ -50,23 +51,30 @@ def parse_records(raw: bytes) -> list[tuple[str, str, str, str]]:
     return records
 
 
-def sanitize_url(value: str) -> dict[str, str | bool]:
+def sanitize_url(value: str) -> dict[str, Union[str, bool]]:
     """Return a sanitized representation. Never include query, fragment, or password."""
     if any(ord(ch) < 32 or ord(ch) == 127 for ch in value):
         return {"display": "<redacted-opaque>", "classified": False}
 
-    # Standard URLs. urlsplit also understands ssh:// and git://.
-    parts = urlsplit(value)
-    if parts.scheme:
+    # Standard URLs. urlsplit also understands ssh:// and git://. Malformed
+    # authority or port syntax is treated as opaque without aborting the inventory.
+    try:
+        parts = urlsplit(value)
         scheme = parts.scheme.lower()
+        hostname = parts.hostname
+        port_number = parts.port
+    except ValueError:
+        return {"display": "<redacted-opaque>", "classified": False}
+
+    if parts.scheme:
         if scheme == "file":
             return {"display": "file://<redacted-local-path>", "classified": True}
-        if scheme not in {"http", "https", "ssh", "git"} or not parts.hostname:
+        if scheme not in {"http", "https", "ssh", "git"} or not hostname:
             return {"display": "<redacted-opaque>", "classified": False}
-        host = parts.hostname
+        host = hostname
         if ":" in host and not host.startswith("["):
             host = f"[{host}]"
-        port = f":{parts.port}" if parts.port else ""
+        port = f":{port_number}" if port_number else ""
         user = "<redacted-user>@" if parts.username is not None else ""
         path = parts.path or ""
         display = urlunsplit((scheme, f"{user}{host}{port}", path, "", ""))

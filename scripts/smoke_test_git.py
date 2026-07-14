@@ -53,6 +53,16 @@ def t_remote_helper_names_with_separators(tmp):
     data=json.loads(run(sys.executable,ROOT/'skills/manage-remotes/scripts/inspect_remotes.py',repo).stdout)
     assert_('team.prod' in data['remotes'] and 'team/prod' in data['remotes'],'remote names with dot/slash were lost')
 
+def t_remote_helper_malformed_url_does_not_abort(tmp):
+    repo=tmp/'repo';init(repo)
+    run('git','config','remote.good.url','https://example.com/team/good.git',cwd=repo)
+    run('git','config','remote.bad-port.url','https://example.com:notaport/repo.git',cwd=repo)
+    run('git','config','remote.bad-ipv6.url','https://[::1/repo.git',cwd=repo)
+    data=json.loads(run(sys.executable,ROOT/'skills/manage-remotes/scripts/inspect_remotes.py',repo).stdout)
+    assert_(data['remotes']['good']['url'][0]['classified'] is True,'valid remote was lost')
+    assert_(data['remotes']['bad-port']['url'][0]['display']=='<redacted-opaque>','malformed port was not redacted')
+    assert_(data['remotes']['bad-ipv6']['url'][0]['display']=='<redacted-opaque>','malformed IPv6 was not redacted')
+
 def t_force_with_lease_rejects_stale(tmp):
     bare=tmp/'remote.git';init(bare,True)
     seed=tmp/'seed';init(seed);old=commit(seed);run('git','remote','add','origin',bare,cwd=seed);run('git','push','-u','origin','main',cwd=seed)
@@ -236,7 +246,7 @@ def t_frontmatter_no_mutation_claim(tmp):
         t=p.read_text();assert_('Activation routes this procedure; it does not authorize' in t,f'{p} lacks boundary')
 
 TESTS=[
- t_remote_helper_redaction,t_remote_helper_opaque,t_remote_helper_names_with_separators,
+ t_remote_helper_redaction,t_remote_helper_opaque,t_remote_helper_names_with_separators,t_remote_helper_malformed_url_does_not_abort,
  t_force_with_lease_rejects_stale,t_normal_push_remote_query,t_tag_objects,t_tag_exact_lease_rejects_stale_move_and_delete,
  t_worktree_porcelain_z,t_worktree_branch_delete_blocked,t_clean_preview_pathological,
  t_reset_hard_preserves_non_obstructing_untracked,t_reset_hard_removes_untracked_obstruction,
