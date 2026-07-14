@@ -9,38 +9,55 @@ permissions:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
+          check-latest: true
 
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "24.17.0"
+          node-version: "26.5"
+          check-latest: true
           package-manager-cache: false
 
       - name: Validate skill packages
-        run: python3 scripts/validate_skills.py
+        run: python scripts/validate_skills.py
 
       - name: Evaluate fixtures
-        run: python3 scripts/evaluate_fixtures.py
+        run: python scripts/evaluate_fixtures.py
 
       - name: Run Git semantic smoke tests
-        run: python3 scripts/smoke_test_git.py
+        run: python scripts/smoke_test_git.py
 
       - name: Verify reproducible release
-        run: python3 scripts/build_release.py --check
+        run: python scripts/build_release.py --check
 
       - name: Validate grouped Skills CLI discovery
         run: |
-          CI=1 npx --yes skills@1.5.17 add . --list | tee /tmp/skills-list.txt
-          grep -Eq 'Found.*25.*skills' /tmp/skills-list.txt
-          grep -Fq 'Git Agent Skills' /tmp/skills-list.txt
+          EXPECTED_SKILLS="$(
+            python - <<'PY'
+          import json
+          from pathlib import Path
+
+          catalog = Path("skills/catalog.json")
+          data = json.loads(catalog.read_text(encoding="utf-8"))
+          print(len(data["skills"]))
+          PY
+          )"
+
+          CI=1 npx --yes skills@1.5.17 add . --list |
+            tee /tmp/skills-list.txt
+
+          grep -Eq "Found.*${EXPECTED_SKILLS}.*skills" /tmp/skills-list.txt
+          grep -Fq "Git Agent Skills" /tmp/skills-list.txt
 
       - name: Validate Claude Code plugin manifest
         run: >
