@@ -1,0 +1,627 @@
+[
+  {
+    "skill": "diagnose-repository",
+    "should_trigger": true,
+    "prompt": "Git says I am in detached HEAD. Is my work lost?"
+  },
+  {
+    "skill": "diagnose-repository",
+    "should_trigger": true,
+    "prompt": "ทำไม git status บอก modified แต่ git diff ไม่ขึ้นอะไร"
+  },
+  {
+    "skill": "diagnose-repository",
+    "should_trigger": true,
+    "prompt": "A rebase stopped yesterday; tell me exactly what state the repo is in before doing anything."
+  },
+  {
+    "skill": "diagnose-repository",
+    "should_trigger": false,
+    "prompt": "Undo the last commit but keep the files staged."
+  },
+  {
+    "skill": "diagnose-repository",
+    "should_trigger": false,
+    "prompt": "Create an annotated v2.0.0 tag and push it."
+  },
+  {
+    "skill": "setup-repository",
+    "should_trigger": true,
+    "prompt": "Clone this repo for development without downloading every blob yet."
+  },
+  {
+    "skill": "setup-repository",
+    "should_trigger": true,
+    "prompt": "Initialize this empty directory with main as the first branch."
+  },
+  {
+    "skill": "setup-repository",
+    "should_trigger": true,
+    "prompt": "I only need a bare mirror for an upcoming migration; do not create a worktree."
+  },
+  {
+    "skill": "setup-repository",
+    "should_trigger": false,
+    "prompt": "Set my Git author email for this repository."
+  },
+  {
+    "skill": "setup-repository",
+    "should_trigger": false,
+    "prompt": "Move all refs from GitLab to GitHub."
+  },
+  {
+    "skill": "configure-git",
+    "should_trigger": true,
+    "prompt": "Set pull to rebase only in this repository and show where the old value came from."
+  },
+  {
+    "skill": "configure-git",
+    "should_trigger": true,
+    "prompt": "Why do files keep changing from LF to CRLF? Configure a repository policy."
+  },
+  {
+    "skill": "configure-git",
+    "should_trigger": true,
+    "prompt": "Configure signed commits for this repo without changing my other repositories."
+  },
+  {
+    "skill": "configure-git",
+    "should_trigger": false,
+    "prompt": "Change origin from HTTPS to SSH."
+  },
+  {
+    "skill": "configure-git",
+    "should_trigger": false,
+    "prompt": "Rewrite the last five commit messages."
+  },
+  {
+    "skill": "manage-remotes",
+    "should_trigger": true,
+    "prompt": "Origin points to the wrong GitHub repository; change it safely."
+  },
+  {
+    "skill": "manage-remotes",
+    "should_trigger": true,
+    "prompt": "Why does fetch use HTTPS but push uses SSH? Inspect without showing tokens."
+  },
+  {
+    "skill": "manage-remotes",
+    "should_trigger": true,
+    "prompt": "Add upstream and fetch its branches, but do not merge anything."
+  },
+  {
+    "skill": "manage-remotes",
+    "should_trigger": false,
+    "prompt": "My branch is behind origin/main; update it."
+  },
+  {
+    "skill": "manage-remotes",
+    "should_trigger": false,
+    "prompt": "Mirror every branch and tag to a new host."
+  },
+  {
+    "skill": "craft-commits",
+    "should_trigger": true,
+    "prompt": "Commit these changes as clean atomic commits."
+  },
+  {
+    "skill": "craft-commits",
+    "should_trigger": true,
+    "prompt": "ช่วยแบ่งงานใน working tree เป็นหลาย commit แล้วตั้งข้อความตาม history ของ repo"
+  },
+  {
+    "skill": "craft-commits",
+    "should_trigger": true,
+    "prompt": "Amend the typo in the last commit; it has not been pushed."
+  },
+  {
+    "skill": "craft-commits",
+    "should_trigger": false,
+    "prompt": "Squash the last eight published commits and force-push."
+  },
+  {
+    "skill": "craft-commits",
+    "should_trigger": false,
+    "prompt": "Push my current branch to origin."
+  },
+  {
+    "skill": "manage-branches",
+    "should_trigger": true,
+    "prompt": "Create feature/cache from the exact release commit and switch to it."
+  },
+  {
+    "skill": "manage-branches",
+    "should_trigger": true,
+    "prompt": "I committed while detached; give that commit a branch name before I leave."
+  },
+  {
+    "skill": "manage-branches",
+    "should_trigger": true,
+    "prompt": "Delete the local branch only if all of it is already in main."
+  },
+  {
+    "skill": "manage-branches",
+    "should_trigger": false,
+    "prompt": "Rebase feature onto main."
+  },
+  {
+    "skill": "manage-branches",
+    "should_trigger": false,
+    "prompt": "Remove the linked worktree that uses this branch."
+  },
+  {
+    "skill": "sync-branches",
+    "should_trigger": true,
+    "prompt": "Push says non-fast-forward. Inspect what changed and choose the safe path."
+  },
+  {
+    "skill": "sync-branches",
+    "should_trigger": true,
+    "prompt": "ดึง main ล่าสุดมา แต่ห้ามทิ้ง commit local"
+  },
+  {
+    "skill": "sync-branches",
+    "should_trigger": true,
+    "prompt": "Publish this new branch to origin and set its upstream."
+  },
+  {
+    "skill": "sync-branches",
+    "should_trigger": false,
+    "prompt": "Change origin to a different repository."
+  },
+  {
+    "skill": "sync-branches",
+    "should_trigger": false,
+    "prompt": "Squash and force-push the published feature branch."
+  },
+  {
+    "skill": "integrate-branches",
+    "should_trigger": true,
+    "prompt": "Merge the completed feature branch into main after reviewing the exact commit set."
+  },
+  {
+    "skill": "integrate-branches",
+    "should_trigger": true,
+    "prompt": "Rebase my unpublished local commits onto the new base."
+  },
+  {
+    "skill": "integrate-branches",
+    "should_trigger": true,
+    "prompt": "Can this branch be fast-forwarded without a merge commit?"
+  },
+  {
+    "skill": "integrate-branches",
+    "should_trigger": false,
+    "prompt": "Cherry-pick only fixes A and C."
+  },
+  {
+    "skill": "integrate-branches",
+    "should_trigger": false,
+    "prompt": "Resolve the three conflicted files in the rebase."
+  },
+  {
+    "skill": "preserve-work",
+    "should_trigger": true,
+    "prompt": "Save everything including untracked files before I switch tasks."
+  },
+  {
+    "skill": "preserve-work",
+    "should_trigger": true,
+    "prompt": "Create a durable local safety point before this risky rebase."
+  },
+  {
+    "skill": "preserve-work",
+    "should_trigger": true,
+    "prompt": "I need a patch of only the tracked changes, and do not remove them."
+  },
+  {
+    "skill": "preserve-work",
+    "should_trigger": false,
+    "prompt": "I lost a commit after reset; find it."
+  },
+  {
+    "skill": "preserve-work",
+    "should_trigger": false,
+    "prompt": "Discard all changes in this file."
+  },
+  {
+    "skill": "manage-worktrees",
+    "should_trigger": true,
+    "prompt": "Create a linked worktree for the release branch."
+  },
+  {
+    "skill": "manage-worktrees",
+    "should_trigger": true,
+    "prompt": "Why can't I delete this branch? Check whether another worktree uses it."
+  },
+  {
+    "skill": "manage-worktrees",
+    "should_trigger": true,
+    "prompt": "Prune stale worktrees only if the dry run contains exactly the approved paths."
+  },
+  {
+    "skill": "manage-worktrees",
+    "should_trigger": false,
+    "prompt": "Switch this checkout to another branch."
+  },
+  {
+    "skill": "manage-worktrees",
+    "should_trigger": false,
+    "prompt": "Stash my current changes."
+  },
+  {
+    "skill": "resolve-conflicts",
+    "should_trigger": true,
+    "prompt": "Rebase stopped with conflicts; help resolve them semantically."
+  },
+  {
+    "skill": "resolve-conflicts",
+    "should_trigger": true,
+    "prompt": "ไฟล์นี้มี both modified และไม่รู้ ours/theirs ฝั่งไหนคืออะไร"
+  },
+  {
+    "skill": "resolve-conflicts",
+    "should_trigger": true,
+    "prompt": "Cherry-pick has a modify/delete conflict. Preserve the intended fix."
+  },
+  {
+    "skill": "resolve-conflicts",
+    "should_trigger": false,
+    "prompt": "Start a merge from feature into main."
+  },
+  {
+    "skill": "resolve-conflicts",
+    "should_trigger": false,
+    "prompt": "Abort the current rebase without resolving anything."
+  },
+  {
+    "skill": "undo-changes",
+    "should_trigger": true,
+    "prompt": "Unstage config.yml but keep my edits."
+  },
+  {
+    "skill": "undo-changes",
+    "should_trigger": true,
+    "prompt": "Undo this published commit with a new inverse commit."
+  },
+  {
+    "skill": "undo-changes",
+    "should_trigger": true,
+    "prompt": "Abort the current cherry-pick and restore the pre-operation state."
+  },
+  {
+    "skill": "undo-changes",
+    "should_trigger": false,
+    "prompt": "I lost a commit and do not know its hash."
+  },
+  {
+    "skill": "undo-changes",
+    "should_trigger": false,
+    "prompt": "Squash the last six published commits."
+  },
+  {
+    "skill": "recover-lost-work",
+    "should_trigger": true,
+    "prompt": "I deleted a branch and need the commits back."
+  },
+  {
+    "skill": "recover-lost-work",
+    "should_trigger": true,
+    "prompt": "reset --hard ไปแล้ว หา commit เดิมให้หน่อย"
+  },
+  {
+    "skill": "recover-lost-work",
+    "should_trigger": true,
+    "prompt": "I left detached HEAD and cannot find the commit I made."
+  },
+  {
+    "skill": "recover-lost-work",
+    "should_trigger": false,
+    "prompt": "Revert this known commit."
+  },
+  {
+    "skill": "recover-lost-work",
+    "should_trigger": false,
+    "prompt": "Stash my current changes before switching."
+  },
+  {
+    "skill": "transplant-commits",
+    "should_trigger": true,
+    "prompt": "Backport these two exact fixes to the 1.x branch."
+  },
+  {
+    "skill": "transplant-commits",
+    "should_trigger": true,
+    "prompt": "I committed on main by mistake; copy that commit to feature first."
+  },
+  {
+    "skill": "transplant-commits",
+    "should_trigger": true,
+    "prompt": "Cherry-pick this merge commit after determining the correct mainline."
+  },
+  {
+    "skill": "transplant-commits",
+    "should_trigger": false,
+    "prompt": "Merge the entire feature branch."
+  },
+  {
+    "skill": "transplant-commits",
+    "should_trigger": false,
+    "prompt": "Reorder and squash commits already on this branch."
+  },
+  {
+    "skill": "edit-commit-history",
+    "should_trigger": true,
+    "prompt": "Squash and reorder these unpublished commits before review."
+  },
+  {
+    "skill": "edit-commit-history",
+    "should_trigger": true,
+    "prompt": "Rewrite this published branch only if origin still points to the exact fetched commit."
+  },
+  {
+    "skill": "edit-commit-history",
+    "should_trigger": true,
+    "prompt": "Split the third commit into implementation and tests."
+  },
+  {
+    "skill": "edit-commit-history",
+    "should_trigger": false,
+    "prompt": "Create a new atomic commit from my worktree."
+  },
+  {
+    "skill": "edit-commit-history",
+    "should_trigger": false,
+    "prompt": "Merge main into feature without editing the existing series."
+  },
+  {
+    "skill": "investigate-history",
+    "should_trigger": true,
+    "prompt": "Which commit removed this validation and why?"
+  },
+  {
+    "skill": "investigate-history",
+    "should_trigger": true,
+    "prompt": "หา commit ที่เพิ่ม string นี้ครั้งแรก แม้ไฟล์จะถูก rename"
+  },
+  {
+    "skill": "investigate-history",
+    "should_trigger": true,
+    "prompt": "Did this patch already land under a different commit ID?"
+  },
+  {
+    "skill": "investigate-history",
+    "should_trigger": false,
+    "prompt": "Run a bisect to find the first failing commit."
+  },
+  {
+    "skill": "investigate-history",
+    "should_trigger": false,
+    "prompt": "Review this branch for correctness bugs."
+  },
+  {
+    "skill": "find-regression",
+    "should_trigger": true,
+    "prompt": "Find the first commit where this test starts failing."
+  },
+  {
+    "skill": "find-regression",
+    "should_trigger": true,
+    "prompt": "ใช้ git bisect แต่บาง commit build ไม่ได้ให้ skip อย่างถูกต้อง"
+  },
+  {
+    "skill": "find-regression",
+    "should_trigger": true,
+    "prompt": "Automate the regression search with a timeout and restore my branch afterward."
+  },
+  {
+    "skill": "find-regression",
+    "should_trigger": false,
+    "prompt": "Search history for the commit that added this string."
+  },
+  {
+    "skill": "find-regression",
+    "should_trigger": false,
+    "prompt": "Fix the known buggy commit."
+  },
+  {
+    "skill": "review-change-set",
+    "should_trigger": true,
+    "prompt": "Review this branch against main for correctness and missing tests."
+  },
+  {
+    "skill": "review-change-set",
+    "should_trigger": true,
+    "prompt": "ตรวจ staged diff นี้ ห้ามแก้ไฟล์"
+  },
+  {
+    "skill": "review-change-set",
+    "should_trigger": true,
+    "prompt": "Review commits A..B and report only actionable defects."
+  },
+  {
+    "skill": "review-change-set",
+    "should_trigger": false,
+    "prompt": "Implement the fixes you find."
+  },
+  {
+    "skill": "review-change-set",
+    "should_trigger": false,
+    "prompt": "Audit the entire repository for simplification opportunities."
+  },
+  {
+    "skill": "scan-secrets",
+    "should_trigger": true,
+    "prompt": "Scan staged changes for secrets without printing any values."
+  },
+  {
+    "skill": "scan-secrets",
+    "should_trigger": true,
+    "prompt": "We committed an API key yesterday; classify the exposure and tell us the next safe workflow."
+  },
+  {
+    "skill": "scan-secrets",
+    "should_trigger": true,
+    "prompt": "Check this release range with a local scanner and report redacted findings."
+  },
+  {
+    "skill": "scan-secrets",
+    "should_trigger": false,
+    "prompt": "Rotate the leaked AWS key now."
+  },
+  {
+    "skill": "scan-secrets",
+    "should_trigger": false,
+    "prompt": "Rewrite every remote branch to remove this string."
+  },
+  {
+    "skill": "manage-submodules",
+    "should_trigger": true,
+    "prompt": "Update the submodule pointer to the reviewed commit and verify collaborators can fetch it."
+  },
+  {
+    "skill": "manage-submodules",
+    "should_trigger": true,
+    "prompt": "Why is my submodule detached and showing modified?"
+  },
+  {
+    "skill": "manage-submodules",
+    "should_trigger": true,
+    "prompt": "Remove this submodule without deleting uncommitted nested work."
+  },
+  {
+    "skill": "manage-submodules",
+    "should_trigger": false,
+    "prompt": "Clone this ordinary repository."
+  },
+  {
+    "skill": "manage-submodules",
+    "should_trigger": false,
+    "prompt": "Merge another project into this repository with subtree."
+  },
+  {
+    "skill": "manage-large-files",
+    "should_trigger": true,
+    "prompt": "GitHub rejected the push because one file is too large. Find the exact object and safest option."
+  },
+  {
+    "skill": "manage-large-files",
+    "should_trigger": true,
+    "prompt": "Track only *.psd with LFS from now on."
+  },
+  {
+    "skill": "manage-large-files",
+    "should_trigger": true,
+    "prompt": "This checkout contains an LFS pointer but the object is missing."
+  },
+  {
+    "skill": "manage-large-files",
+    "should_trigger": false,
+    "prompt": "Make this monorepo faster with sparse checkout."
+  },
+  {
+    "skill": "manage-large-files",
+    "should_trigger": false,
+    "prompt": "Mirror all repository refs to another host."
+  },
+  {
+    "skill": "optimize-large-repository",
+    "should_trigger": true,
+    "prompt": "Status takes 20 seconds in this monorepo; measure and improve it."
+  },
+  {
+    "skill": "optimize-large-repository",
+    "should_trigger": true,
+    "prompt": "Configure sparse checkout for only services/api and shared libraries."
+  },
+  {
+    "skill": "optimize-large-repository",
+    "should_trigger": true,
+    "prompt": "Should we use partial clone or shallow clone for developers?"
+  },
+  {
+    "skill": "optimize-large-repository",
+    "should_trigger": false,
+    "prompt": "Move large binaries into LFS."
+  },
+  {
+    "skill": "optimize-large-repository",
+    "should_trigger": false,
+    "prompt": "Delete stale linked worktrees."
+  },
+  {
+    "skill": "prepare-release",
+    "should_trigger": true,
+    "prompt": "Prepare version 2.1.0 locally, update the changelog, and verify artifacts. Do not tag."
+  },
+  {
+    "skill": "prepare-release",
+    "should_trigger": true,
+    "prompt": "Build release notes from v2.0.0 to the exact candidate commit."
+  },
+  {
+    "skill": "prepare-release",
+    "should_trigger": true,
+    "prompt": "Create a clean release preparation commit following this repository's history."
+  },
+  {
+    "skill": "prepare-release",
+    "should_trigger": false,
+    "prompt": "Create and push the v2.1.0 tag."
+  },
+  {
+    "skill": "prepare-release",
+    "should_trigger": false,
+    "prompt": "Publish the package to npm."
+  },
+  {
+    "skill": "manage-tags",
+    "should_trigger": true,
+    "prompt": "Create an annotated v2.1.0 tag at this exact commit but do not push."
+  },
+  {
+    "skill": "manage-tags",
+    "should_trigger": true,
+    "prompt": "Verify this signed tag and report the peeled commit."
+  },
+  {
+    "skill": "manage-tags",
+    "should_trigger": true,
+    "prompt": "Push only v2.1.0 to the verified origin."
+  },
+  {
+    "skill": "manage-tags",
+    "should_trigger": false,
+    "prompt": "Update changelog and version files for the release."
+  },
+  {
+    "skill": "manage-tags",
+    "should_trigger": false,
+    "prompt": "Push all branches and tags to a new host."
+  },
+  {
+    "skill": "migrate-repository",
+    "should_trigger": true,
+    "prompt": "Migrate this repository and all approved branches/tags/LFS objects to the new organization."
+  },
+  {
+    "skill": "migrate-repository",
+    "should_trigger": true,
+    "prompt": "Plan a zero-surprise cutover from GitLab to GitHub."
+  },
+  {
+    "skill": "migrate-repository",
+    "should_trigger": true,
+    "prompt": "Mirror only the declared ref namespaces and verify a fresh clone."
+  },
+  {
+    "skill": "migrate-repository",
+    "should_trigger": false,
+    "prompt": "Change origin to the new URL."
+  },
+  {
+    "skill": "migrate-repository",
+    "should_trigger": false,
+    "prompt": "Push my feature branch to origin."
+  }
+]

@@ -1,0 +1,42 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "24.17.0"
+          package-manager-cache: false
+
+      - run: python3 scripts/validate_skills.py
+      - run: python3 scripts/evaluate_fixtures.py
+      - run: python3 scripts/smoke_test_git.py
+      - run: python3 scripts/build_release.py --check
+
+      - name: Validate grouped Skills CLI discovery
+        run: |
+          CI=1 npx --yes skills@1.5.17 add . --list | tee /tmp/skills-list.txt
+          grep -Eq 'Found.*25.*skills' /tmp/skills-list.txt
+          grep -Fq 'Git Agent Skills' /tmp/skills-list.txt
+
+      - name: Validate Claude Code plugin manifest
+        run: >
+          npx --yes @anthropic-ai/claude-code@2.1.209
+          plugin validate . --strict
+
+      - run: git diff --check

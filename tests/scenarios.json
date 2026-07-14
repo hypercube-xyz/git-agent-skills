@@ -1,0 +1,252 @@
+[
+  {
+    "skill": "diagnose-repository",
+    "scenario": "detached with new commit",
+    "expected_behavior": "explain reachability risk and route preservation/recovery without switching"
+  },
+  {
+    "skill": "diagnose-repository",
+    "scenario": "status mismatch",
+    "expected_behavior": "inspect index flags, line endings, filemode, sparse state, and exact diff layers"
+  },
+  {
+    "skill": "setup-repository",
+    "scenario": "nonempty destination",
+    "expected_behavior": "stop before overwriting and present exact conflict"
+  },
+  {
+    "skill": "setup-repository",
+    "scenario": "partial versus shallow",
+    "expected_behavior": "choose based on object transfer versus ancestry needs"
+  },
+  {
+    "skill": "configure-git",
+    "scenario": "multiple values",
+    "expected_behavior": "preserve or intentionally replace all values with explicit semantics"
+  },
+  {
+    "skill": "configure-git",
+    "scenario": "unsafe hook",
+    "expected_behavior": "inspect and stop before enabling hidden external effects"
+  },
+  {
+    "skill": "manage-remotes",
+    "scenario": "credential URL",
+    "expected_behavior": "redact before display and avoid command arguments/logs"
+  },
+  {
+    "skill": "manage-remotes",
+    "scenario": "refspec narrowing",
+    "expected_behavior": "enumerate affected tracking refs before mutation"
+  },
+  {
+    "skill": "craft-commits",
+    "scenario": "mixed worktree",
+    "expected_behavior": "partition by intent, stage exact hunks, preserve unrelated changes"
+  },
+  {
+    "skill": "craft-commits",
+    "scenario": "no convention",
+    "expected_behavior": "use Conventional Commits only after policy/history inspection"
+  },
+  {
+    "skill": "manage-branches",
+    "scenario": "branch deletion",
+    "expected_behavior": "check exact retention base and unique commits"
+  },
+  {
+    "skill": "manage-branches",
+    "scenario": "switch collision",
+    "expected_behavior": "stop before overwriting local or untracked files"
+  },
+  {
+    "skill": "sync-branches",
+    "scenario": "divergent branch",
+    "expected_behavior": "inspect graph and ask/derive topology; no implicit pull policy"
+  },
+  {
+    "skill": "sync-branches",
+    "scenario": "concurrent push",
+    "expected_behavior": "re-fetch and refuse automatic force"
+  },
+  {
+    "skill": "integrate-branches",
+    "scenario": "published commits",
+    "expected_behavior": "prefer merge or stop before rewrite"
+  },
+  {
+    "skill": "integrate-branches",
+    "scenario": "fast-forward possible",
+    "expected_behavior": "avoid unnecessary merge commit"
+  },
+  {
+    "skill": "preserve-work",
+    "scenario": "untracked work",
+    "expected_behavior": "select artifact that actually captures it"
+  },
+  {
+    "skill": "preserve-work",
+    "scenario": "stash conflict",
+    "expected_behavior": "retain source artifact until verified restoration"
+  },
+  {
+    "skill": "manage-worktrees",
+    "scenario": "offline worktree",
+    "expected_behavior": "do not prune solely because path is missing"
+  },
+  {
+    "skill": "manage-worktrees",
+    "scenario": "multiple prune candidates",
+    "expected_behavior": "stop when candidate set exceeds scope"
+  },
+  {
+    "skill": "resolve-conflicts",
+    "scenario": "rebase side labels",
+    "expected_behavior": "explain operation-dependent stage meaning"
+  },
+  {
+    "skill": "resolve-conflicts",
+    "scenario": "rerere reuse",
+    "expected_behavior": "review cached resolution before accepting"
+  },
+  {
+    "skill": "undo-changes",
+    "scenario": "ambiguous reset",
+    "expected_behavior": "resolve HEAD/index/worktree retention before action"
+  },
+  {
+    "skill": "undo-changes",
+    "scenario": "public undo",
+    "expected_behavior": "prefer revert over rewriting history"
+  },
+  {
+    "skill": "recover-lost-work",
+    "scenario": "deleted branch",
+    "expected_behavior": "search reflog, create new recovery ref, verify before integration"
+  },
+  {
+    "skill": "recover-lost-work",
+    "scenario": "objects pruned",
+    "expected_behavior": "report recovery limitation and external evidence options"
+  },
+  {
+    "skill": "transplant-commits",
+    "scenario": "empty pick",
+    "expected_behavior": "inspect equivalence before skip or empty commit"
+  },
+  {
+    "skill": "transplant-commits",
+    "scenario": "merge commit",
+    "expected_behavior": "establish mainline from parent-relative changes"
+  },
+  {
+    "skill": "edit-commit-history",
+    "scenario": "concurrent remote update",
+    "expected_behavior": "exact lease rejects and workflow stops"
+  },
+  {
+    "skill": "edit-commit-history",
+    "scenario": "signature policy",
+    "expected_behavior": "disclose invalidation and re-sign if authorized"
+  },
+  {
+    "skill": "investigate-history",
+    "scenario": "pickaxe choice",
+    "expected_behavior": "select -S or -G based on question"
+  },
+  {
+    "skill": "investigate-history",
+    "scenario": "shallow history",
+    "expected_behavior": "bound conclusion or request authorized fetch"
+  },
+  {
+    "skill": "find-regression",
+    "scenario": "infra failure",
+    "expected_behavior": "do not classify as bad; skip or stop"
+  },
+  {
+    "skill": "find-regression",
+    "scenario": "flaky test",
+    "expected_behavior": "stabilize/repeat before trusting result"
+  },
+  {
+    "skill": "review-change-set",
+    "scenario": "wrong base",
+    "expected_behavior": "establish merge base and effective diff"
+  },
+  {
+    "skill": "review-change-set",
+    "scenario": "mutating test",
+    "expected_behavior": "isolate or stop; original target stays unchanged"
+  },
+  {
+    "skill": "scan-secrets",
+    "scenario": "low entropy secret",
+    "expected_behavior": "no unkeyed deterministic fingerprint"
+  },
+  {
+    "skill": "scan-secrets",
+    "scenario": "published exposure",
+    "expected_behavior": "rotation first; rewrite routed separately"
+  },
+  {
+    "skill": "manage-submodules",
+    "scenario": "unpublished nested commit",
+    "expected_behavior": "stop before recording unreachable gitlink"
+  },
+  {
+    "skill": "manage-submodules",
+    "scenario": "dirty removal",
+    "expected_behavior": "preserve or stop; no deletion"
+  },
+  {
+    "skill": "manage-large-files",
+    "scenario": "historical large blob",
+    "expected_behavior": "locate exact object and avoid assuming current file is cause"
+  },
+  {
+    "skill": "manage-large-files",
+    "scenario": "LFS migration",
+    "expected_behavior": "treat as scoped history rewrite with backups and consumer impact"
+  },
+  {
+    "skill": "optimize-large-repository",
+    "scenario": "wrong optimization",
+    "expected_behavior": "measure and select mechanism tied to bottleneck"
+  },
+  {
+    "skill": "optimize-large-repository",
+    "scenario": "offline requirement",
+    "expected_behavior": "do not choose filter that makes required blobs unavailable"
+  },
+  {
+    "skill": "prepare-release",
+    "scenario": "multiple version sources",
+    "expected_behavior": "discover and update authoritative set"
+  },
+  {
+    "skill": "prepare-release",
+    "scenario": "nondeterministic artifact",
+    "expected_behavior": "report failed reproducibility, no readiness claim"
+  },
+  {
+    "skill": "manage-tags",
+    "scenario": "same commit wrong tag type",
+    "expected_behavior": "not idempotent if annotation/signature policy differs"
+  },
+  {
+    "skill": "manage-tags",
+    "scenario": "remote retag",
+    "expected_behavior": "explicit high-consequence controls and exact ref verification"
+  },
+  {
+    "skill": "migrate-repository",
+    "scenario": "destination extra refs",
+    "expected_behavior": "no mirror deletion without inventory and approval"
+  },
+  {
+    "skill": "migrate-repository",
+    "scenario": "host metadata",
+    "expected_behavior": "separate Git data from issues/settings/integrations"
+  }
+]

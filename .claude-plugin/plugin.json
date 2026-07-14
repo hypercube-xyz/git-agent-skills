@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "git-agent-skills",
+  "displayName": "Git Agent Skills",
+  "version": "1.0.0",
+  "description": "Evidence-driven Git workflow skills for AI coding agents.",
+  "author": {
+    "name": "hypercube-xyz",
+    "url": "https://github.com/hypercube-xyz"
+  },
+  "repository": "https://github.com/hypercube-xyz/git-agent-skills",
+  "homepage": "https://github.com/hypercube-xyz/git-agent-skills",
+  "license": "MIT",
+  "keywords": [
+    "git",
+    "agent-skills",
+    "developer-productivity",
+    "recovery",
+    "release",
+    "workflow",
+    "coding-agent"
+  ],
+  "skills": [
+    "./skills/diagnose-repository",
+    "./skills/setup-repository",
+    "./skills/configure-git",
+    "./skills/manage-remotes",
+    "./skills/craft-commits",
+    "./skills/manage-branches",
+    "./skills/sync-branches",
+    "./skills/integrate-branches",
+    "./skills/preserve-work",
+    "./skills/manage-worktrees",
+    "./skills/resolve-conflicts",
+    "./skills/undo-changes",
+    "./skills/recover-lost-work",
+    "./skills/transplant-commits",
+    "./skills/edit-commit-history",
+    "./skills/investigate-history",
+    "./skills/find-regression",
+    "./skills/review-change-set",
+    "./skills/scan-secrets",
+    "./skills/manage-submodules",
+    "./skills/manage-large-files",
+    "./skills/optimize-large-repository",
+    "./skills/prepare-release",
+    "./skills/manage-tags",
+    "./skills/migrate-repository"
+  ]
+}
