@@ -1,114 +1,118 @@
 #!/usr/bin/env python3
-"""Print configured Git remotes with fail-closed credential redaction.
+"""Inspect effective Git remote configuration without disclosing credentials.
 
-Requires Python 3.9+. Reads local Git configuration only and performs no network access.
-Unknown or opaque address forms are redacted rather than echoed.
+The helper reads effective config with origin and scope. URL-like values are fail-closed:
+recognized forms are sanitized; opaque forms are never echoed.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import subprocess
 import sys
+from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 
-SENSITIVE_QUERY = re.compile(
-    r"(?i)(access[_-]?token|auth|authorization|credential|key|password|secret|signature|sig|token)"
-)
-CONTROL = re.compile(r"[\x00-\x1f\x7f]")
-SCP_LIKE = re.compile(r"^(?:(?P<user>[^/@:\s]+)@)?(?P<host>[^/:\s]+):(?P<path>.+)$")
-HELPER = re.compile(r"^(?P<helper>[A-Za-z][A-Za-z0-9+.-]*)::(?P<address>.*)$")
+REMOTE_KEY = re.compile(r"^remote\.(.+)\.(url|pushurl|fetch)$", re.IGNORECASE)
+SCP_LIKE = re.compile(r"^(?:(?P<user>[^@/:]+)@)?(?P<host>\[[^]]+\]|[^:/]+):(?P<path>.+)$")
+SAFE_HOST = re.compile(r"^[A-Za-z0-9._-]+$|^\[[0-9A-Fa-f:]+\]$")
 
 
-def run_git(*args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    if proc.returncode:
-        msg = CONTROL.sub("?", proc.stderr.strip())
-        raise RuntimeError(msg or f"git exited with {proc.returncode}")
+def run_config(repo: Path) -> bytes:
+    cmd = [
+        "git", "-C", str(repo), "config", "--null", "--show-origin", "--show-scope",
+        "--get-regexp", r"^remote\..*\.(url|pushurl|fetch)$",
+    ]
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    if proc.returncode == 1 and not proc.stdout:
+        return b""
+    if proc.returncode != 0:
+        raise RuntimeError("git config inspection failed")
     return proc.stdout
 
 
-def redact_url(value: str) -> str:
-    value = CONTROL.sub("?", value.strip())
-    if not value:
-        return "<empty>"
+def parse_records(raw: bytes) -> list[tuple[str, str, str, str]]:
+    fields = raw.split(b"\0")
+    if fields and fields[-1] == b"":
+        fields.pop()
+    if len(fields) % 3:
+        raise ValueError("unexpected git config --null output")
+    records: list[tuple[str, str, str, str]] = []
+    for i in range(0, len(fields), 3):
+        scope = fields[i].decode("utf-8", "replace")
+        origin = fields[i + 1].decode("utf-8", "replace")
+        key_value = fields[i + 2].decode("utf-8", "replace")
+        if "\n" not in key_value:
+            raise ValueError("missing key/value separator")
+        key, value = key_value.split("\n", 1)
+        records.append((scope, origin, key, value))
+    return records
 
-    helper = HELPER.match(value)
-    if helper:
-        return f"{helper.group('helper')}::<redacted-opaque-address>"
 
-    # Standard URL with a scheme.
-    try:
-        parsed = urlsplit(value)
-    except ValueError:
-        return "<redacted-unparseable-remote>"
+def sanitize_url(value: str) -> dict[str, str | bool]:
+    """Return a sanitized representation. Never include query, fragment, or password."""
+    if any(ord(ch) < 32 or ord(ch) == 127 for ch in value):
+        return {"display": "<redacted-opaque>", "classified": False}
 
-    if parsed.scheme and parsed.netloc:
-        host = parsed.hostname or "<redacted-host>"
-        port = f":{parsed.port}" if parsed.port else ""
-        # Never preserve userinfo. Preserve a bounded path for usability.
-        path = parsed.path or ""
-        if len(path) > 256:
-            path = path[:253] + "..."
-        safe_query_parts = []
-        if parsed.query:
-            for item in parsed.query.split("&"):
-                key = item.split("=", 1)[0]
-                safe_query_parts.append(f"{key}=<redacted>" if SENSITIVE_QUERY.search(key) else key)
-        safe_query = "&".join(safe_query_parts)
-        return urlunsplit((parsed.scheme, host + port, path, safe_query, ""))
+    # Standard URLs. urlsplit also understands ssh:// and git://.
+    parts = urlsplit(value)
+    if parts.scheme:
+        scheme = parts.scheme.lower()
+        if scheme == "file":
+            return {"display": "file://<redacted-local-path>", "classified": True}
+        if scheme not in {"http", "https", "ssh", "git"} or not parts.hostname:
+            return {"display": "<redacted-opaque>", "classified": False}
+        host = parts.hostname
+        if ":" in host and not host.startswith("["):
+            host = f"[{host}]"
+        port = f":{parts.port}" if parts.port else ""
+        user = "<redacted-user>@" if parts.username is not None else ""
+        path = parts.path or ""
+        display = urlunsplit((scheme, f"{user}{host}{port}", path, "", ""))
+        return {"display": display, "classified": True}
 
-    # scp-like SSH syntax. Drop userinfo and bound the path.
+    # Git scp-like syntax: [user@]host:path. Avoid treating Windows drives as hosts.
+    if re.match(r"^[A-Za-z]:[\\/]", value):
+        return {"display": "<redacted-local-path>", "classified": True}
     match = SCP_LIKE.match(value)
-    if match and not value.startswith(("/", "./", "../")):
-        path = match.group("path")
-        if "@" in path or CONTROL.search(path):
-            path = "<redacted-path>"
-        elif len(path) > 256:
-            path = path[:253] + "..."
-        return f"{match.group('host')}:{path}"
+    if match and SAFE_HOST.match(match.group("host")):
+        user = "<redacted-user>@" if match.group("user") else ""
+        return {"display": f"{user}{match.group('host')}:{match.group('path')}", "classified": True}
 
-    # Local paths are useful but can reveal usernames/home locations. Report class only.
-    if value.startswith(("/", "./", "../", "~")):
-        return "<local-path>"
-
-    return "<redacted-opaque-remote>"
+    # Relative/absolute filesystem paths can reveal usernames and workspace names.
+    if value.startswith(('/', './', '../', '~')):
+        return {"display": "<redacted-local-path>", "classified": True}
+    return {"display": "<redacted-opaque>", "classified": False}
 
 
-def config_entries() -> list[dict[str, str]]:
-    out = run_git("config", "--null", "--get-regexp", r"^remote\..*\.(url|pushurl|fetch)$")
-    entries: list[dict[str, str]] = []
-    for record in out.split("\0"):
-        if not record:
+def inspect(repo: Path) -> dict[str, object]:
+    remotes: dict[str, dict[str, list[dict[str, object]]]] = {}
+    for scope, origin, key, value in parse_records(run_config(repo)):
+        match = REMOTE_KEY.match(key)
+        if not match:
             continue
-        if "\n" in record:
-            key, value = record.split("\n", 1)
-        elif " " in record:
-            key, value = record.split(" ", 1)
+        name, kind = match.groups()
+        entry: dict[str, object] = {"scope": scope, "origin": origin}
+        if kind.lower() == "fetch":
+            entry.update({"value": value, "classified": True})
         else:
-            entries.append({"key": CONTROL.sub("?", record), "value": "<missing>"})
-            continue
-        kind = key.rsplit(".", 1)[-1]
-        safe = value if kind == "fetch" else redact_url(value)
-        entries.append({"key": CONTROL.sub("?", key), "value": safe})
-    return entries
+            entry.update(sanitize_url(value))
+        remotes.setdefault(name, {"url": [], "pushurl": [], "fetch": []})[kind.lower()].append(entry)
+    return {"repository": str(repo.resolve()), "remotes": remotes}
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("repo", nargs="?", default=".")
+    parser.add_argument("--compact", action="store_true")
+    args = parser.parse_args()
     try:
-        entries = config_entries()
-    except RuntimeError as exc:
-        print(f"error: {exc}", file=sys.stderr)
+        payload = inspect(Path(args.repo))
+    except (OSError, RuntimeError, ValueError) as exc:
+        print(f"inspect-remotes: {exc}", file=sys.stderr)
         return 2
-    print(json.dumps(entries, indent=2, ensure_ascii=False))
+    print(json.dumps(payload, indent=None if args.compact else 2, sort_keys=True))
     return 0
 
 

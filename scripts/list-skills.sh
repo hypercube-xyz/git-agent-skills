@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
-find "$REPO/skills" -mindepth 2 -maxdepth 2 -name SKILL.md -print \
-  | sed "s|^$REPO/||" \
-  | LC_ALL=C sort
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+python3 - "$ROOT/skills/catalog.json" <<'PY'
+import json,sys
+c=json.load(open(sys.argv[1],encoding='utf-8'))
+for tier, spec in c['tiers'].items():
+    print(f"[{tier}]")
+    for name in spec['skills']:
+        print(name)
+PY
