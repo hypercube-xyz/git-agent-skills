@@ -2,6 +2,7 @@
 from __future__ import annotations
 import argparse, json, os, sys
 from pathlib import Path
+from typing import Optional
 
 
 def main() -> int:
@@ -14,7 +15,7 @@ def main() -> int:
     catalog = json.loads((root/"skills/catalog.json").read_text(encoding="utf-8"))
     names = [x["name"] for x in catalog["skills"]]
     target = args.target.expanduser().resolve(strict=False)
-    plan: list[tuple[Path, Path, str | None]] = []
+    plan: list[tuple[Path, Path, Optional[str]]] = []
     errors: list[str] = []
     for name in names:
         source = (root/"skills"/name).resolve(strict=True)
@@ -41,7 +42,7 @@ def main() -> int:
     if args.dry_run:
         return 0
     target.mkdir(parents=True, exist_ok=True)
-    touched: list[tuple[Path,str|None]] = []
+    touched: list[tuple[Path, Optional[str]]] = []
     try:
         for source,dest,old in plan:
             # Record the original state before the first mutation so a failure while
