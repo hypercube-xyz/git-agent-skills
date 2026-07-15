@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from collections import Counter, defaultdict
-from itertools import combinations
-from pathlib import Path
 import json
 import re
 import sys
+from collections import Counter, defaultdict
+from itertools import combinations
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,29 +21,55 @@ def parse_skill(path: Path) -> dict[str, str]:
     if not frontmatter:
         raise ValueError(f"{path}: missing frontmatter")
     name = re.search(r"^name:\s*([^\n]+)$", frontmatter.group(1), re.M)
-    description = re.search(r"^description:\s*>-\n((?:  .*\n?)+)", frontmatter.group(1), re.M)
+    description = re.search(
+        r"^description:\s*>-\n((?:  .*\n?)+)", frontmatter.group(1), re.M
+    )
     if not name or not description:
         raise ValueError(f"{path}: missing name/description")
     return {
         "name": name.group(1).strip(),
-        "description": " ".join(line.strip() for line in description.group(1).splitlines()),
+        "description": " ".join(
+            line.strip() for line in description.group(1).splitlines()
+        ),
         "text": text,
     }
 
 
 def section(text: str, heading: str) -> str:
-    match = re.search(r"^" + re.escape(heading) + r"\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+    match = re.search(
+        r"^" + re.escape(heading) + r"\n(.*?)(?=^## |\Z)", text, re.M | re.S
+    )
     return match.group(1) if match else ""
 
 
 def overlap_tokens(text: str) -> set[str]:
     stop = {
-        "the", "and", "or", "to", "a", "an", "of", "for", "with", "when",
-        "use", "do", "not", "git", "repository", "branch", "branches", "state",
-        "exact", "intended", "local", "remote",
+        "the",
+        "and",
+        "or",
+        "to",
+        "a",
+        "an",
+        "of",
+        "for",
+        "with",
+        "when",
+        "use",
+        "do",
+        "not",
+        "git",
+        "repository",
+        "branch",
+        "branches",
+        "state",
+        "exact",
+        "intended",
+        "local",
+        "remote",
     }
     return {
-        token for token in re.findall(r"[a-z][a-z0-9-]{2,}", text.lower())
+        token
+        for token in re.findall(r"[a-z][a-z0-9-]{2,}", text.lower())
         if token not in stop
     }
 
@@ -97,9 +123,15 @@ plugin_paths = plugin.get("skills", [])
 plugin_names = {Path(path).name for path in plugin_paths}
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
 readme_names = set(re.findall(r"\[`([a-z0-9-]+)`\]\(skills/[^)]+/SKILL\.md\)", readme))
-for label, found in (("disk", disk), ("plugin", plugin_names), ("README", readme_names)):
+for label, found in (
+    ("disk", disk),
+    ("plugin", plugin_names),
+    ("README", readme_names),
+):
     if found != name_set:
-        errors.append(f"{label}/catalog mismatch: extra={sorted(found-name_set)} missing={sorted(name_set-found)}")
+        errors.append(
+            f"{label}/catalog mismatch: extra={sorted(found-name_set)} missing={sorted(name_set-found)}"
+        )
 if plugin_paths != expected_plugin_paths:
     errors.append("plugin skill paths/order must exactly match the catalog")
 
@@ -114,21 +146,37 @@ workflow = (ROOT / ".github/workflows/validate.yml").read_text(encoding="utf-8")
 python_compat = compatibility.get("python", {})
 ci_compat = compatibility.get("ci", {})
 client_compat = compatibility.get("packaging_clients", {})
-required_doc_values = [python_compat.get("minimum"), *python_compat.get("ci_matrix", []), ci_compat.get("os")]
+required_doc_values = [
+    python_compat.get("minimum"),
+    *python_compat.get("ci_matrix", []),
+    ci_compat.get("os"),
+]
 for value in filter(None, required_doc_values):
     if str(value) not in compat_doc:
         errors.append(f"compatibility documentation missing {value}")
 required_workflow_values = [*python_compat.get("ci_matrix", []), ci_compat.get("os")]
-for group in (client_compat.get("blocking", {}), client_compat.get("forward_probe", {})):
-    required_workflow_values.extend(group.get(key) for key in ("node", "skills_cli", "claude_code"))
+for group in (
+    client_compat.get("blocking", {}),
+    client_compat.get("forward_probe", {}),
+):
+    required_workflow_values.extend(
+        group.get(key) for key in ("node", "skills_cli", "claude_code")
+    )
 for value in filter(None, required_workflow_values):
     if str(value) not in workflow:
-        errors.append(f"validation workflow missing catalog compatibility value {value}")
+        errors.append(
+            f"validation workflow missing catalog compatibility value {value}"
+        )
 
 required_sections = [
-    "## Objective", "## Use When", "## Do Not Use / Route Elsewhere",
-    "## Required Evidence", "## Action Boundaries", "## Workflow",
-    "## Verification", "## Output Contract",
+    "## Objective",
+    "## Use When",
+    "## Do Not Use / Route Elsewhere",
+    "## Required Evidence",
+    "## Action Boundaries",
+    "## Workflow",
+    "## Verification",
+    "## Output Contract",
 ]
 all_refs: set[Path] = set()
 skills: dict[str, dict[str, object]] = {}
@@ -153,7 +201,9 @@ for name in names:
     if len(parsed["text"].splitlines()) > 500:
         errors.append(f"{path}: exceeds 500-line heuristic")
 
-    reference_contract = section(parsed["text"], "## Reference Trigger") + section(parsed["text"], "## Reference Triggers")
+    reference_contract = section(parsed["text"], "## Reference Trigger") + section(
+        parsed["text"], "## Reference Triggers"
+    )
     refs = re.findall(r"`(references/[^`]+\.md)`", reference_contract)
     if len(refs) != len(set(refs)):
         errors.append(f"{path}: duplicate reference trigger")
@@ -165,7 +215,9 @@ for name in names:
         elif re.search(r"`references/[^`]+\.md`", ref.read_text(encoding="utf-8")):
             errors.append(f"{ref}: reference-to-reference chain")
 
-    script_contract = section(parsed["text"], "## Script Trigger") + section(parsed["text"], "## Script Triggers")
+    script_contract = section(parsed["text"], "## Script Trigger") + section(
+        parsed["text"], "## Script Triggers"
+    )
     script_mentions = set(re.findall(r"`(scripts/[^`]+)`", script_contract))
     for script in sorted(path.parent.glob("scripts/*")):
         if not script.is_file() or script.name.startswith("."):
@@ -182,7 +234,9 @@ for name in names:
     use_when = section(parsed["text"], "## Use When")
     skills[name] = {
         "objective": re.sub(r"\s+", " ", objective.strip()).casefold(),
-        "tokens": overlap_tokens(parsed["description"] + " " + objective + " " + use_when),
+        "tokens": overlap_tokens(
+            parsed["description"] + " " + objective + " " + use_when
+        ),
         "nonuse": section(parsed["text"], "## Do Not Use / Route Elsewhere"),
     }
 
@@ -203,7 +257,9 @@ for label, rows in (("routing", routing), ("scenario", scenarios)):
         errors.append(f"duplicate {label} ids")
     found = {row["skill"] for row in rows}
     if found != name_set:
-        errors.append(f"{label}/catalog mismatch: extra={sorted(found-name_set)} missing={sorted(name_set-found)}")
+        errors.append(
+            f"{label}/catalog mismatch: extra={sorted(found-name_set)} missing={sorted(name_set-found)}"
+        )
 
 by_skill: dict[str, list[dict]] = defaultdict(list)
 for row in routing:
@@ -212,7 +268,9 @@ for name in names:
     positive = sum(row["expect"] == "route" for row in by_skill[name])
     negative = sum(row["expect"] == "do-not-route" for row in by_skill[name])
     if positive < 3 or negative < 2:
-        errors.append(f"{name}: routing coverage {positive} positive/{negative} negative")
+        errors.append(
+            f"{name}: routing coverage {positive} positive/{negative} negative"
+        )
 
 categories: dict[str, set[str]] = defaultdict(set)
 for row in scenarios:
@@ -221,14 +279,24 @@ for row in scenarios:
     assertions = row.get("assertions")
     if len(prompt) < 80 or prompt.startswith("Perform the "):
         errors.append(f"{row.get('id')}: scenario prompt is generic or underspecified")
-    if not isinstance(assertions, list) or len(assertions) < 3 or len(assertions) != len(set(assertions)):
-        errors.append(f"{row.get('id')}: scenario assertions must contain at least three unique checks")
+    if (
+        not isinstance(assertions, list)
+        or len(assertions) < 3
+        or len(assertions) != len(set(assertions))
+    ):
+        errors.append(
+            f"{row.get('id')}: scenario assertions must contain at least three unique checks"
+        )
 required_categories = {"stale-state", "partial-failure", "prompt-injection"}
 for name in names:
     if not required_categories <= categories[name]:
-        errors.append(f"{name}: missing scenario categories {sorted(required_categories-categories[name])}")
+        errors.append(
+            f"{name}: missing scenario categories {sorted(required_categories-categories[name])}"
+        )
 
-for prompt, count in Counter(row["prompt"].strip().casefold() for row in routing + scenarios).items():
+for prompt, count in Counter(
+    row["prompt"].strip().casefold() for row in routing + scenarios
+).items():
     if count > 1:
         errors.append(f"duplicate prompt text: {prompt[:80]}")
 
@@ -248,7 +316,9 @@ required_reciprocal = {
     ("transplant-commits", "undo-changes"),
 }
 for left, right in required_reciprocal:
-    if f"`{right}`" not in str(skills[left]["nonuse"]) or f"`{left}`" not in str(skills[right]["nonuse"]):
+    if f"`{right}`" not in str(skills[left]["nonuse"]) or f"`{left}`" not in str(
+        skills[right]["nonuse"]
+    ):
         errors.append(f"missing reciprocal boundary: {left}, {right}")
 
 objectives: dict[str, str] = {}
@@ -261,9 +331,13 @@ for name, data in skills.items():
 
 for left, right in combinations(sorted(skills), 2):
     score = jaccard(set(skills[left]["tokens"]), set(skills[right]["tokens"]))
-    routed = f"`{right}`" in str(skills[left]["nonuse"]) or f"`{left}`" in str(skills[right]["nonuse"])
+    routed = f"`{right}`" in str(skills[left]["nonuse"]) or f"`{left}`" in str(
+        skills[right]["nonuse"]
+    )
     if score >= 0.25 and not routed:
-        errors.append(f"high overlap without routing boundary: {left}, {right} ({score:.2f})")
+        errors.append(
+            f"high overlap without routing boundary: {left}, {right} ({score:.2f})"
+        )
     overlap_signals += score >= 0.10
 
 # Tracked Markdown links must resolve within the source tree; external URLs are out of scope.
@@ -290,7 +364,9 @@ if errors:
     print("\n".join("ERROR: " + error for error in errors))
     raise SystemExit(1)
 
-skill_scripts = sum(1 for script in (ROOT / "skills").glob("*/scripts/*") if script.is_file())
+skill_scripts = sum(
+    1 for script in (ROOT / "skills").glob("*/scripts/*") if script.is_file()
+)
 print(
     f"PASS validate_skills: {len(names)} skills, {len(all_refs)} references, "
     f"{skill_scripts} skill scripts, {len(routing)} routing cases, "
