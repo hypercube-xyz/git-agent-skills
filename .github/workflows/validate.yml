@@ -1,70 +1,213 @@
 name: validate
 
 on:
-  push:
   pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  validate:
+  python-compatibility:
+    name: Python ${{ matrix.python_version }}
     runs-on: ubuntu-26.04
     timeout-minutes: 15
 
+    strategy:
+      fail-fast: false
+      matrix:
+        python_version:
+          - "3.12"
+          - "3.14"
+
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
-          python-version: "3.14"
-          check-latest: true
+          python-version: ${{ matrix.python_version }}
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: "26.5"
-          check-latest: true
-          package-manager-cache: false
+      - name: Record tool versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python --version
+          git --version
 
       - name: Validate skill packages
         run: python scripts/validate_skills.py
 
-      - name: Evaluate fixtures
-        run: python scripts/evaluate_fixtures.py
-
-      - name: Run Git semantic smoke tests
+      - name: Run Git semantic tests
         run: python scripts/smoke_test_git.py
 
+      - name: Verify no test-created source artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+  packaging:
+    name: Reproducible package
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    needs:
+      - python-compatibility
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+
+      - name: Record tool versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python --version
+          git --version
+
       - name: Verify reproducible release
-        run: python scripts/build_release.py --check
+        run: python scripts/build_release.py --check --skip-validation
+
+      - name: Verify clean source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+  client-compatibility:
+    name: Pinned client compatibility
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    needs:
+      - packaging
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          check-latest: true
+          package-manager-cache: false
+
+      - name: Record Node.js and client versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --version
+          npm --version
+          echo "Skills CLI: 1.5.17"
+          echo "Claude Code: 2.1.209"
 
       - name: Validate grouped Skills CLI discovery
+        shell: bash
         run: |
-          EXPECTED_SKILLS="$(
-            python - <<'PY'
-          import json
-          from pathlib import Path
+          set -euo pipefail
 
-          catalog = Path("skills/catalog.json")
-          data = json.loads(catalog.read_text(encoding="utf-8"))
-          print(len(data["skills"]))
-          PY
+          EXPECTED_SKILLS="$(
+            node -e '
+              const catalog = require("./skills/catalog.json");
+              console.log(catalog.skills.length);
+            '
           )"
 
-          CI=1 npx --yes skills@1.5.17 add . --list |
+          CI=1 npx --yes skills@1.5.17 add . --list | tee /tmp/skills-list.txt
+          grep -Eq "Found.*${EXPECTED_SKILLS}.*skills" /tmp/skills-list.txt
+          grep -Fq "Git Agent Skills" /tmp/skills-list.txt
+
+      - name: Validate Claude Code plugin manifest
+        run: >-
+          npx --yes @anthropic-ai/claude-code@2.1.209
+          plugin validate . --strict
+
+      - name: Verify clean source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+  client-forward-probe:
+    name: Node 26 latest-client probe
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    needs:
+      - client-compatibility
+    continue-on-error: true
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "26"
+          check-latest: true
+          package-manager-cache: false
+
+      - name: Record Node.js and client versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --version
+          npm --version
+          echo "Skills CLI: latest"
+          echo "Claude Code: latest"
+
+      - name: Validate grouped Skills CLI discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          EXPECTED_SKILLS="$(
+            node -e '
+              const catalog = require("./skills/catalog.json");
+              console.log(catalog.skills.length);
+            '
+          )"
+
+          CI=1 npx --yes skills@latest add . --list |
             tee /tmp/skills-list.txt
 
           grep -Eq "Found.*${EXPECTED_SKILLS}.*skills" /tmp/skills-list.txt
           grep -Fq "Git Agent Skills" /tmp/skills-list.txt
 
       - name: Validate Claude Code plugin manifest
-        run: >
-          npx --yes @anthropic-ai/claude-code@2.1.209
+        run: >-
+          npx --yes
+          @anthropic-ai/claude-code@latest
           plugin validate . --strict
 
-      - name: Verify clean working tree
+      - name: Verify clean source tree
+        shell: bash
         run: |
+          set -euo pipefail
           git diff --check
           test -z "$(git status --porcelain=v1 --untracked-files=all)"

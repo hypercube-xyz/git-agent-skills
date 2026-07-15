@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package_version": "1.1.0",
-  "release_date": "2026-07-15",
+  "release_date": "2026-07-16",
   "base_release": {
     "tag": "v1.0.0",
     "commit": "1d513f5b29332c406c33705c42ccec6dfaf86e3c"

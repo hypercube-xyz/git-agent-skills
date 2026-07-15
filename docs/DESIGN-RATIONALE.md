@@ -155,23 +155,20 @@ Reference chains and duplicated general doctrine are avoided.
 Normal tasks may require more than one skill. A handoff is used only when mutable evidence or a
 material consequence boundary must be carried forward.
 
-The compact handoff records the established state, exact object IDs, protected state, unresolved
-unknowns, partial effects, and recovery anchors. Mutable state is re-inspected near the next action
-boundary, and a broader action does not inherit authority or confirmation from a narrower action by
-default.
-
-See [`HANDOFF-CONTRACT.md`](HANDOFF-CONTRACT.md).
+The handing-off skill reports the verified repository/worktree, exact object IDs or paths,
+completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and
+verification remaining. The receiving skill re-inspects mutable state near its action boundary; a
+broader action does not inherit authorization, approval, or confirmation from a narrower action.
 
 ## Validation strategy
 
 Validation is layered:
 
-1. Structural validation checks frontmatter, package layout, direct references, and catalog parity.
+1. Structural validation checks frontmatter, package layout, direct resource triggers, and catalog parity.
 2. Routing fixtures cover positive triggers, near misses, and out-of-package boundaries.
-3. Scenario fixtures cover ambiguity, protected state, partial failure, and consequential paths.
+3. Skill-specific static contract scenarios cover stale state, partial failure, and prompt injection; they do not prove agent behavior.
 4. Git smoke tests verify mechanical behavior and previously observed regressions.
-5. Agent-runtime cases are reserved for routing, tool-use, and decision behavior that static tests
-   cannot establish.
+5. Authorized agent-runtime evaluation is required for routing, tool-use, and decision behavior that static tests cannot establish.
 
 Validation effort is concentrated on high-risk and high-confusion workflows rather than applied
 uniformly to every skill.
