@@ -2,18 +2,24 @@
 
 ## Environment
 
-- Python: 3.9 or newer for bundled scripts.
-- Git: 2.35 or newer. Workflows feature-detect commands and options when behavior varies by version.
-- Packaging clients tested in the upstream validation record: Skills CLI 1.5.17 and Claude Code
-  2.1.209.
-- CI operating system: Ubuntu.
+- Python: 3.12 or newer for bundled scripts. CI runs the validators and semantic suite on Python
+  3.12 and 3.14.
+- Git: 2.35 or newer is the declared compatibility target. Optional commands and modes are
+  feature-detected; the exact Git version used for a release build is recorded in the release metadata file.
+  CI exercises the Git version supplied by the selected GitHub-hosted runner rather than claiming
+  continuous execution on exactly Git 2.35.
+- CI operating system: the `ubuntu-26.04` GitHub-hosted runner image. This records the validation
+  environment and is not a claim that the package requires Ubuntu.
+- Blocking packaging-client checks use Node 24, Skills CLI 1.5.17, and Claude Code 2.1.209.
+  A non-blocking Node 26 probe exercises the latest available client releases on pushes to `main`
+  and manual workflow runs.
 
 ## Feature detection
 
-Before relying on sparse index, partial clone filters, maintenance, worktree porcelain options, or
-exact push modes:
+Before relying on sparse index, partial clone filters, maintenance, worktree porcelain options,
+atomic push, or exact push modes:
 
-1. inspect `git --version` and the relevant command help or capability;
+1. inspect `git --version` and the relevant command help or advertised capability;
 2. use the native feature when available;
 3. use a fallback only when it preserves the same postcondition and safety properties;
 4. otherwise stop and report the unsupported operation.

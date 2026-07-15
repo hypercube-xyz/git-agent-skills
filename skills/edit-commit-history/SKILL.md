@@ -25,6 +25,7 @@ Produce the explicitly designed replacement commit series while preserving conte
 
 - Use `craft-commits` for new commits or a simple unpublished tip amend.
 - Use `integrate-branches` for routine local rebase/merge onto a base.
+- Use `manage-stacked-branches` when several dependent branch tips must be restacked while preserving each layer's review diff.
 - Use `migrate-repository` for repository-wide filter/rehosting work.
 - Use `undo-changes` for a known reset/revert without series editing.
 
@@ -106,6 +107,8 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
+When handing off to another mutation owner, include the verified repository/worktree, exact OIDs or paths, completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and verification remaining; the receiving skill must re-inspect mutable state and controls.
+
 ## Reference Trigger
 
-Read `references/history-editing.md` when interactive rebase, split/fixup, merge-preserving rewrite, signatures, range-diff, or exact leased publication are involved.
+Read `references/history-editing.md` when sequencing a rewrite, creating recovery refs, checking patch equivalence, or publishing a rewritten series with an exact lease.

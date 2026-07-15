@@ -24,7 +24,10 @@ Create the intended integrated history at an exact local target while preserving
 ## Do Not Use / Route Elsewhere
 
 - Use `sync-branches` when the main outcome is local/upstream synchronization and ordinary push.
-- Use `transplant-commits` for selected exact commits.
+- Use `transplant-commits` for selected commits or an external patch/mailbox series rather than a complete line.
+- Use `manage-stacked-branches` when multiple dependent branch layers must be restacked and verified separately.
+- Use `manage-submodules` for `.gitmodules` and gitlink relationships; subtree/vendor imports remain owned here.
+- Use `undo-changes` when the desired outcome is only to abort or reverse the known integration rather than complete it.
 - Use `resolve-conflicts` when unmerged paths require semantic resolution.
 - Use `edit-commit-history` for interactive reorder/squash/reword or published rewrite.
 
@@ -97,6 +100,8 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
+When handing off to another mutation owner, include the verified repository/worktree, exact OIDs or paths, completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and verification remaining; the receiving skill must re-inspect mutable state and controls.
+
 ## Reference Trigger
 
-Read `references/integration-strategies.md` when choosing merge, fast-forward, or rebase; evaluating criss-cross/octopus/subtree cases; or planning recovery.
+Read `references/subtree-vendor-synchronization.md` when synchronizing a Git subtree, vendor branch, or imported upstream snapshot; ordinary submodules remain owned by `manage-submodules`.

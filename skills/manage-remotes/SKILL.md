@@ -63,7 +63,7 @@ or scope expansion. Use the narrowest operation that establishes the postconditi
 
 ## Workflow
 
-1. Run the redaction helper and inspect remote config/refspecs without exposing raw credentials.
+1. Run `scripts/inspect_remotes.py` with the repository path and inspect its sanitized remote/config/refspec inventory without exposing raw credentials.
 2. Resolve the intended remote role, exact destination, account/environment, and fetch versus push behavior.
 3. Inspect URL rewrite rules and existing remote-tracking refs.
 4. For prune or refspec changes, inspect the complete dry-run/candidate set, including shared namespaces such as tags.
@@ -98,6 +98,6 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
-## Reference Trigger
+## Script Trigger
 
-Read `references/remote-topology.md` when remote helpers, URL rewriting, asymmetric push URLs, refspecs, pruning, or remote default-branch metadata are involved.
+Run `scripts/inspect_remotes.py` with the repository path before displaying or classifying configured fetch URLs, push URLs, or refspecs. If the helper reports an unclassified URL, do not display the raw value; stop or report that the destination could not be safely classified.

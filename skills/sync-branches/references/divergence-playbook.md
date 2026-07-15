@@ -1,20 +1,11 @@
-# Branch synchronization playbook
+# Branch divergence and publication
 
-## Classify after an authorized fetch
+Fetch the exact remote ref, classify ahead/behind/diverged/unborn/deleted state, and establish the desired relationship. Fast-forward when ancestry permits; local integration belongs to `integrate-branches`. For publication, verify destination/refspec and re-read the remote OID near execution. Never substitute broad force for an exact lease. Multi-ref stack publication routes to `manage-stacked-branches`.
 
-```sh
-git rev-list --left-right --count <local>...<remote>
-git merge-base <local> <remote>
-git log --oneline --left-right <local>...<remote>
-```
+## Safe update and publish
 
-- **Equal**: no content movement required.
-- **Local ahead only**: ordinary push may be valid after destination and policy checks.
-- **Remote ahead only**: fast-forward local branch when the worktree is safe.
-- **Diverged**: choose merge to preserve topology or rebase only when rewriting the local commits
-  is permitted. Never select from global pull defaults without resolving intent.
-- **Missing remote ref**: distinguish new branch, deleted branch, wrong fetch refspec, and stale
-  tracking ref.
+Preserve uncommitted work before integration when required. Let `integrate-branches` own any local merge or rebase and `resolve-conflicts` own a stopped conflict state. Resume publication only after the intended local postcondition and protected work are verified. Stop if the request expands to a branch stack, published rewrite, wrong destination, stale remote evidence, or unverified rescue state.
 
-A push rejection is a concurrency/scope signal, not an instruction to force. Re-fetch, compare the
-exact remote OID, and route any intentional non-fast-forward update to `edit-commit-history`.
+## Fork contribution publication
+
+Establish upstream and fork identities, fetch/push URLs, tracking, and `pushRemote` configuration through `manage-remotes`. Base the contribution branch on the intended upstream OID, then publish with an explicit fork refspec and verify the resulting remote OID. Never infer a push destination from a remote name alone.

@@ -24,7 +24,8 @@ Produce one usable local repository at a verified destination without overwritin
 
 - Use `configure-git` for identity, attributes, hooks, aliases, signing, or policy.
 - Use `manage-submodules` for nested repositories.
-- Use `optimize-large-repository` for ongoing sparse checkout, maintenance, or performance work.
+- Use `optimize-large-repository` for ongoing performance tuning of a healthy repository.
+- Use `repair-repository-integrity` when an existing shallow/partial clone cannot materialize required objects or has corrupt completeness metadata.
 - Use `migrate-repository` to transfer all refs or change hosting.
 
 ## Required Evidence
@@ -95,7 +96,3 @@ Command completion is evidence only for what the command actually demonstrates.
 Report the resolved target, material observations, action taken or recommended, verification
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
-
-## Reference Trigger
-
-Read `references/clone-and-init-modes.md` when choosing between normal, bare, mirror, shallow, partial, single-branch, sparse, or no-checkout setup.

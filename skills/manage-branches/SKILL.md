@@ -23,7 +23,8 @@ Establish the intended local branch/ref state while preserving commits, worktree
 ## Do Not Use / Route Elsewhere
 
 - Use `sync-branches` to update from or publish to a remote.
-- Use `integrate-branches` to merge or rebase lines of development.
+- Use `integrate-branches` for one complete branch-line merge/rebase integration.
+- Use `manage-stacked-branches` for a dependency graph of multiple review branches that must move together.
 - Use `manage-worktrees` when a branch is checked out elsewhere.
 - Use `edit-commit-history` to rewrite commit topology.
 
@@ -95,7 +96,3 @@ Command completion is evidence only for what the command actually demonstrates.
 Report the resolved target, material observations, action taken or recommended, verification
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
-
-## Reference Trigger
-
-Read `references/branch-lifecycle.md` when deletion, detached HEAD, upstream metadata, ambiguous start points, or linked worktrees affect the operation.

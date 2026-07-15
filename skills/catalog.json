@@ -1,6 +1,40 @@
 {
   "schema_version": 1,
-  "package_version": "1.0.0",
+  "package_version": "1.1.0",
+  "release_date": "2026-07-16",
+  "base_release": {
+    "tag": "v1.0.0",
+    "commit": "1d513f5b29332c406c33705c42ccec6dfaf86e3c"
+  },
+  "compatibility": {
+    "python": {
+      "minimum": "3.12",
+      "ci_matrix": [
+        "3.12",
+        "3.14"
+      ]
+    },
+    "git": {
+      "compatibility_target": "2.35+",
+      "strategy": "feature-detect optional commands and record the exact build version"
+    },
+    "ci": {
+      "os": "ubuntu-26.04"
+    },
+    "packaging_clients": {
+      "blocking": {
+        "node": "24",
+        "skills_cli": "1.5.17",
+        "claude_code": "2.1.209"
+      },
+      "forward_probe": {
+        "node": "26",
+        "skills_cli": "latest",
+        "claude_code": "latest",
+        "blocking": false
+      }
+    }
+  },
   "design": "Skills are routed by desired postcondition. Groups organize documentation and evaluation priority.",
   "tiers": {
     "core": {
@@ -15,6 +49,7 @@
         "resolve-conflicts",
         "undo-changes",
         "recover-lost-work",
+        "repair-repository-integrity",
         "edit-commit-history",
         "find-regression",
         "manage-submodules",
@@ -32,7 +67,8 @@
         "preserve-work",
         "transplant-commits",
         "investigate-history",
-        "optimize-large-repository"
+        "optimize-large-repository",
+        "manage-stacked-branches"
       ]
     }
   },
@@ -40,112 +76,146 @@
     {
       "name": "configure-git",
       "path": "skills/configure-git",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Own Git configuration, identity, signing, attributes, hooks, and helper selection."
     },
     {
       "name": "craft-commits",
       "path": "skills/craft-commits",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Turn reviewed local changes into coherent atomic commits."
     },
     {
       "name": "diagnose-repository",
       "path": "skills/diagnose-repository",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Classify confusing Git state without mutation and route to the owning workflow."
     },
     {
       "name": "edit-commit-history",
       "path": "skills/edit-commit-history",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Rewrite one existing commit series in place."
     },
     {
       "name": "find-regression",
       "path": "skills/find-regression",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Locate a behavioral transition with a validated bisect oracle."
     },
     {
       "name": "integrate-branches",
       "path": "skills/integrate-branches",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Integrate one complete line, including subtree/vendor synchronization."
     },
     {
       "name": "investigate-history",
       "path": "skills/investigate-history",
-      "tier": "optional"
+      "tier": "optional",
+      "summary": "Explain provenance and historical change without mutation."
     },
     {
       "name": "manage-branches",
       "path": "skills/manage-branches",
-      "tier": "optional"
+      "tier": "optional",
+      "summary": "Own local branch lifecycle and metadata without integration."
     },
     {
       "name": "manage-large-files",
       "path": "skills/manage-large-files",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Own LFS pointer/object relationships and large-object policy."
     },
     {
       "name": "manage-remotes",
       "path": "skills/manage-remotes",
-      "tier": "optional"
+      "tier": "optional",
+      "summary": "Own remote identity, URLs, refspecs, and fork/upstream topology."
+    },
+    {
+      "name": "manage-stacked-branches",
+      "path": "skills/manage-stacked-branches",
+      "tier": "optional",
+      "summary": "Restack and coordinate publication of dependent review branches."
     },
     {
       "name": "manage-submodules",
       "path": "skills/manage-submodules",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Own `.gitmodules`, gitlinks, and nested repository relationships."
     },
     {
       "name": "manage-tags",
       "path": "skills/manage-tags",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Own tag object/ref lifecycle and verification."
     },
     {
       "name": "manage-worktrees",
       "path": "skills/manage-worktrees",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Own linked-worktree lifecycle and branch occupancy safety."
     },
     {
       "name": "migrate-repository",
       "path": "skills/migrate-repository",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Transfer a complete repository and coordinated migration state."
     },
     {
       "name": "optimize-large-repository",
       "path": "skills/optimize-large-repository",
-      "tier": "optional"
+      "tier": "optional",
+      "summary": "Measure and tune a healthy large repository."
     },
     {
       "name": "preserve-work",
       "path": "skills/preserve-work",
-      "tier": "optional"
+      "tier": "optional",
+      "summary": "Create a verified temporary rescue artifact from current uncommitted work."
     },
     {
       "name": "recover-lost-work",
       "path": "skills/recover-lost-work",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Restore intact but unreachable/deleted work additively."
+    },
+    {
+      "name": "repair-repository-integrity",
+      "path": "skills/repair-repository-integrity",
+      "tier": "core",
+      "summary": "Repair damaged/missing Git objects, packs, refs, alternates, or clone completeness."
     },
     {
       "name": "resolve-conflicts",
       "path": "skills/resolve-conflicts",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Resolve semantic conflicts after a Git operation has stopped."
     },
     {
       "name": "setup-repository",
       "path": "skills/setup-repository",
-      "tier": "optional"
+      "tier": "optional",
+      "summary": "Create or clone a repository with the intended topology and completeness policy."
     },
     {
       "name": "sync-branches",
       "path": "skills/sync-branches",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Reconcile and publish one local/remote branch relationship."
     },
     {
       "name": "transplant-commits",
       "path": "skills/transplant-commits",
-      "tier": "optional"
+      "tier": "optional",
+      "summary": "Replay selected commits or reviewed patch/mailbox series."
     },
     {
       "name": "undo-changes",
       "path": "skills/undo-changes",
-      "tier": "core"
+      "tier": "core",
+      "summary": "Reverse a known change or abort known operation state."
     }
   ]
 }

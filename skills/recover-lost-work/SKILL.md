@@ -23,6 +23,7 @@ Identify the correct recoverable object with evidence, restore it under a new sa
 ## Do Not Use / Route Elsewhere
 
 - Use `undo-changes` when the target state is known and reachable.
+- Use `repair-repository-integrity` when objects, packs, refs, alternates, or promisor/shallow metadata are corrupt or incomplete rather than merely unreachable.
 - Use `preserve-work` before risk, not after loss.
 - Use `diagnose-repository` when the issue may be status/index semantics rather than missing content.
 - Do not run aggressive prune/gc or overwrite current state during investigation.
@@ -96,6 +97,8 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
+When handing off to another mutation owner, include the verified repository/worktree, exact OIDs or paths, completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and verification remaining; the receiving skill must re-inspect mutable state and controls.
+
 ## Reference Trigger
 
-Read `references/recovery-playbook.md` when reflogs, dangling objects, stash recovery, branch deletion, detached commits, shallow/partial clones, or garbage collection matter.
+Read `references/missing-object-boundaries.md` when shallow, partial-clone, promisor, LFS, submodule, or missing-object symptoms may change routing to `repair-repository-integrity` or another owner.

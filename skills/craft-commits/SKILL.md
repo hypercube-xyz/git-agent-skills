@@ -2,10 +2,11 @@
 name: craft-commits
 description: >-
   Inspect local changes, partition them into coherent atomic commits, stage exact content,
-  and write repository-conformant commit messages. Use whenever the user asks to commit
-  work, split mixed changes, amend an unpublished commit, or improve commit structure.
-  Follow repository policy and history first; use Conventional Commits only when no
-  convention exists. Do not use to push or rewrite published history.
+  and write repository-conformant commit messages. Use when the desired result is durable,
+  reviewable project history: committing selected work, splitting mixed changes, amending
+  an unpublished commit, or improving commit structure. Follow repository policy and history
+  first; use Conventional Commits only when no convention exists. Do not use for temporary
+  WIP/rescue artifacts, push, or published-history rewrite.
 ---
 
 # Craft Atomic Commits
@@ -25,6 +26,7 @@ Turn selected local work into the smallest complete, reviewable sequence of comm
 
 - Use `edit-commit-history` to reorder, squash, split, or reword multiple existing commits.
 - Use `undo-changes` to unstage or discard known changes without creating a commit.
+- Use `preserve-work` when a temporary/WIP commit, stash, safety branch, or rescue artifact is requested primarily for recovery or context switching rather than durable reviewable history.
 - Use an approved deterministic secret scanner and security workflow before committing when secret risk is material.
 - Do not push, tag, merge, or alter unrelated working changes.
 
@@ -48,6 +50,7 @@ repository state establishes the evidence.
 - Stage exact hunks/paths; never assume `git add .` matches the user's scope.
 - Message precedence: explicit user requirement, authoritative repository policy, dominant recent history, then Conventional Commits.
 - Do not amend or rewrite a commit that may be published without routing to `edit-commit-history`.
+- A temporary commit whose primary purpose is recovery or a context switch is a preservation artifact, not a final atomic commit.
 
 ## Action Boundaries
 
@@ -97,7 +100,3 @@ Command completion is evidence only for what the command actually demonstrates.
 Report the resolved target, material observations, action taken or recommended, verification
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
-
-## Reference Trigger
-
-Read `references/atomic-commit-playbook.md` when changes are mixed, partial staging is required, commit-message convention is unclear, or amend/publication status matters.

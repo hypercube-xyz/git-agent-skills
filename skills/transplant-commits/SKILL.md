@@ -1,10 +1,10 @@
 ---
 name: transplant-commits
 description: >-
-  Copy a selected set or range of exact commits onto another local line of history with
-  cherry-pick, including ordering, provenance, empty commits, and conflict handling. Use
-  when only particular commits should move. Do not use to integrate a whole branch,
-  rewrite an existing series in place, or publish.
+  Replay selected exact commits or a reviewed patch/mailbox series onto another local
+  line of history, preserving ordering, provenance, empties, and conflict semantics. Use
+  when only particular logical changes should move. Do not use to integrate a whole
+  branch, rewrite an existing series in place, create a temporary preservation patch, or publish.
 ---
 
 # Transplant Selected Commits
@@ -18,13 +18,17 @@ Replay exactly the intended logical changes onto the target in a verified order 
 - Cherry-pick one or more exact commits or a reviewed commit range.
 - Move a fix committed on the wrong branch to the intended branch.
 - Backport selected patches to a maintenance branch.
+- Apply a reviewed `format-patch`/mailbox series with `git am`, including rerolls, cover letters, sign-offs, and partial application recovery.
 - Continue, abort, or assess an empty cherry-pick when the main task is the transplant.
 
 ## Do Not Use / Route Elsewhere
 
 - Use `integrate-branches` for a complete branch line.
 - Use `edit-commit-history` to reorder/squash/reword commits already on the target.
+- Use `manage-stacked-branches` when selected changes are only one part of transforming a dependent branch DAG.
+- Use `undo-changes` when the desired outcome is only to abort a known cherry-pick or mailbox application rather than complete it.
 - Use `resolve-conflicts` for deep semantic conflict work.
+- Use `preserve-work` to create a temporary patch from current uncommitted work; this skill owns replaying reviewed commits or external patch/mailbox inputs.
 - Do not assume cherry-pick always produces a different object ID.
 
 ## Required Evidence
@@ -96,6 +100,8 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
+When handing off to another mutation owner, include the verified repository/worktree, exact OIDs or paths, completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and verification remaining; the receiving skill must re-inspect mutable state and controls.
+
 ## Reference Trigger
 
-Read `references/cherry-pick-cases.md` when ranges, merge commits, empty picks, patch equivalence, dependency ordering, or backport provenance are involved.
+Read `references/cherry-pick-cases.md` when commits were made on the wrong branch, a maintenance backport is requested, or ranges, merge commits, empty picks, patch equivalence, dependency ordering, or provenance are involved. Read `references/patch-mailbox-workflows.md` when using `git am`, `format-patch`, rerolled series, cover letters, sign-offs, or partial mailbox recovery.

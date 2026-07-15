@@ -10,16 +10,15 @@ import subprocess
 import sys
 import zipfile
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
-FIXED_TIME = (2026, 7, 15, 0, 0, 0)
-EXCLUDE_NAMES = {".DS_Store", "RELEASE-MANIFEST.json"}
-EXCLUDE_PREFIXES = {"dist"}
+EXCLUDE_NAMES = {".DS_Store"}
+EXCLUDE_PREFIXES = {"dist", ".git"}
 VALIDATION = [
     [sys.executable, "scripts/validate_skills.py"],
-    [sys.executable, "scripts/evaluate_fixtures.py"],
     [sys.executable, "scripts/smoke_test_git.py"],
 ]
 
@@ -37,19 +36,23 @@ def run(cmd: list[str]) -> None:
         raise SystemExit(proc.returncode)
 
 
+def git(root: Path, *args: str, text: bool = False) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", "-C", str(root), *args],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=text,
+        check=False,
+    )
+
+
 def require_clean_tracked_state(root: Path = ROOT) -> None:
-    """Reject staged or unstaged changes to tracked release inputs."""
     checks = [
-        ["diff", "--quiet", "--no-ext-diff", "--"],
-        ["diff", "--cached", "--quiet", "--no-ext-diff", "HEAD", "--"],
+        ("diff", "--quiet", "--no-ext-diff", "--"),
+        ("diff", "--cached", "--quiet", "--no-ext-diff", "HEAD", "--"),
     ]
     for args in checks:
-        proc = subprocess.run(
-            ["git", "-C", str(root), *args],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
+        proc = git(root, *args)
         if proc.returncode == 1:
             raise SystemExit("release build requires committed tracked files")
         if proc.returncode != 0:
@@ -57,30 +60,14 @@ def require_clean_tracked_state(root: Path = ROOT) -> None:
 
 
 def source_revision(root: Path = ROOT) -> str:
-    proc = subprocess.run(
-        ["git", "-C", str(root), "rev-parse", "--verify", "HEAD"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        check=False,
-    )
+    proc = git(root, "rev-parse", "--verify", "HEAD", text=True)
     if proc.returncode != 0:
         raise SystemExit("unable to resolve release source revision")
     return proc.stdout.strip()
 
 
 def tracked_files(root: Path = ROOT) -> list[Entry]:
-    """Return tracked regular files with executable modes from the Git index.
-
-    Untracked and ignored files are not release inputs. Tracked symlinks and other
-    non-regular modes are rejected instead of being dereferenced into the archive.
-    """
-    proc = subprocess.run(
-        ["git", "-C", str(root), "ls-files", "--cached", "--stage", "-z"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
+    proc = git(root, "ls-files", "--cached", "--stage", "-z")
     if proc.returncode:
         raise SystemExit("unable to enumerate tracked release files")
 
@@ -88,16 +75,20 @@ def tracked_files(root: Path = ROOT) -> list[Entry]:
     for record in proc.stdout.split(b"\0"):
         if not record:
             continue
+
         try:
             header, raw_path = record.split(b"\t", 1)
             raw_mode, _oid, raw_stage = header.split(b" ", 2)
         except ValueError as exc:
             raise SystemExit("unexpected git ls-files output") from exc
+
         if raw_stage != b"0":
             raise SystemExit("release input contains an unmerged index entry")
 
         rel = Path(os.fsdecode(raw_path))
-        if rel.name in EXCLUDE_NAMES or (rel.parts and rel.parts[0] in EXCLUDE_PREFIXES):
+        if rel.name in EXCLUDE_NAMES:
+            continue
+        if rel.parts and rel.parts[0] in EXCLUDE_PREFIXES:
             continue
 
         mode = int(raw_mode, 8)
@@ -109,6 +100,7 @@ def tracked_files(root: Path = ROOT) -> list[Entry]:
         path = root / rel
         if path.is_symlink() or not path.is_file():
             raise SystemExit(f"tracked release file is missing or not regular: {rel}")
+
         entries.append(Entry(rel=rel, path=path, mode=mode))
 
     return sorted(entries, key=lambda entry: entry.rel.as_posix())
@@ -117,8 +109,8 @@ def tracked_files(root: Path = ROOT) -> list[Entry]:
 def tree_digest(entries: list[Entry]) -> str:
     digest = hashlib.sha256()
     for entry in entries:
-        digest.update(entry.rel.as_posix().encode("utf-8") + b"\0")
-        digest.update(oct(entry.mode).encode("ascii") + b"\0")
+        digest.update(entry.rel.as_posix().encode() + b"\0")
+        digest.update(oct(entry.mode).encode() + b"\0")
         digest.update(hashlib.sha256(entry.path.read_bytes()).digest())
     return digest.hexdigest()
 
@@ -136,64 +128,89 @@ def tool_version(cmd: list[str]) -> str:
         return "unavailable"
 
 
-def package_manifest(entries: list[Entry], version: str) -> dict[str, object]:
-    """Return source-derived metadata embedded in the deterministic archive."""
+def archive_time(catalog: dict) -> tuple[int, int, int, int, int, int]:
+    released = date.fromisoformat(catalog["release_date"])
+    if released.year < 1980:
+        raise SystemExit("release date is outside ZIP timestamp range")
+    return released.year, released.month, released.day, 0, 0, 0
+
+
+def release_metadata(entries: list[Entry], catalog: dict) -> dict[str, object]:
+    revision = source_revision()
     return {
         "schema_version": 1,
         "package": "git-agent-skills",
-        "package_version": version,
-        "release_date": "2026-07-15",
+        "package_version": catalog["package_version"],
+        "release_date": catalog["release_date"],
+        "release_tag": f"v{catalog['package_version']}",
         "source_identity": {
-            "method": "sha256 over sorted tracked package paths, Git modes, and file content",
+            "method": (
+                "sha256 over sorted tracked package paths, Git modes, "
+                "and file content"
+            ),
             "source_tree_sha256": tree_digest(entries),
-            "upstream_repository": "https://github.com/hypercube-xyz/git-agent-skills",
+            "base_revision": catalog.get("base_release", {}),
+            "source_revision": {
+                "kind": "git-commit",
+                "commit": revision,
+            },
+            "upstream_repository": (
+                "https://github.com/hypercube-xyz/git-agent-skills"
+            ),
         },
-        "compatibility": {
-            "python_minimum": "3.9",
-            "git_minimum": "2.35",
-            "ci_os": "Ubuntu",
-            "tested_packaging_clients": ["Skills CLI 1.5.17", "Claude Code 2.1.209"],
+        "compatibility": catalog["compatibility"],
+        "contents": {
+            "skills": len(catalog["skills"]),
+            "tracked_files": len(entries),
         },
     }
 
 
-def archive_bytes(entries: list[Entry], version: str) -> bytes:
+def archive_bytes(entries: list[Entry], catalog: dict) -> bytes:
+    version = catalog["package_version"]
     prefix = f"git-agent-skills-{version}"
-    embedded = json.dumps(
-        package_manifest(entries, version), indent=2, sort_keys=True
-    ).encode("utf-8") + b"\n"
-
-    all_entries = [(Path("RELEASE-MANIFEST.json"), 0o100644, embedded)] + [
+    archive_entries = [
         (entry.rel, entry.mode, entry.path.read_bytes()) for entry in entries
     ]
-    names = [rel.as_posix() for rel, _mode, _data in all_entries]
+
+    names = [rel.as_posix() for rel, _mode, _data in archive_entries]
     if len(names) != len(set(names)):
-        duplicates = sorted({name for name in names if names.count(name) > 1})
-        raise SystemExit(f"duplicate archive entries: {duplicates}")
-    if names.count("RELEASE-MANIFEST.json") != 1:
-        raise SystemExit("release archive must contain exactly one RELEASE-MANIFEST.json")
+        raise SystemExit("duplicate archive entries")
 
     buffer = io.BytesIO()
-    # ZIP_STORED avoids zlib-version-dependent compressed output.
-    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_STORED) as archive:
-        for rel, mode, data in sorted(all_entries, key=lambda item: item[0].as_posix()):
-            info = zipfile.ZipInfo(f"{prefix}/{rel.as_posix()}", FIXED_TIME)
+    with zipfile.ZipFile(
+        buffer,
+        "w",
+        compression=zipfile.ZIP_STORED,
+    ) as archive:
+        for rel, mode, data in sorted(
+            archive_entries,
+            key=lambda item: item[0].as_posix(),
+        ):
+            info = zipfile.ZipInfo(
+                f"{prefix}/{rel.as_posix()}",
+                archive_time(catalog),
+            )
             info.external_attr = (mode & 0xFFFF) << 16
             info.create_system = 3
             info.compress_type = zipfile.ZIP_STORED
             archive.writestr(info, data)
+
     return buffer.getvalue()
+
+
+def release_path(output: Path) -> Path:
+    return output.with_suffix(".release.json")
 
 
 def release_record(
     entries: list[Entry],
-    version: str,
+    catalog: dict,
     validation_executed: bool,
     reproducibility_checked: bool,
     artifact: dict[str, object],
 ) -> dict[str, object]:
-    record = package_manifest(entries, version)
-    record["source_revision"] = {"commit": source_revision()}
+    record = release_metadata(entries, catalog)
     record["build_environment"] = {
         "python": sys.version.split()[0],
         "git": tool_version(["git", "--version"]),
@@ -201,54 +218,75 @@ def release_record(
     record["validation"] = {
         "result": "passed" if validation_executed else "skipped",
         "commands_executed": (
-            [
-                "python3 scripts/validate_skills.py",
-                "python3 scripts/evaluate_fixtures.py",
-                "python3 scripts/smoke_test_git.py",
-            ]
-            if validation_executed
-            else []
+            [" ".join(command) for command in VALIDATION] if validation_executed else []
         ),
-        "reproducibility_check": "passed" if reproducibility_checked else "not-run",
-        "agent_runtime_cases": "not run",
+        "reproducibility_check": ("passed" if reproducibility_checked else "not-run"),
+        "independent_agent_runtime_comparison": (
+            "not run unless supplied by an authorized external runner"
+        ),
     }
     record["artifact"] = artifact
     return record
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true")
-    parser.add_argument("--skip-validation", action="store_true")
+    parser = argparse.ArgumentParser(
+        description="Build a deterministic release archive from committed tracked files."
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Build twice in memory and fail if the archive bytes differ.",
+    )
+    parser.add_argument(
+        "--skip-validation",
+        action="store_true",
+        help="Skip skill validation and semantic tests before packaging.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Write the ZIP to this path instead of dist/.",
+    )
     args = parser.parse_args()
 
     catalog = json.loads((ROOT / "skills/catalog.json").read_text(encoding="utf-8"))
-    version = catalog["package_version"]
 
     if not args.skip_validation:
-        for cmd in VALIDATION:
-            run(cmd)
-    validation_executed = not args.skip_validation
+        for command in VALIDATION:
+            run(command)
 
     require_clean_tracked_state()
     entries = tracked_files()
-    first = archive_bytes(entries, version)
-    if args.check:
-        second = archive_bytes(entries, version)
-        if first != second:
-            raise SystemExit("release archives are not deterministic")
+    first = archive_bytes(entries, catalog)
 
-    DIST.mkdir(exist_ok=True)
-    name = f"git-agent-skills-{version}.zip"
-    output = DIST / name
+    if args.check and first != archive_bytes(entries, catalog):
+        raise SystemExit("release archives are not deterministic")
+
+    version = catalog["package_version"]
+    output = args.output or DIST / f"git-agent-skills-{version}.zip"
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_bytes(first)
-    digest = hashlib.sha256(first).hexdigest()
-    (DIST / f"{name}.sha256").write_text(f"{digest}  {name}\n", encoding="utf-8")
 
-    artifact = {"filename": name, "sha256": digest, "size_bytes": len(first)}
-    sidecar = release_record(entries, version, validation_executed, args.check, artifact)
-    (DIST / f"git-agent-skills-{version}.release.json").write_text(
-        json.dumps(sidecar, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    digest = hashlib.sha256(first).hexdigest()
+    checksum = output.with_suffix(output.suffix + ".sha256")
+    checksum.write_text(f"{digest}  {output.name}\n", encoding="utf-8")
+
+    artifact = {
+        "filename": output.name,
+        "sha256": digest,
+        "size_bytes": len(first),
+    }
+    metadata = release_record(
+        entries,
+        catalog,
+        validation_executed=not args.skip_validation,
+        reproducibility_checked=args.check,
+        artifact=artifact,
+    )
+    release_path(output).write_text(
+        json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
     )
 
     print(f"PASS: deterministic archive {output}")

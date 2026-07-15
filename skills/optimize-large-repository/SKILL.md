@@ -23,6 +23,7 @@ Reduce measured Git latency or transfer/storage cost while preserving correctnes
 ## Do Not Use / Route Elsewhere
 
 - Use `manage-large-files` for host size limits or LFS.
+- Use `repair-repository-integrity` when missing/corrupt objects, packs, alternates, or promisor metadata make correctness uncertain; optimization assumes a healthy object model.
 - Use `setup-repository` for first-time clone choice when no repository exists yet.
 - Use `diagnose-repository` for correctness symptoms not shown to be performance-related.
 - Do not run aggressive gc/prune or delete worktrees/refs as a generic optimization.
@@ -98,4 +99,4 @@ incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
 ## Reference Trigger
 
-Read `references/large-repo-performance.md` when sparse checkout/index, partial clone filters, maintenance, commit-graph, multi-pack-index, or gc/prune tradeoffs are involved.
+Read `references/partial-clone-sparse-checkout.md` when changing an intentional partial-clone or sparse-checkout performance policy; route completeness failures to `repair-repository-integrity`.

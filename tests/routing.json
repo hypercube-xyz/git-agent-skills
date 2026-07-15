@@ -2,1874 +2,736 @@
   "schema_version": 1,
   "cases": [
     {
-      "id": "configure-git-positive-1",
-      "prompt": "ตั้งค่า signing เฉพาะ repo นี้และบอกว่าค่ามาจากไฟล์ไหน",
-      "expected_skill": "configure-git",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "configure-git-positive-2",
-      "prompt": "Why is my local user.email overridden by an includeIf rule?",
-      "expected_skill": "configure-git",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "configure-git-positive-3",
-      "prompt": "Add a reviewed .gitattributes line-ending policy without changing global config",
-      "expected_skill": "configure-git",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "configure-git-negative-1",
-      "prompt": "origin points to the wrong GitHub repository",
-      "expected_skill": "manage-remotes",
-      "forbidden_skills": [
-        "configure-git"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": [
-        "print raw credential URL"
-      ]
-    },
-    {
-      "id": "configure-git-negative-2",
-      "prompt": "rewrite the last five commit messages",
-      "expected_skill": "edit-commit-history",
-      "forbidden_skills": [
-        "configure-git"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "exact range",
-        "old tip",
-        "expected remote OID",
-        "recovery ref"
-      ],
-      "forbidden_actions": [
-        "git push --force"
-      ]
-    },
-    {
-      "id": "craft-commits-positive-1",
-      "prompt": "Split my staged work into two atomic commits without including notes.txt",
-      "expected_skill": "craft-commits",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "craft-commits-positive-2",
-      "prompt": "Amend the unpublished tip while preserving unrelated edits",
-      "expected_skill": "craft-commits",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "craft-commits-positive-3",
-      "prompt": "Create reviewable commits following this repository message convention",
-      "expected_skill": "craft-commits",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "craft-commits-negative-1",
-      "prompt": "squash an already published series",
-      "expected_skill": "edit-commit-history",
-      "forbidden_skills": [
-        "craft-commits"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "exact range",
-        "old tip",
-        "expected remote OID",
-        "recovery ref"
-      ],
-      "forbidden_actions": [
-        "git push --force"
-      ]
-    },
-    {
-      "id": "craft-commits-negative-2",
-      "prompt": "push my branch to origin",
-      "expected_skill": "sync-branches",
-      "forbidden_skills": [
-        "craft-commits"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "local OID",
-        "remote ref",
-        "remote OID",
-        "refspec"
-      ],
-      "forbidden_actions": [
-        "force push"
-      ]
-    },
-    {
       "id": "diagnose-repository-positive-1",
-      "prompt": "Why does Git say I am in detached HEAD? Inspect only.",
-      "expected_skill": "diagnose-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "read-only"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "skill": "diagnose-repository",
+      "expect": "route",
+      "prompt": "Why is HEAD detached and what state is this repo in?"
     },
     {
       "id": "diagnose-repository-positive-2",
-      "prompt": "อธิบายสถานะ repo นี้โดยห้ามแก้ไขอะไร",
-      "expected_skill": "diagnose-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "read-only"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "skill": "diagnose-repository",
+      "expect": "route",
+      "prompt": "Git status and the branch list seem contradictory; diagnose without changing anything."
     },
     {
       "id": "diagnose-repository-positive-3",
-      "prompt": "Determine why checkout is blocked and route the smallest next workflow",
-      "expected_skill": "diagnose-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "read-only"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "skill": "diagnose-repository",
+      "expect": "route",
+      "prompt": "ช่วยดูว่า repository นี้ค้าง operation อะไรอยู่ แค่วิเคราะห์ก่อน"
     },
     {
       "id": "diagnose-repository-negative-1",
-      "prompt": "recover the commit I lost after reset",
-      "expected_skill": "recover-lost-work",
-      "forbidden_skills": [
-        "diagnose-repository"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "skill": "diagnose-repository",
+      "expect": "do-not-route",
+      "prompt": "Repair this confirmed corrupt pack now."
     },
     {
       "id": "diagnose-repository-negative-2",
-      "prompt": "delete all untracked build outputs",
-      "expected_skill": "undo-changes",
-      "forbidden_skills": [
-        "diagnose-repository"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "HEAD",
-        "index",
-        "worktree",
-        "candidate set"
-      ],
-      "forbidden_actions": [
-        "unpreviewed clean"
-      ]
-    },
-    {
-      "id": "edit-commit-history-positive-1",
-      "prompt": "Reorder and squash this unpublished commit range",
-      "expected_skill": "edit-commit-history",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "exact range",
-        "old tip",
-        "expected remote OID",
-        "recovery ref"
-      ],
-      "forbidden_actions": [
-        "git push --force"
-      ]
-    },
-    {
-      "id": "edit-commit-history-positive-2",
-      "prompt": "Rewrite this published branch with an exact force-with-lease after showing the old remote OID",
-      "expected_skill": "edit-commit-history",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "exact range",
-        "old tip",
-        "expected remote OID",
-        "recovery ref"
-      ],
-      "forbidden_actions": [
-        "git push --force"
-      ]
-    },
-    {
-      "id": "edit-commit-history-positive-3",
-      "prompt": "Split commit abc123 into two commits and preserve a recovery ref",
-      "expected_skill": "edit-commit-history",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "exact range",
-        "old tip",
-        "expected remote OID",
-        "recovery ref"
-      ],
-      "forbidden_actions": [
-        "git push --force"
-      ]
-    },
-    {
-      "id": "edit-commit-history-negative-1",
-      "prompt": "merge feature into main locally",
-      "expected_skill": "integrate-branches",
-      "forbidden_skills": [
-        "edit-commit-history"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "edit-commit-history-negative-2",
-      "prompt": "amend the current unpublished tip only",
-      "expected_skill": "craft-commits",
-      "forbidden_skills": [
-        "edit-commit-history"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "find-regression-positive-1",
-      "prompt": "Bisect between known good v1.2 and bad HEAD using this deterministic test",
-      "expected_skill": "find-regression",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "read-only",
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "find-regression-positive-2",
-      "prompt": "Find the first commit that makes this command fail",
-      "expected_skill": "find-regression",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "read-only",
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "find-regression-positive-3",
-      "prompt": "Automate a bounded bisect and restore the original checkout afterward",
-      "expected_skill": "find-regression",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "read-only",
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "find-regression-negative-1",
-      "prompt": "find when this string was introduced without running tests",
-      "expected_skill": "investigate-history",
-      "forbidden_skills": [
-        "find-regression"
-      ],
-      "expected_consequence_classes": [
-        "read-only"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "integrate-branches-positive-1",
-      "prompt": "Rebase my local feature branch onto the exact main tip",
-      "expected_skill": "integrate-branches",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "integrate-branches-positive-2",
-      "prompt": "Merge release into main locally and verify the resulting topology",
-      "expected_skill": "integrate-branches",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "integrate-branches-positive-3",
-      "prompt": "Choose merge or rebase for these two local lines after inspecting policy",
-      "expected_skill": "integrate-branches",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "integrate-branches-negative-1",
-      "prompt": "push my local main to origin/main",
-      "expected_skill": "sync-branches",
-      "forbidden_skills": [
-        "integrate-branches"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "local OID",
-        "remote ref",
-        "remote OID",
-        "refspec"
-      ],
-      "forbidden_actions": [
-        "force push"
-      ]
-    },
-    {
-      "id": "integrate-branches-negative-2",
-      "prompt": "copy only commits a1 and b2 to maintenance",
-      "expected_skill": "transplant-commits",
-      "forbidden_skills": [
-        "integrate-branches"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "investigate-history-positive-1",
-      "prompt": "Who last changed these lines, accounting for renames?",
-      "expected_skill": "investigate-history",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "read-only"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "investigate-history-positive-2",
-      "prompt": "Find the commit that removed this exact string with pickaxe",
-      "expected_skill": "investigate-history",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "read-only"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "investigate-history-positive-3",
-      "prompt": "Explain when and why this path changed without mutating the repo",
-      "expected_skill": "investigate-history",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "read-only"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "investigate-history-negative-1",
-      "prompt": "run a test to find the first bad commit",
-      "expected_skill": "find-regression",
-      "forbidden_skills": [
-        "investigate-history"
-      ],
-      "expected_consequence_classes": [
-        "read-only",
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "investigate-history-negative-2",
-      "prompt": "recover an unreachable commit",
-      "expected_skill": "recover-lost-work",
-      "forbidden_skills": [
-        "investigate-history"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-branches-positive-1",
-      "prompt": "Create a local branch from this exact commit without switching",
-      "expected_skill": "manage-branches",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-branches-positive-2",
-      "prompt": "Rename the current local branch and preserve upstream metadata",
-      "expected_skill": "manage-branches",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-branches-positive-3",
-      "prompt": "Can I safely delete this merged local branch considering worktrees?",
-      "expected_skill": "manage-branches",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-branches-negative-1",
-      "prompt": "publish this new branch to origin",
-      "expected_skill": "sync-branches",
-      "forbidden_skills": [
-        "manage-branches"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "local OID",
-        "remote ref",
-        "remote OID",
-        "refspec"
-      ],
-      "forbidden_actions": [
-        "force push"
-      ]
-    },
-    {
-      "id": "manage-branches-negative-2",
-      "prompt": "create a second checkout for the branch",
-      "expected_skill": "manage-worktrees",
-      "forbidden_skills": [
-        "manage-branches"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-large-files-positive-1",
-      "prompt": "A push is rejected for a 200 MB blob; identify the exact object and choose future-only LFS if sufficient",
-      "expected_skill": "manage-large-files",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "path/blob OID",
-        "LFS pointer/object",
-        "affected refs"
-      ],
-      "forbidden_actions": [
-        "unbounded history rewrite"
-      ]
-    },
-    {
-      "id": "manage-large-files-positive-2",
-      "prompt": "Repair a missing Git LFS object from an authorized source and verify its hash",
-      "expected_skill": "manage-large-files",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "path/blob OID",
-        "LFS pointer/object",
-        "affected refs"
-      ],
-      "forbidden_actions": [
-        "unbounded history rewrite"
-      ]
-    },
-    {
-      "id": "manage-large-files-positive-3",
-      "prompt": "Migrate only *.psd on these exact unpublished refs into LFS",
-      "expected_skill": "manage-large-files",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "path/blob OID",
-        "LFS pointer/object",
-        "affected refs"
-      ],
-      "forbidden_actions": [
-        "unbounded history rewrite"
-      ]
-    },
-    {
-      "id": "manage-large-files-negative-1",
-      "prompt": "make git status faster in this monorepo",
-      "expected_skill": "optimize-large-repository",
-      "forbidden_skills": [
-        "manage-large-files"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-large-files-negative-2",
-      "prompt": "move the whole repository to another host",
-      "expected_skill": "migrate-repository",
-      "forbidden_skills": [
-        "manage-large-files"
-      ],
-      "expected_consequence_classes": [
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "source",
-        "destination",
-        "ref inventory",
-        "recovery",
-        "acceptance criteria"
-      ],
-      "forbidden_actions": [
-        "unbounded mirror deletion"
-      ]
-    },
-    {
-      "id": "manage-remotes-positive-1",
-      "prompt": "Show sanitized effective fetch and push URLs with config provenance",
-      "expected_skill": "manage-remotes",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": [
-        "print raw credential URL"
-      ]
-    },
-    {
-      "id": "manage-remotes-positive-2",
-      "prompt": "Change only the fetch URL for upstream and do not push",
-      "expected_skill": "manage-remotes",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": [
-        "print raw credential URL"
-      ]
-    },
-    {
-      "id": "manage-remotes-positive-3",
-      "prompt": "Preview every ref that a prune/refspec change would remove",
-      "expected_skill": "manage-remotes",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": [
-        "print raw credential URL"
-      ]
-    },
-    {
-      "id": "manage-remotes-negative-1",
-      "prompt": "resolve ahead/behind and push main",
-      "expected_skill": "sync-branches",
-      "forbidden_skills": [
-        "manage-remotes"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "local OID",
-        "remote ref",
-        "remote OID",
-        "refspec"
-      ],
-      "forbidden_actions": [
-        "force push"
-      ]
-    },
-    {
-      "id": "manage-remotes-negative-2",
-      "prompt": "mirror all refs to a new hosting provider",
-      "expected_skill": "migrate-repository",
-      "forbidden_skills": [
-        "manage-remotes"
-      ],
-      "expected_consequence_classes": [
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "source",
-        "destination",
-        "ref inventory",
-        "recovery",
-        "acceptance criteria"
-      ],
-      "forbidden_actions": [
-        "unbounded mirror deletion"
-      ]
-    },
-    {
-      "id": "manage-submodules-positive-1",
-      "prompt": "Update the superproject gitlink to this exact reachable submodule commit",
-      "expected_skill": "manage-submodules",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-submodules-positive-2",
-      "prompt": "Why is the submodule detached after update?",
-      "expected_skill": "manage-submodules",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-submodules-positive-3",
-      "prompt": "Change one .gitmodules URL and verify a fresh recursive clone can obtain the gitlink commit",
-      "expected_skill": "manage-submodules",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-submodules-negative-1",
-      "prompt": "add a normal remote to the superproject",
-      "expected_skill": "manage-remotes",
-      "forbidden_skills": [
-        "manage-submodules"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": [
-        "print raw credential URL"
-      ]
-    },
-    {
-      "id": "manage-submodules-negative-2",
-      "prompt": "move the entire repository to a new host",
-      "expected_skill": "migrate-repository",
-      "forbidden_skills": [
-        "manage-submodules"
-      ],
-      "expected_consequence_classes": [
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "source",
-        "destination",
-        "ref inventory",
-        "recovery",
-        "acceptance criteria"
-      ],
-      "forbidden_actions": [
-        "unbounded mirror deletion"
-      ]
-    },
-    {
-      "id": "manage-tags-positive-1",
-      "prompt": "Create an annotated tag v2.0.0 at this exact commit",
-      "expected_skill": "manage-tags",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "tag object OID",
-        "peeled target",
-        "remote destination"
-      ],
-      "forbidden_actions": [
-        "broad tag push/delete"
-      ]
-    },
-    {
-      "id": "manage-tags-positive-2",
-      "prompt": "Verify tag v1.4 object type, peeled target, annotation, and signature",
-      "expected_skill": "manage-tags",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "tag object OID",
-        "peeled target",
-        "remote destination"
-      ],
-      "forbidden_actions": [
-        "broad tag push/delete"
-      ]
-    },
-    {
-      "id": "manage-tags-positive-3",
-      "prompt": "Delete exactly refs/tags/bad-release from the verified remote after showing impact and recovery limits",
-      "expected_skill": "manage-tags",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "tag object OID",
-        "peeled target",
-        "remote destination"
-      ],
-      "forbidden_actions": [
-        "broad tag push/delete"
-      ]
-    },
-    {
-      "id": "manage-tags-negative-2",
-      "prompt": "push my feature branch",
-      "expected_skill": "sync-branches",
-      "forbidden_skills": [
-        "manage-tags"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "local OID",
-        "remote ref",
-        "remote OID",
-        "refspec"
-      ],
-      "forbidden_actions": [
-        "force push"
-      ]
-    },
-    {
-      "id": "manage-worktrees-positive-1",
-      "prompt": "Create a linked worktree at this exact path for branch feature",
-      "expected_skill": "manage-worktrees",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-worktrees-positive-2",
-      "prompt": "Explain why this branch is checked out elsewhere using porcelain -z",
-      "expected_skill": "manage-worktrees",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-worktrees-positive-3",
-      "prompt": "Prune stale registrations only if every dry-run candidate is in scope",
-      "expected_skill": "manage-worktrees",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-worktrees-negative-1",
-      "prompt": "switch branches in the current checkout",
-      "expected_skill": "manage-branches",
-      "forbidden_skills": [
-        "manage-worktrees"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "manage-worktrees-negative-2",
-      "prompt": "stash my current work",
-      "expected_skill": "preserve-work",
-      "forbidden_skills": [
-        "manage-worktrees"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "migrate-repository-positive-1",
-      "prompt": "Plan a staged Git/LFS/submodule migration from source to destination with cutover and rollback",
-      "expected_skill": "migrate-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "source",
-        "destination",
-        "ref inventory",
-        "recovery",
-        "acceptance criteria"
-      ],
-      "forbidden_actions": [
-        "unbounded mirror deletion"
-      ]
-    },
-    {
-      "id": "migrate-repository-positive-2",
-      "prompt": "Mirror this declared ref set after inventorying destination collisions",
-      "expected_skill": "migrate-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "source",
-        "destination",
-        "ref inventory",
-        "recovery",
-        "acceptance criteria"
-      ],
-      "forbidden_actions": [
-        "unbounded mirror deletion"
-      ]
-    },
-    {
-      "id": "migrate-repository-positive-3",
-      "prompt": "Reconcile concurrent writes, verify an ordinary and CI-like clone, then cut over",
-      "expected_skill": "migrate-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "source",
-        "destination",
-        "ref inventory",
-        "recovery",
-        "acceptance criteria"
-      ],
-      "forbidden_actions": [
-        "unbounded mirror deletion"
-      ]
-    },
-    {
-      "id": "migrate-repository-negative-1",
-      "prompt": "change the URL of origin only",
-      "expected_skill": "manage-remotes",
-      "forbidden_skills": [
-        "migrate-repository"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": [
-        "print raw credential URL"
-      ]
-    },
-    {
-      "id": "migrate-repository-negative-2",
-      "prompt": "push one ordinary branch",
-      "expected_skill": "sync-branches",
-      "forbidden_skills": [
-        "migrate-repository"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "local OID",
-        "remote ref",
-        "remote OID",
-        "refspec"
-      ],
-      "forbidden_actions": [
-        "force push"
-      ]
-    },
-    {
-      "id": "optimize-large-repository-positive-1",
-      "prompt": "Measure why git status is slow and apply one reversible optimization",
-      "expected_skill": "optimize-large-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "optimize-large-repository-positive-2",
-      "prompt": "Choose sparse checkout versus partial clone from the actual bottleneck",
-      "expected_skill": "optimize-large-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "optimize-large-repository-positive-3",
-      "prompt": "Benchmark commit-graph maintenance and preserve required offline objects",
-      "expected_skill": "optimize-large-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "optimize-large-repository-negative-1",
-      "prompt": "track large binaries with LFS",
-      "expected_skill": "manage-large-files",
-      "forbidden_skills": [
-        "optimize-large-repository"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "path/blob OID",
-        "LFS pointer/object",
-        "affected refs"
-      ],
-      "forbidden_actions": [
-        "unbounded history rewrite"
-      ]
-    },
-    {
-      "id": "optimize-large-repository-negative-2",
-      "prompt": "clone this normal small repository",
-      "expected_skill": "setup-repository",
-      "forbidden_skills": [
-        "optimize-large-repository"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "preserve-work-positive-1",
-      "prompt": "Save tracked and untracked work before switching context and verify restoration",
-      "expected_skill": "preserve-work",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "preserve-work-positive-2",
-      "prompt": "Choose stash versus a WIP branch based on required durability",
-      "expected_skill": "preserve-work",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "preserve-work-positive-3",
-      "prompt": "Create a safe patch plus file archive without overwriting existing paths",
-      "expected_skill": "preserve-work",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "preserve-work-negative-1",
-      "prompt": "recover work already lost after reset",
-      "expected_skill": "recover-lost-work",
-      "forbidden_skills": [
-        "preserve-work"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "preserve-work-negative-2",
-      "prompt": "discard these local changes",
-      "expected_skill": "undo-changes",
-      "forbidden_skills": [
-        "preserve-work"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "HEAD",
-        "index",
-        "worktree",
-        "candidate set"
-      ],
-      "forbidden_actions": [
-        "unpreviewed clean"
-      ]
-    },
-    {
-      "id": "recover-lost-work-positive-1",
-      "prompt": "Recover the commit that became unreachable after reset into a new branch",
-      "expected_skill": "recover-lost-work",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "recover-lost-work-positive-2",
-      "prompt": "Use reflog evidence to restore a lost branch without moving current HEAD",
-      "expected_skill": "recover-lost-work",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "recover-lost-work-positive-3",
-      "prompt": "Find and preserve a dangling object before any gc or prune",
-      "expected_skill": "recover-lost-work",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "recover-lost-work-negative-1",
-      "prompt": "revert a known published commit",
-      "expected_skill": "undo-changes",
-      "forbidden_skills": [
-        "recover-lost-work"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "HEAD",
-        "index",
-        "worktree",
-        "candidate set"
-      ],
-      "forbidden_actions": [
-        "unpreviewed clean"
-      ]
-    },
-    {
-      "id": "recover-lost-work-negative-2",
-      "prompt": "save my current uncommitted edits before rebase",
-      "expected_skill": "preserve-work",
-      "forbidden_skills": [
-        "recover-lost-work"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "resolve-conflicts-positive-1",
-      "prompt": "Resolve this merge conflict semantically and verify both contracts",
-      "expected_skill": "resolve-conflicts",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "resolve-conflicts-positive-2",
-      "prompt": "Continue this rebase only after inspecting conflict stages and generated-file ownership",
-      "expected_skill": "resolve-conflicts",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "resolve-conflicts-positive-3",
-      "prompt": "Abort the established cherry-pick safely without deleting unrelated metadata",
-      "expected_skill": "resolve-conflicts",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "resolve-conflicts-negative-1",
-      "prompt": "choose whether to merge or rebase before conflicts exist",
-      "expected_skill": "integrate-branches",
-      "forbidden_skills": [
-        "resolve-conflicts"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
-    },
-    {
-      "id": "resolve-conflicts-negative-2",
-      "prompt": "unstage a normal file",
-      "expected_skill": "undo-changes",
-      "forbidden_skills": [
-        "resolve-conflicts"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "HEAD",
-        "index",
-        "worktree",
-        "candidate set"
-      ],
-      "forbidden_actions": [
-        "unpreviewed clean"
-      ]
+      "skill": "diagnose-repository",
+      "expect": "do-not-route",
+      "prompt": "Recover the deleted commit for me."
     },
     {
       "id": "setup-repository-positive-1",
-      "prompt": "Clone this repository into an empty verified destination",
-      "expected_skill": "setup-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "skill": "setup-repository",
+      "expect": "route",
+      "prompt": "Clone this repository with only the last 50 commits."
     },
     {
       "id": "setup-repository-positive-2",
-      "prompt": "Initialize a new repository without overwriting existing files",
-      "expected_skill": "setup-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "skill": "setup-repository",
+      "expect": "route",
+      "prompt": "Initialize a bare repository for a local mirror source."
     },
     {
       "id": "setup-repository-positive-3",
-      "prompt": "Choose shallow versus partial clone only after checking required history and blobs",
-      "expected_skill": "setup-repository",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "skill": "setup-repository",
+      "expect": "route",
+      "prompt": "ตั้ง repo ใหม่แบบ partial clone และวางแผนใช้ offline"
     },
     {
       "id": "setup-repository-negative-1",
-      "prompt": "add a second remote to an existing repo",
-      "expected_skill": "manage-remotes",
-      "forbidden_skills": [
-        "setup-repository"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": [
-        "print raw credential URL"
-      ]
+      "skill": "setup-repository",
+      "expect": "do-not-route",
+      "prompt": "Tune this existing healthy monorepo for faster status."
     },
     {
       "id": "setup-repository-negative-2",
-      "prompt": "speed up an existing large checkout",
-      "expected_skill": "optimize-large-repository",
-      "forbidden_skills": [
-        "setup-repository"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "skill": "setup-repository",
+      "expect": "do-not-route",
+      "prompt": "Repair missing promised objects in this existing clone."
+    },
+    {
+      "id": "configure-git-positive-1",
+      "skill": "configure-git",
+      "expect": "route",
+      "prompt": "Use different Git identities for work and personal repository paths."
+    },
+    {
+      "id": "configure-git-positive-2",
+      "skill": "configure-git",
+      "expect": "route",
+      "prompt": "Configure commit signing and verify which key Git actually uses."
+    },
+    {
+      "id": "configure-git-positive-3",
+      "skill": "configure-git",
+      "expect": "route",
+      "prompt": "ตั้ง core.hooksPath แบบ repository-owned และตรวจผลกระทบของ hook"
+    },
+    {
+      "id": "configure-git-negative-1",
+      "skill": "configure-git",
+      "expect": "do-not-route",
+      "prompt": "Change origin URL."
+    },
+    {
+      "id": "configure-git-negative-2",
+      "skill": "configure-git",
+      "expect": "do-not-route",
+      "prompt": "Rewrite old commits to use a new email address."
+    },
+    {
+      "id": "manage-remotes-positive-1",
+      "skill": "manage-remotes",
+      "expect": "route",
+      "prompt": "Set up upstream and fork remotes without pushing."
+    },
+    {
+      "id": "manage-remotes-positive-2",
+      "skill": "manage-remotes",
+      "expect": "route",
+      "prompt": "Why does fetch use one URL but push use another?"
+    },
+    {
+      "id": "manage-remotes-positive-3",
+      "skill": "manage-remotes",
+      "expect": "route",
+      "prompt": "เปลี่ยน refspec ของ remote นี้และตรวจ topology"
+    },
+    {
+      "id": "manage-remotes-negative-1",
+      "skill": "manage-remotes",
+      "expect": "do-not-route",
+      "prompt": "Push my feature branch."
+    },
+    {
+      "id": "manage-remotes-negative-2",
+      "skill": "manage-remotes",
+      "expect": "do-not-route",
+      "prompt": "Rebase my branch onto upstream main."
+    },
+    {
+      "id": "craft-commits-positive-1",
+      "skill": "craft-commits",
+      "expect": "route",
+      "prompt": "Split these local changes into two atomic commits."
+    },
+    {
+      "id": "craft-commits-positive-2",
+      "skill": "craft-commits",
+      "expect": "route",
+      "prompt": "Stage only the bug fix and create a coherent commit."
+    },
+    {
+      "id": "craft-commits-positive-3",
+      "skill": "craft-commits",
+      "expect": "route",
+      "prompt": "ช่วยตรวจ staged diff แล้ว commit เฉพาะงานนี้"
+    },
+    {
+      "id": "craft-commits-negative-1",
+      "skill": "craft-commits",
+      "expect": "do-not-route",
+      "prompt": "Squash the last five existing commits."
+    },
+    {
+      "id": "craft-commits-negative-2",
+      "skill": "craft-commits",
+      "expect": "do-not-route",
+      "prompt": "Push the commit to origin."
+    },
+    {
+      "id": "manage-branches-positive-1",
+      "skill": "manage-branches",
+      "expect": "route",
+      "prompt": "Rename this local branch and keep its upstream metadata correct."
+    },
+    {
+      "id": "manage-branches-positive-2",
+      "skill": "manage-branches",
+      "expect": "route",
+      "prompt": "Delete local branches only if their work is safely retained."
+    },
+    {
+      "id": "manage-branches-positive-3",
+      "skill": "manage-branches",
+      "expect": "route",
+      "prompt": "สร้าง branch ใหม่จาก exact commit โดยไม่ merge"
+    },
+    {
+      "id": "manage-branches-negative-1",
+      "skill": "manage-branches",
+      "expect": "do-not-route",
+      "prompt": "Merge feature into main."
+    },
+    {
+      "id": "manage-branches-negative-2",
+      "skill": "manage-branches",
+      "expect": "do-not-route",
+      "prompt": "Restack this chain of dependent PR branches."
     },
     {
       "id": "sync-branches-positive-1",
-      "prompt": "Fetch and fast-forward local main from origin/main",
-      "expected_skill": "sync-branches",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "local OID",
-        "remote ref",
-        "remote OID",
-        "refspec"
-      ],
-      "forbidden_actions": [
-        "force push"
-      ]
+      "skill": "sync-branches",
+      "expect": "route",
+      "prompt": "Update my local branch from its upstream and publish only this ref."
     },
     {
       "id": "sync-branches-positive-2",
-      "prompt": "Publish this exact new branch to the verified remote and confirm the remote OID",
-      "expected_skill": "sync-branches",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "local OID",
-        "remote ref",
-        "remote OID",
-        "refspec"
-      ],
-      "forbidden_actions": [
-        "force push"
-      ]
+      "skill": "sync-branches",
+      "expect": "route",
+      "prompt": "Why is this branch ahead and behind origin?"
     },
     {
       "id": "sync-branches-positive-3",
-      "prompt": "Resolve a non-fast-forward rejection without force-pushing",
-      "expected_skill": "sync-branches",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external"
-      ],
-      "required_evidence": [
-        "local OID",
-        "remote ref",
-        "remote OID",
-        "refspec"
-      ],
-      "forbidden_actions": [
-        "force push"
-      ]
+      "skill": "sync-branches",
+      "expect": "route",
+      "prompt": "push branch นี้ด้วย explicit destination แล้ว verify remote"
     },
     {
       "id": "sync-branches-negative-1",
-      "prompt": "change origin URL",
-      "expected_skill": "manage-remotes",
-      "forbidden_skills": [
-        "sync-branches"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": [
-        "print raw credential URL"
-      ]
+      "skill": "sync-branches",
+      "expect": "do-not-route",
+      "prompt": "Rewrite and force-push three dependent stack refs."
     },
     {
       "id": "sync-branches-negative-2",
-      "prompt": "force-push a rewritten published series",
-      "expected_skill": "edit-commit-history",
-      "forbidden_skills": [
-        "sync-branches"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "exact range",
-        "old tip",
-        "expected remote OID",
-        "recovery ref"
-      ],
-      "forbidden_actions": [
-        "git push --force"
-      ]
+      "skill": "sync-branches",
+      "expect": "do-not-route",
+      "prompt": "Only merge this local feature branch; do not contact a remote."
     },
     {
-      "id": "transplant-commits-positive-1",
-      "prompt": "Cherry-pick these exact two commits in dependency order",
-      "expected_skill": "transplant-commits",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "id": "integrate-branches-positive-1",
+      "skill": "integrate-branches",
+      "expect": "route",
+      "prompt": "Rebase this one feature branch onto current main."
     },
     {
-      "id": "transplant-commits-positive-2",
-      "prompt": "Backport this fix to maintenance and record provenance",
-      "expected_skill": "transplant-commits",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "id": "integrate-branches-positive-2",
+      "skill": "integrate-branches",
+      "expect": "route",
+      "prompt": "Merge the complete release branch while preserving topology."
     },
     {
-      "id": "transplant-commits-positive-3",
-      "prompt": "Inspect whether this empty cherry-pick is already applied before skipping",
-      "expected_skill": "transplant-commits",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "id": "integrate-branches-positive-3",
+      "skill": "integrate-branches",
+      "expect": "route",
+      "prompt": "อัปเดต vendored library จาก upstream tag ด้วย subtree workflow"
     },
     {
-      "id": "transplant-commits-negative-1",
-      "prompt": "merge the entire feature branch",
-      "expected_skill": "integrate-branches",
-      "forbidden_skills": [
-        "transplant-commits"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "id": "integrate-branches-negative-1",
+      "skill": "integrate-branches",
+      "expect": "do-not-route",
+      "prompt": "Cherry-pick only commit abc123."
     },
     {
-      "id": "transplant-commits-negative-2",
-      "prompt": "reorder commits already on this branch",
-      "expected_skill": "edit-commit-history",
-      "forbidden_skills": [
-        "transplant-commits"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "exact range",
-        "old tip",
-        "expected remote OID",
-        "recovery ref"
-      ],
-      "forbidden_actions": [
-        "git push --force"
-      ]
+      "id": "integrate-branches-negative-2",
+      "skill": "integrate-branches",
+      "expect": "do-not-route",
+      "prompt": "Restack A, B, and C while preserving separate PR diffs."
+    },
+    {
+      "id": "preserve-work-positive-1",
+      "skill": "preserve-work",
+      "expect": "route",
+      "prompt": "Preserve all current uncommitted work before I try a risky rebase."
+    },
+    {
+      "id": "preserve-work-positive-2",
+      "skill": "preserve-work",
+      "expect": "route",
+      "prompt": "Create a verified temporary rescue patch and include untracked files safely."
+    },
+    {
+      "id": "preserve-work-positive-3",
+      "skill": "preserve-work",
+      "expect": "route",
+      "prompt": "เก็บงานปัจจุบันไว้ก่อน reset โดยยังไม่ทำ reset"
+    },
+    {
+      "id": "preserve-work-negative-1",
+      "skill": "preserve-work",
+      "expect": "do-not-route",
+      "prompt": "Apply this mailing-list patch series."
+    },
+    {
+      "id": "preserve-work-negative-2",
+      "skill": "preserve-work",
+      "expect": "do-not-route",
+      "prompt": "Recover work that disappeared yesterday."
+    },
+    {
+      "id": "manage-worktrees-positive-1",
+      "skill": "manage-worktrees",
+      "expect": "route",
+      "prompt": "Create a linked worktree for the release branch."
+    },
+    {
+      "id": "manage-worktrees-positive-2",
+      "skill": "manage-worktrees",
+      "expect": "route",
+      "prompt": "Why can I not delete this branch; is it checked out elsewhere?"
+    },
+    {
+      "id": "manage-worktrees-positive-3",
+      "skill": "manage-worktrees",
+      "expect": "route",
+      "prompt": "ลบ worktree ที่ระบุและตรวจว่าไม่ทำงานหาย"
+    },
+    {
+      "id": "manage-worktrees-negative-1",
+      "skill": "manage-worktrees",
+      "expect": "do-not-route",
+      "prompt": "Rename a local branch without creating a worktree."
+    },
+    {
+      "id": "manage-worktrees-negative-2",
+      "skill": "manage-worktrees",
+      "expect": "do-not-route",
+      "prompt": "Prune unreachable Git objects to save disk."
+    },
+    {
+      "id": "resolve-conflicts-positive-1",
+      "skill": "resolve-conflicts",
+      "expect": "route",
+      "prompt": "Resolve the semantic conflicts in this stopped rebase."
+    },
+    {
+      "id": "resolve-conflicts-positive-2",
+      "skill": "resolve-conflicts",
+      "expect": "route",
+      "prompt": "Explain the index stages and fix this rename/delete conflict."
+    },
+    {
+      "id": "resolve-conflicts-positive-3",
+      "skill": "resolve-conflicts",
+      "expect": "route",
+      "prompt": "แก้ conflict นี้ตาม intended behavior แล้ว verify staged result"
+    },
+    {
+      "id": "resolve-conflicts-negative-1",
+      "skill": "resolve-conflicts",
+      "expect": "do-not-route",
+      "prompt": "Start a rebase of the feature branch."
+    },
+    {
+      "id": "resolve-conflicts-negative-2",
+      "skill": "resolve-conflicts",
+      "expect": "do-not-route",
+      "prompt": "Choose ours for every conflict without inspecting semantics."
     },
     {
       "id": "undo-changes-positive-1",
-      "prompt": "Unstage this exact path while keeping worktree edits",
-      "expected_skill": "undo-changes",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "HEAD",
-        "index",
-        "worktree",
-        "candidate set"
-      ],
-      "forbidden_actions": [
-        "unpreviewed clean"
-      ]
+      "skill": "undo-changes",
+      "expect": "route",
+      "prompt": "Revert this published commit without rewriting history."
     },
     {
       "id": "undo-changes-positive-2",
-      "prompt": "Revert this known published commit with a new commit",
-      "expected_skill": "undo-changes",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "HEAD",
-        "index",
-        "worktree",
-        "candidate set"
-      ],
-      "forbidden_actions": [
-        "unpreviewed clean"
-      ]
+      "skill": "undo-changes",
+      "expect": "route",
+      "prompt": "Abort the current cherry-pick and restore the pre-operation state."
     },
     {
       "id": "undo-changes-positive-3",
-      "prompt": "Preview and remove only these untracked generated files after preserving protected work",
-      "expected_skill": "undo-changes",
-      "forbidden_skills": [],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "HEAD",
-        "index",
-        "worktree",
-        "candidate set"
-      ],
-      "forbidden_actions": [
-        "unpreviewed clean"
-      ]
+      "skill": "undo-changes",
+      "expect": "route",
+      "prompt": "ยกเลิกการแก้ไฟล์ที่รู้ target ชัด โดยไม่แตะไฟล์อื่น"
     },
     {
       "id": "undo-changes-negative-1",
-      "prompt": "find an unknown lost commit",
-      "expected_skill": "recover-lost-work",
-      "forbidden_skills": [
-        "undo-changes"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "current repository state",
-        "exact target"
-      ],
-      "forbidden_actions": []
+      "skill": "undo-changes",
+      "expect": "do-not-route",
+      "prompt": "Find whatever commit I lost; I do not know the target."
     },
     {
       "id": "undo-changes-negative-2",
-      "prompt": "squash a series of commits",
-      "expected_skill": "edit-commit-history",
-      "forbidden_skills": [
-        "undo-changes"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation",
-        "shared-external",
-        "critical-impact"
-      ],
-      "required_evidence": [
-        "exact range",
-        "old tip",
-        "expected remote OID",
-        "recovery ref"
-      ],
-      "forbidden_actions": [
-        "git push --force"
-      ]
+      "skill": "undo-changes",
+      "expect": "do-not-route",
+      "prompt": "Rewrite a published series and force-push it."
     },
     {
-      "id": "route-elsewhere-code-review",
-      "prompt": "Review this pull request for product correctness and bugs.",
-      "expected_skill": null,
-      "forbidden_skills": [
-        "find-regression",
-        "investigate-history"
-      ],
-      "expected_consequence_classes": [
-        "read-only"
-      ],
-      "required_evidence": [
-        "repository review policy",
-        "exact proposed change set"
-      ],
-      "forbidden_actions": [
-        "route to a Git history or regression skill merely because a diff exists"
-      ]
+      "id": "recover-lost-work-positive-1",
+      "skill": "recover-lost-work",
+      "expect": "route",
+      "prompt": "Find the commit I lost after an accidental reset using reflog."
     },
     {
-      "id": "route-elsewhere-secret-scan",
-      "prompt": "Scan this repository for secrets and prove it is clean.",
-      "expected_skill": null,
-      "forbidden_skills": [
-        "craft-commits",
-        "investigate-history"
-      ],
-      "expected_consequence_classes": [
-        "read-only"
-      ],
-      "required_evidence": [
-        "approved deterministic scanner",
-        "documented scan coverage"
-      ],
-      "forbidden_actions": [
-        "model-only clean claim",
-        "print raw secret values"
-      ]
+      "id": "recover-lost-work-positive-2",
+      "skill": "recover-lost-work",
+      "expect": "route",
+      "prompt": "Recover a deleted local branch without overwriting current work."
     },
     {
-      "id": "route-elsewhere-release-preparation",
-      "prompt": "Update version files, changelog, and release artifacts for the next release.",
-      "expected_skill": null,
-      "forbidden_skills": [
-        "manage-tags"
-      ],
-      "expected_consequence_classes": [
-        "local-mutation"
-      ],
-      "required_evidence": [
-        "repository-specific release policy",
-        "authoritative version and build sources"
-      ],
-      "forbidden_actions": [
-        "invent a release scheme",
-        "treat tag management as full release preparation"
-      ]
+      "id": "recover-lost-work-positive-3",
+      "skill": "recover-lost-work",
+      "expect": "route",
+      "prompt": "กู้ไฟล์ที่ยังอยู่ใน dangling commit แบบ additive"
+    },
+    {
+      "id": "recover-lost-work-negative-1",
+      "skill": "recover-lost-work",
+      "expect": "do-not-route",
+      "prompt": "Repair a corrupt object database."
+    },
+    {
+      "id": "recover-lost-work-negative-2",
+      "skill": "recover-lost-work",
+      "expect": "do-not-route",
+      "prompt": "Revert this known published commit."
+    },
+    {
+      "id": "repair-repository-integrity-positive-1",
+      "skill": "repair-repository-integrity",
+      "expect": "route",
+      "prompt": "Git reports fatal: bad object; preserve evidence and repair from a healthy clone."
+    },
+    {
+      "id": "repair-repository-integrity-positive-2",
+      "skill": "repair-repository-integrity",
+      "expect": "route",
+      "prompt": "A promised blob cannot be fetched in this partial clone and offline checkout fails."
+    },
+    {
+      "id": "repair-repository-integrity-positive-3",
+      "skill": "repair-repository-integrity",
+      "expect": "route",
+      "prompt": "ซ่อม pack/index ที่เสียโดยห้าม prune และต้อง verify exact object"
+    },
+    {
+      "id": "repair-repository-integrity-negative-1",
+      "skill": "repair-repository-integrity",
+      "expect": "do-not-route",
+      "prompt": "Find an intact commit lost after reset."
+    },
+    {
+      "id": "repair-repository-integrity-negative-2",
+      "skill": "repair-repository-integrity",
+      "expect": "do-not-route",
+      "prompt": "Optimize this healthy repository with sparse checkout."
+    },
+    {
+      "id": "transplant-commits-positive-1",
+      "skill": "transplant-commits",
+      "expect": "route",
+      "prompt": "Backport these two exact commits in dependency order."
+    },
+    {
+      "id": "transplant-commits-positive-2",
+      "skill": "transplant-commits",
+      "expect": "route",
+      "prompt": "Apply this v3 mailing-list patch series and preserve author/sign-off metadata."
+    },
+    {
+      "id": "transplant-commits-positive-3",
+      "skill": "transplant-commits",
+      "expect": "route",
+      "prompt": "ย้าย commit ที่ทำผิด branch ไป target ที่ระบุ"
+    },
+    {
+      "id": "transplant-commits-negative-1",
+      "skill": "transplant-commits",
+      "expect": "do-not-route",
+      "prompt": "Merge the entire feature branch."
+    },
+    {
+      "id": "transplant-commits-negative-2",
+      "skill": "transplant-commits",
+      "expect": "do-not-route",
+      "prompt": "Create a temporary patch to preserve uncommitted work."
+    },
+    {
+      "id": "edit-commit-history-positive-1",
+      "skill": "edit-commit-history",
+      "expect": "route",
+      "prompt": "Squash and reorder this unpublished commit series."
+    },
+    {
+      "id": "edit-commit-history-positive-2",
+      "skill": "edit-commit-history",
+      "expect": "route",
+      "prompt": "Reword one commit and publish the rewritten ref with an exact lease."
+    },
+    {
+      "id": "edit-commit-history-positive-3",
+      "skill": "edit-commit-history",
+      "expect": "route",
+      "prompt": "แยก commit เดียวใน history ชุดนี้โดยมี recovery ref"
+    },
+    {
+      "id": "edit-commit-history-negative-1",
+      "skill": "edit-commit-history",
+      "expect": "do-not-route",
+      "prompt": "Restack three dependent branches."
+    },
+    {
+      "id": "edit-commit-history-negative-2",
+      "skill": "edit-commit-history",
+      "expect": "do-not-route",
+      "prompt": "Apply one selected patch to a maintenance branch."
+    },
+    {
+      "id": "investigate-history-positive-1",
+      "skill": "investigate-history",
+      "expect": "route",
+      "prompt": "Which commit introduced this configuration line and why?"
+    },
+    {
+      "id": "investigate-history-positive-2",
+      "skill": "investigate-history",
+      "expect": "route",
+      "prompt": "Trace this file through renames without changing the repo."
+    },
+    {
+      "id": "investigate-history-positive-3",
+      "skill": "investigate-history",
+      "expect": "route",
+      "prompt": "หาประวัติว่า API นี้เปลี่ยนเมื่อไรจาก commit evidence"
+    },
+    {
+      "id": "investigate-history-negative-1",
+      "skill": "investigate-history",
+      "expect": "do-not-route",
+      "prompt": "Bisect to find the first failing commit."
+    },
+    {
+      "id": "investigate-history-negative-2",
+      "skill": "investigate-history",
+      "expect": "do-not-route",
+      "prompt": "Rewrite the commit that introduced this line."
+    },
+    {
+      "id": "find-regression-positive-1",
+      "skill": "find-regression",
+      "expect": "route",
+      "prompt": "Bisect between these known good and bad commits using this test command."
+    },
+    {
+      "id": "find-regression-positive-2",
+      "skill": "find-regression",
+      "expect": "route",
+      "prompt": "Find the first commit where this deterministic behavior changes."
+    },
+    {
+      "id": "find-regression-positive-3",
+      "skill": "find-regression",
+      "expect": "route",
+      "prompt": "ทำ git bisect โดย validate oracle ก่อน"
+    },
+    {
+      "id": "find-regression-negative-1",
+      "skill": "find-regression",
+      "expect": "do-not-route",
+      "prompt": "Explain the history of this line without an executable oracle."
+    },
+    {
+      "id": "find-regression-negative-2",
+      "skill": "find-regression",
+      "expect": "do-not-route",
+      "prompt": "Fix the regression after you find it."
+    },
+    {
+      "id": "manage-stacked-branches-positive-1",
+      "skill": "manage-stacked-branches",
+      "expect": "route",
+      "prompt": "Restack branches A -> B -> C onto the new main and preserve each PR diff."
+    },
+    {
+      "id": "manage-stacked-branches-positive-2",
+      "skill": "manage-stacked-branches",
+      "expect": "route",
+      "prompt": "The parent PR was squash-merged; update all dependent review branches safely."
+    },
+    {
+      "id": "manage-stacked-branches-positive-3",
+      "skill": "manage-stacked-branches",
+      "expect": "route",
+      "prompt": "rebase branch stack แล้ว publish หลาย refs ด้วย exact leases"
+    },
+    {
+      "id": "manage-stacked-branches-negative-1",
+      "skill": "manage-stacked-branches",
+      "expect": "do-not-route",
+      "prompt": "Rebase this single unpublished branch onto main."
+    },
+    {
+      "id": "manage-stacked-branches-negative-2",
+      "skill": "manage-stacked-branches",
+      "expect": "do-not-route",
+      "prompt": "Rename one branch and set its upstream."
+    },
+    {
+      "id": "manage-submodules-positive-1",
+      "skill": "manage-submodules",
+      "expect": "route",
+      "prompt": "Update this submodule gitlink to an exact verified commit."
+    },
+    {
+      "id": "manage-submodules-positive-2",
+      "skill": "manage-submodules",
+      "expect": "route",
+      "prompt": "Fix recursive submodule URL and initialization behavior."
+    },
+    {
+      "id": "manage-submodules-positive-3",
+      "skill": "manage-submodules",
+      "expect": "route",
+      "prompt": "ตรวจ .gitmodules กับ nested repo state แล้ว sync อย่างปลอดภัย"
+    },
+    {
+      "id": "manage-submodules-negative-1",
+      "skill": "manage-submodules",
+      "expect": "do-not-route",
+      "prompt": "Update a git subtree vendor directory."
+    },
+    {
+      "id": "manage-submodules-negative-2",
+      "skill": "manage-submodules",
+      "expect": "do-not-route",
+      "prompt": "Repair a missing ordinary Git blob in the parent repository."
+    },
+    {
+      "id": "manage-large-files-positive-1",
+      "skill": "manage-large-files",
+      "expect": "route",
+      "prompt": "Track new binary assets with LFS and verify payload availability."
+    },
+    {
+      "id": "manage-large-files-positive-2",
+      "skill": "manage-large-files",
+      "expect": "route",
+      "prompt": "Diagnose a valid LFS pointer whose object is missing."
+    },
+    {
+      "id": "manage-large-files-positive-3",
+      "skill": "manage-large-files",
+      "expect": "route",
+      "prompt": "วางแผน migrate selected large paths ตาม host size policy"
+    },
+    {
+      "id": "manage-large-files-negative-1",
+      "skill": "manage-large-files",
+      "expect": "do-not-route",
+      "prompt": "Repair a corrupt ordinary Git pack."
+    },
+    {
+      "id": "manage-large-files-negative-2",
+      "skill": "manage-large-files",
+      "expect": "do-not-route",
+      "prompt": "Tune commit-graph performance."
+    },
+    {
+      "id": "optimize-large-repository-positive-1",
+      "skill": "optimize-large-repository",
+      "expect": "route",
+      "prompt": "Measure why status is slow and tune this healthy monorepo."
+    },
+    {
+      "id": "optimize-large-repository-positive-2",
+      "skill": "optimize-large-repository",
+      "expect": "route",
+      "prompt": "Configure sparse checkout and partial clone for a large healthy repo."
+    },
+    {
+      "id": "optimize-large-repository-positive-3",
+      "skill": "optimize-large-repository",
+      "expect": "route",
+      "prompt": "สร้าง commit-graph/multi-pack-index หลังวัด bottleneck"
+    },
+    {
+      "id": "optimize-large-repository-negative-1",
+      "skill": "optimize-large-repository",
+      "expect": "do-not-route",
+      "prompt": "Fix fatal bad object."
+    },
+    {
+      "id": "optimize-large-repository-negative-2",
+      "skill": "optimize-large-repository",
+      "expect": "do-not-route",
+      "prompt": "Track this binary with LFS."
+    },
+    {
+      "id": "manage-tags-positive-1",
+      "skill": "manage-tags",
+      "expect": "route",
+      "prompt": "Create an annotated signed tag at this exact commit and verify it."
+    },
+    {
+      "id": "manage-tags-positive-2",
+      "skill": "manage-tags",
+      "expect": "route",
+      "prompt": "Explain what this tag object peels to."
+    },
+    {
+      "id": "manage-tags-positive-3",
+      "skill": "manage-tags",
+      "expect": "route",
+      "prompt": "ลบ remote tag ที่ระบุพร้อม confirmation และ verify"
+    },
+    {
+      "id": "manage-tags-negative-1",
+      "skill": "manage-tags",
+      "expect": "do-not-route",
+      "prompt": "Publish a package release."
+    },
+    {
+      "id": "manage-tags-negative-2",
+      "skill": "manage-tags",
+      "expect": "do-not-route",
+      "prompt": "Create a branch named v1.2.0."
+    },
+    {
+      "id": "migrate-repository-positive-1",
+      "skill": "migrate-repository",
+      "expect": "route",
+      "prompt": "Migrate all refs, tags, LFS, and submodules to a new host."
+    },
+    {
+      "id": "migrate-repository-positive-2",
+      "skill": "migrate-repository",
+      "expect": "route",
+      "prompt": "Stage a mirror transfer and verify cutover completeness."
+    },
+    {
+      "id": "migrate-repository-positive-3",
+      "skill": "migrate-repository",
+      "expect": "route",
+      "prompt": "ย้าย repository พร้อม repo-wide path filtering ที่เป็น requirement ของ migration"
+    },
+    {
+      "id": "migrate-repository-negative-1",
+      "skill": "migrate-repository",
+      "expect": "do-not-route",
+      "prompt": "Change one remote URL."
+    },
+    {
+      "id": "migrate-repository-negative-2",
+      "skill": "migrate-repository",
+      "expect": "do-not-route",
+      "prompt": "Push one branch to its existing origin."
+    },
+    {
+      "id": "craft-commits-negative-temporary-rescue",
+      "skill": "craft-commits",
+      "expect": "do-not-route",
+      "prompt": "Make a temporary WIP commit only so I can switch branches safely; it is not final reviewable history."
+    },
+    {
+      "id": "preserve-work-negative-final-history",
+      "skill": "preserve-work",
+      "expect": "do-not-route",
+      "prompt": "Turn these reviewed changes into the final atomic commits for code review."
     }
   ]
 }
