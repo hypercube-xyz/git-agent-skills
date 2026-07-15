@@ -28,7 +28,7 @@ A skipped environment-dependent test is reported; zero skips is preferred for re
 
 ## Release gate
 
-`scripts/build_release.py` runs both validators, requires a clean committed tracked tree, selects regular files from the Git index, rejects symlinks/unmerged entries/unsupported modes, creates a deterministic ZIP with one embedded manifest, and emits SHA-256 and sidecar metadata. `--skip-validation` remains truthfully represented in the sidecar.
+`scripts/build_release.py` runs both validators, requires a clean committed tracked tree, selects regular files from the Git index, rejects symlinks, unmerged entries, and unsupported modes, creates a deterministic ZIP from those tracked files, and emits `git-agent-skills-<version>.zip.sha256` plus `git-agent-skills-<version>.release.json`. `--skip-validation` remains truthfully represented in the metadata file.
 
 CI checks grouped skill discovery and the Claude Code plugin manifest with pinned clients on Node 24 for pull requests, pushes to `main`, and manual runs. A separate Node 26/latest-client job runs only after non-PR builds, is non-blocking, and is not release evidence for a pinned client version.
 

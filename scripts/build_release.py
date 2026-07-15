@@ -199,6 +199,10 @@ def archive_bytes(entries: list[Entry], catalog: dict) -> bytes:
     return buffer.getvalue()
 
 
+def release_path(output: Path) -> Path:
+    return output.with_suffix(".release.json")
+
+
 def release_record(
     entries: list[Entry],
     catalog: dict,
@@ -273,15 +277,15 @@ def main() -> int:
         "sha256": digest,
         "size_bytes": len(first),
     }
-    sidecar = release_record(
+    metadata = release_record(
         entries,
         catalog,
         validation_executed=not args.skip_validation,
         reproducibility_checked=args.check,
         artifact=artifact,
     )
-    output.with_suffix(".release.json").write_text(
-        json.dumps(sidecar, indent=2, sort_keys=True) + "\n",
+    release_path(output).write_text(
+        json.dumps(metadata, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 

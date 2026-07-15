@@ -19,7 +19,7 @@
 - Fold common multi-skill workflows into direct references of the owning skills instead of adding an umbrella workflow skill or undiscoverable top-level recipes.
 - Add focused references for patch/mailbox replay, shallow/partial-clone repair, subtree/vendor synchronization, and multi-identity/signing/hooks.
 - Add exact package/catalog/plugin/README/fixture parity validation and integrated overlap/routing checks.
-- Preserve the v1.0.0 Git-index release-input model, tracked-symlink rejection, clean-state gate, deterministic embedded manifest, source revision, and sidecar release record.
+- Preserve the v1.0.0 Git-index release-input model, tracked-symlink rejection, and clean-state gate; generate a deterministic archive with source revision, source-tree identity, artifact hash, and validation status in `git-agent-skills-<version>.release.json`.
 - Extend semantic tests for the new skills and references while retaining the v1.0.0 release, remote, recovery, conflict, tag, submodule, installer, and pathological-path cases.
 - Keep model evaluation outputs outside the source package; the repository validates deterministic routing, boundary, Git, and packaging behavior.
 

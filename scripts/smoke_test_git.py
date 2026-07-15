@@ -759,6 +759,12 @@ def test_installer_dry_run(td):
     assert cp.returncode == 0 and not target.exists()
 
 
+def test_release_metadata_filename(td):
+    mod = load_helper("scripts/build_release.py", "build_release_metadata_filename")
+    output = td / "git-agent-skills-1.1.0.zip"
+    assert mod.release_path(output).name == "git-agent-skills-1.1.0.release.json"
+
+
 def test_skipped_validation_metadata(td):
     mod = load_helper("scripts/build_release.py", "build_release_e")
     p = init_build_repo(td)
@@ -873,7 +879,8 @@ def main(argv=None):
         ("tracked symlink rejection", test_release_symlink_rejected),
         ("dirty release state rejection", test_release_dirty_rejected),
         ("deterministic archive bytes", test_release_deterministic),
-        ("skipped validation sidecar metadata", test_skipped_validation_metadata),
+        ("release metadata filename", test_release_metadata_filename),
+        ("skipped validation metadata", test_skipped_validation_metadata),
         ("release provenance fields", test_release_provenance_fields),
         ("installer all-target preflight", test_installer_preflight),
         ("installer rollback", test_installer_rollback),

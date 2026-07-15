@@ -5,7 +5,7 @@
 - Python: 3.12 or newer for bundled scripts. CI runs the validators and semantic suite on Python
   3.12 and 3.14.
 - Git: 2.35 or newer is the declared compatibility target. Optional commands and modes are
-  feature-detected; the exact Git version used for a release build is recorded in sidecar metadata.
+  feature-detected; the exact Git version used for a release build is recorded in the release metadata file.
   CI exercises the Git version supplied by the selected GitHub-hosted runner rather than claiming
   continuous execution on exactly Git 2.35.
 - CI operating system: the `ubuntu-26.04` GitHub-hosted runner image. This records the validation
