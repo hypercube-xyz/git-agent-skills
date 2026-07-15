@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 DIST=ROOT/'dist'
-EXCLUDE_NAMES={'.DS_Store','RELEASE-MANIFEST.json'}
+EXCLUDE_NAMES={'.DS_Store'}
 EXCLUDE_PREFIXES={'dist','.git'}
 VALIDATION=[
  [sys.executable,'scripts/validate_skills.py'],
