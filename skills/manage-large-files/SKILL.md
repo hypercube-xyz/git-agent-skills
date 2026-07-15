@@ -24,6 +24,7 @@ Make selected large-file paths use the intended storage policy and remain retrie
 ## Do Not Use / Route Elsewhere
 
 - Use `optimize-large-repository` for sparse checkout, partial clone, maintenance, or general scale performance.
+- Use `repair-repository-integrity` for missing/corrupt ordinary Git objects; this skill owns LFS pointer/object relationships and large-object policy only.
 - Use `edit-commit-history` for small local series rewriting unrelated to LFS.
 - Use `migrate-repository` for whole-host transfer.
 - Do not delete large files or rewrite all history merely to satisfy a push error.
@@ -100,6 +101,4 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
-## Reference Trigger
-
-Read `references/lfs-and-size-limits.md` when push-size limits, LFS pointer/object diagnosis, tracking patterns, or history migration are involved.
+When handing off to another mutation owner, include the verified repository/worktree, exact OIDs or paths, completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and verification remaining; the receiving skill must re-inspect mutable state and controls.

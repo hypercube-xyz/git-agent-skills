@@ -24,7 +24,8 @@ Build a precise, non-mutating explanation of the repository's current state and 
 ## Do Not Use / Route Elsewhere
 
 - Use `undo-changes` when the target and reversal are already known.
-- Use `recover-lost-work` when commits or files are missing or unreachable.
+- Use `recover-lost-work` when intact commits, refs, or files became unreachable or were deleted.
+- Use `repair-repository-integrity` when object, pack, ref, alternates, shallow, or promisor integrity is actually damaged.
 - Use `resolve-conflicts` when unmerged entries need semantic resolution.
 - Do not repair, clean, reset, prune, fetch, or rewrite as part of diagnosis.
 
@@ -97,7 +98,3 @@ Command completion is evidence only for what the command actually demonstrates.
 Report the resolved target, material observations, action taken or recommended, verification
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
-
-## Reference Trigger
-
-Read `references/state-diagnosis.md` when the symptom involves detached/unborn HEAD, interrupted operations, porcelain-v2 status, index flags, sparse/shallow state, or integrity checks.

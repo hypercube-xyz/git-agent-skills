@@ -24,6 +24,9 @@ Reach a specified earlier or inverse state while preserving all material work ou
 
 - Use `recover-lost-work` when the desired object/version is unknown or missing.
 - Use `edit-commit-history` for multi-commit or published rewrite.
+- Use `manage-branches` for branch creation, rename, copy, deletion, or upstream metadata without a reversal.
+- Use `transplant-commits` when the desired outcome is to complete selected-commit or mailbox replay rather than abort it.
+- Use `manage-tags` for tag creation, movement, deletion, signing, or remote tag verification.
 - Use `preserve-work` before reversal when current work must be captured.
 - Do not use broad hard reset or clean as a generic fix.
 
@@ -106,6 +109,4 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
-## Reference Trigger
-
-Read `references/reversal-matrix.md` when choosing restore, reset mode, revert, abort, or clean; or reasoning about HEAD/index/worktree effects.
+When handing off to another mutation owner, include the verified repository/worktree, exact OIDs or paths, completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and verification remaining; the receiving skill must re-inspect mutable state and controls.

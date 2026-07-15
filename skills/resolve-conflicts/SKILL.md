@@ -96,6 +96,4 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
-## Reference Trigger
-
-Read `references/conflict-semantics.md` when operation-specific ours/theirs meaning, conflict stages, rename/binary/submodule conflicts, rerere, or continue/skip/abort choices matter.
+When handing off to another mutation owner, include the verified repository/worktree, exact OIDs or paths, completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and verification remaining; the receiving skill must re-inspect mutable state and controls.

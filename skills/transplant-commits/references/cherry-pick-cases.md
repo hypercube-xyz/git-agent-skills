@@ -1,17 +1,11 @@
 # Cherry-pick cases
 
-Review immutable OIDs and diffs before replay. Range notation can be surprising:
+Resolve exact source OIDs and order. Inspect dependencies, merge parents, patch IDs, and target equivalence. Use `-m` only with an established mainline. For empty results, distinguish already-applied, cancellation, and intentionally empty commits before skip/keep. Verify each logical change exactly once and preserve source refs.
 
-- `A..B` excludes `A` and includes commits reachable from `B` but not `A`.
-- `A^..B` can include `A`.
-- `--no-walk` affects ordering for explicitly listed commits.
+## Committed on the wrong branch
 
-For a merge commit, `git cherry-pick -m <parent-number> <merge-oid>` defines the parent used as the
-mainline. Inspect all parents and the change relative to each; never guess `-m 1`.
+Treat moving the intended commits and cleaning the source branch as separate postconditions. First record the source and target OIDs, preserve a recovery ref when needed, and replay the selected commits onto the intended branch. Verify patch equivalence and target tests before any source cleanup. Route an explicitly requested source reversal to `undo-changes`; never reset the source first.
 
-An empty result can mean the patch is already present. Compare trees/diffs or use patch-equivalence
-signals; do not automatically skip or create an empty commit.
+## Maintenance backports
 
-Cherry-pick reuses author information and commit message but creates a commit from the resulting
-tree, parent, and metadata. If every serialized field happens to match an existing commit, the OID
-can match too; therefore verify semantics and topology rather than asserting a fresh ID.
+Identify the exact fix and required prerequisite commits before replay. Preserve order, provenance, and compatibility with the maintenance line. Do not broaden a backport into full branch integration, dependency modernization, or unrelated cleanup. Publication of the maintenance ref remains owned by `sync-branches`.

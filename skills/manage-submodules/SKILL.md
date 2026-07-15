@@ -23,7 +23,7 @@ Make the superproject's gitlink, `.gitmodules`, local submodule config, nested c
 
 - Use `manage-remotes` for the superproject's remotes.
 - Use `setup-repository` for a normal standalone clone.
-- Use `integrate-branches` for Git subtree or branch integration if that is the chosen model.
+- Do not use for ordinary directories, Git subtree integration, vendor-branch merges, or monorepo package management; route subtree/vendor synchronization to `integrate-branches`.
 - Do not commit nested repository content as ordinary files accidentally.
 
 ## Required Evidence
@@ -94,7 +94,3 @@ Command completion is evidence only for what the command actually demonstrates.
 Report the resolved target, material observations, action taken or recommended, verification
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
-
-## Reference Trigger
-
-Read `references/submodule-playbook.md` when detached nested HEAD, recursive updates, URL synchronization, removal, missing commits, or branch tracking are involved.

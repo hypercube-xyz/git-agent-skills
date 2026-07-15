@@ -100,7 +100,3 @@ Command completion is evidence only for what the command actually demonstrates.
 Report the resolved target, material observations, action taken or recommended, verification
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
-
-## Reference Trigger
-
-Read `references/tag-objects.md` when lightweight versus annotated/signed tags, peeled targets, idempotence, signature trust, or remote move/delete are involved.

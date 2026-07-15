@@ -95,7 +95,3 @@ Command completion is evidence only for what the command actually demonstrates.
 Report the resolved target, material observations, action taken or recommended, verification
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
-
-## Reference Trigger
-
-Read `references/bisect-oracle.md` when designing automated bisect classifiers, handling flaky/infrastructure outcomes, merge commits, skips, or expensive setup.

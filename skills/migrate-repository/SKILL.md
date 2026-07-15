@@ -101,6 +101,4 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
-## Reference Trigger
-
-Read `references/migration-runbook.md` when mirror refspecs, repository-wide filtering, LFS/submodules, host metadata, cutover, or rollback are involved.
+When handing off to another mutation owner, include the verified repository/worktree, exact OIDs or paths, completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and verification remaining; the receiving skill must re-inspect mutable state and controls.

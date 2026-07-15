@@ -16,13 +16,15 @@ Create a verified, recoverable snapshot of exactly the intended in-progress stat
 ## Use When
 
 - Save work before switching branches, pulling, rebasing, testing another revision, or handing off.
-- Choose among stash, temporary/WIP commit, safety branch, patch, or copied untracked files.
+- Choose among a stash, temporary/WIP commit, safety branch, patch, or copied untracked files to preserve current uncommitted work.
 - Restore a previously created preservation artifact when its identity is known.
 - Inventory what a stash would and would not include.
 
 ## Do Not Use / Route Elsewhere
 
-- Use `recover-lost-work` when work is missing or the preservation artifact is unknown.
+- Use `recover-lost-work` after intact work is already missing or unreachable.
+- Use `craft-commits` when the requested result is durable, reviewable project history rather than a temporary recovery artifact.
+- Use `transplant-commits` to apply an authored external patch/mailbox series; preservation patches are temporary rescue artifacts, not a contribution-ingestion workflow.
 - Use `undo-changes` to discard or unstage known state.
 - Use `manage-worktrees` when parallel work should remain checked out rather than packed away.
 - Do not treat a stash as a durable backup or remote publication.
@@ -47,6 +49,7 @@ repository state establishes the evidence.
 - A patch does not preserve all metadata, untracked files, submodule worktrees, or intent.
 - Do not write artifacts over existing paths; use restrictive permissions and verified destinations.
 - Verify restoration in a disposable location when the artifact is material.
+- A temporary/WIP commit must be clearly identified as a recovery artifact and kept separate from the final reviewable commit plan.
 
 ## Action Boundaries
 
@@ -96,6 +99,4 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
-## Reference Trigger
-
-Read `references/preservation-options.md` when choosing stash, temporary commit, branch, patch, bundle, or filesystem archive; or handling untracked/ignored/submodule content.
+When handing off to another mutation owner, include the verified repository/worktree, exact OIDs or paths, completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and verification remaining; the receiving skill must re-inspect mutable state and controls.

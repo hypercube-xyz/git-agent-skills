@@ -101,4 +101,4 @@ incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
 ## Reference Trigger
 
-Read `references/configuration-precedence.md` when configuration precedence, line endings, identity, signing, attributes, hooks, includes, or multi-valued keys affect the decision.
+Read `references/identity-signing-hooks.md` when multiple identities, conditional signing, trust models, hook paths, hook execution, or credential-adjacent behavior is involved.

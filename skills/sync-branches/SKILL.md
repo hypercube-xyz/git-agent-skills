@@ -24,7 +24,8 @@ Make one local/remote branch relationship reach an explicitly chosen state witho
 ## Do Not Use / Route Elsewhere
 
 - Use `manage-remotes` when the destination URL/refspec is wrong.
-- Use `integrate-branches` for local merge/rebase decisions not centered on an upstream.
+- Use `integrate-branches` for local merge/rebase integration of one branch line.
+- Use `manage-stacked-branches` when publication depends on restacking and verifying multiple dependent refs as one coordinated change.
 - Use `edit-commit-history` for force-with-lease or published rewrite.
 - Use `migrate-repository` for many refs or host transfer.
 
@@ -99,6 +100,8 @@ Report the resolved target, material observations, action taken or recommended, 
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
 
+When handing off to another mutation owner, include the verified repository/worktree, exact OIDs or paths, completed effects, protected state, recovery anchors or limitations, unresolved unknowns, and verification remaining; the receiving skill must re-inspect mutable state and controls.
+
 ## Reference Trigger
 
-Read `references/divergence-playbook.md` when a non-fast-forward rejection, divergent pull, first push, stale upstream, or remote-ahead/local-ahead decision is involved.
+Read `references/divergence-playbook.md` when a branch is ahead/behind/diverged, an integration handoff is required, a fork destination is involved, or publication needs exact remote freshness.

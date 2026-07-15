@@ -94,7 +94,3 @@ Command completion is evidence only for what the command actually demonstrates.
 Report the resolved target, material observations, action taken or recommended, verification
 performed, protected-state checks, unresolved uncertainty, and the safest next action when
 incomplete. Distinguish observed fact, inference, assumption, and unknown.
-
-## Reference Trigger
-
-Read `references/worktree-safety.md` when pruning, locking, repair, removable media, branch ownership, or shared metadata are involved.
