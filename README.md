@@ -1,7 +1,6 @@
 # Git Agent Skills
 
-Evidence-driven Git workflow skills for AI coding agents. Skills are organized by **desired
-postcondition**, not individual Git commands.
+Evidence-driven Git workflow skills for AI coding agents. Skills are organized by **desired postcondition**, not individual Git commands.
 
 ## Install
 
@@ -26,72 +25,64 @@ npx skills add hypercube-xyz/git-agent-skills --skill craft-commits
 
 ## Skill groups
 
-Groups organize documentation and evaluation priority. Installers expose all skills unless they
-support explicit selection.
+Groups organize documentation and evaluation priority. Installers expose all skills unless they support explicit selection.
 
 ### Core
 
 | Skill | Scope |
 |---|---|
-| [`diagnose-repository`](skills/diagnose-repository/SKILL.md) | Build a precise, non-mutating explanation of the repository's current state and route the user to the smallest next workflow. |
-| [`configure-git`](skills/configure-git/SKILL.md) | Establish the requested Git behavior at the narrowest valid scope while preserving unrelated configuration and revealing provenance. |
-| [`craft-commits`](skills/craft-commits/SKILL.md) | Turn selected local work into the smallest complete, reviewable sequence of commits while preserving unrelated edits and the repository's message convention. |
-| [`sync-branches`](skills/sync-branches/SKILL.md) | Make one local/remote branch relationship reach an explicitly chosen state without losing commits or silently choosing a divergence policy. |
-| [`integrate-branches`](skills/integrate-branches/SKILL.md) | Create the intended integrated history at an exact local target while preserving contracts, unrelated work, and recoverability. |
-| [`manage-worktrees`](skills/manage-worktrees/SKILL.md) | Establish the requested linked-worktree topology while protecting every registered worktree, checked-out branch, and uncommitted file. |
-| [`resolve-conflicts`](skills/resolve-conflicts/SKILL.md) | Produce a semantically correct resolved tree, preserve intended behavior from all relevant sides, and complete or safely leave the operation in an explicit state. |
-| [`undo-changes`](skills/undo-changes/SKILL.md) | Reach a specified earlier or inverse state while preserving all material work outside the exact reversal scope. |
-| [`recover-lost-work`](skills/recover-lost-work/SKILL.md) | Identify the correct recoverable object with evidence, restore it under a new safe name or path, and avoid destroying remaining recovery evidence. |
-| [`edit-commit-history`](skills/edit-commit-history/SKILL.md) | Produce the explicitly designed replacement commit series while preserving content, recovery anchors, signatures/policy, and concurrent remote work. |
-| [`find-regression`](skills/find-regression/SKILL.md) | Identify a minimal causal boundary with a trustworthy test oracle and leave the repository in a known state. |
-| [`manage-submodules`](skills/manage-submodules/SKILL.md) | Make the superproject's gitlink, `.gitmodules`, local submodule config, nested checkout, and expected remote relationship consistent. |
-| [`manage-large-files`](skills/manage-large-files/SKILL.md) | Make selected large-file paths use the intended storage policy and remain retrievable without losing binary content or silently rewriting unrelated history. |
-| [`manage-tags`](skills/manage-tags/SKILL.md) | Establish the exact requested tag object/ref locally or at a verified remote with correct type, target, annotation, signature, and immutability policy. |
-| [`migrate-repository`](skills/migrate-repository/SKILL.md) | Transfer the explicitly selected repository state to a verified destination with auditable completeness, no credential leakage, and a controlled cutover/recovery plan. |
+| [`diagnose-repository`](skills/diagnose-repository/SKILL.md) | Classify confusing Git state without mutation and route to the owning workflow. |
+| [`configure-git`](skills/configure-git/SKILL.md) | Own Git configuration, identity, signing, attributes, hooks, and helper selection. |
+| [`craft-commits`](skills/craft-commits/SKILL.md) | Turn reviewed local changes into coherent atomic commits. |
+| [`sync-branches`](skills/sync-branches/SKILL.md) | Reconcile and publish one local/remote branch relationship. |
+| [`integrate-branches`](skills/integrate-branches/SKILL.md) | Integrate one complete line, including subtree/vendor synchronization. |
+| [`manage-worktrees`](skills/manage-worktrees/SKILL.md) | Own linked-worktree lifecycle and branch occupancy safety. |
+| [`resolve-conflicts`](skills/resolve-conflicts/SKILL.md) | Resolve semantic conflicts after a Git operation has stopped. |
+| [`undo-changes`](skills/undo-changes/SKILL.md) | Reverse a known change or abort known operation state. |
+| [`recover-lost-work`](skills/recover-lost-work/SKILL.md) | Restore intact but unreachable/deleted work additively. |
+| [`repair-repository-integrity`](skills/repair-repository-integrity/SKILL.md) | Repair damaged/missing Git objects, packs, refs, alternates, or clone completeness. |
+| [`edit-commit-history`](skills/edit-commit-history/SKILL.md) | Rewrite one existing commit series in place. |
+| [`find-regression`](skills/find-regression/SKILL.md) | Locate a behavioral transition with a validated bisect oracle. |
+| [`manage-submodules`](skills/manage-submodules/SKILL.md) | Own `.gitmodules`, gitlinks, and nested repository relationships. |
+| [`manage-large-files`](skills/manage-large-files/SKILL.md) | Own LFS pointer/object relationships and large-object policy. |
+| [`manage-tags`](skills/manage-tags/SKILL.md) | Own tag object/ref lifecycle and verification. |
+| [`migrate-repository`](skills/migrate-repository/SKILL.md) | Transfer a complete repository and coordinated migration state. |
 
 ### Compact / optional
 
 | Skill | Scope |
 |---|---|
-| [`setup-repository`](skills/setup-repository/SKILL.md) | Produce one usable local repository at a verified destination without overwriting unrelated files or silently weakening repository completeness. |
-| [`manage-remotes`](skills/manage-remotes/SKILL.md) | Make remote topology accurately represent the intended repositories and ref mappings without silently publishing or leaking authentication material. |
-| [`manage-branches`](skills/manage-branches/SKILL.md) | Establish the intended local branch/ref state while preserving commits, worktree changes, linked worktrees, and remote refs. |
-| [`preserve-work`](skills/preserve-work/SKILL.md) | Create a verified, recoverable snapshot of exactly the intended in-progress state while leaving excluded work protected. |
-| [`transplant-commits`](skills/transplant-commits/SKILL.md) | Replay exactly the intended logical changes onto the target in a verified order without importing unrelated branch history. |
-| [`investigate-history`](skills/investigate-history/SKILL.md) | Produce an evidence-backed history explanation with exact commits, paths, ranges, and limitations. |
-| [`optimize-large-repository`](skills/optimize-large-repository/SKILL.md) | Reduce measured Git latency or transfer/storage cost while preserving correctness, required files/history, and recoverability. |
+| [`setup-repository`](skills/setup-repository/SKILL.md) | Create or clone a repository with the intended topology and completeness policy. |
+| [`manage-remotes`](skills/manage-remotes/SKILL.md) | Own remote identity, URLs, refspecs, and fork/upstream topology. |
+| [`manage-branches`](skills/manage-branches/SKILL.md) | Own local branch lifecycle and metadata without integration. |
+| [`preserve-work`](skills/preserve-work/SKILL.md) | Create a verified temporary rescue artifact from current uncommitted work. |
+| [`transplant-commits`](skills/transplant-commits/SKILL.md) | Replay selected commits or reviewed patch/mailbox series. |
+| [`investigate-history`](skills/investigate-history/SKILL.md) | Explain provenance and historical change without mutation. |
+| [`optimize-large-repository`](skills/optimize-large-repository/SKILL.md) | Measure and tune a healthy large repository. |
+| [`manage-stacked-branches`](skills/manage-stacked-branches/SKILL.md) | Restack and coordinate publication of dependent review branches. |
 
-### Out-of-package boundaries
+## Boundaries and references
 
-General code review, secret detection, and release preparation are not packaged as Git skills. Route
-them to a dedicated SWE review workflow, an approved deterministic secret scanner, or the
-repository's release procedure. `manage-tags` owns only the exact Git tag lifecycle.
+General code review, secret detection, release preparation, hosting-provider administration, and deployment are outside this package. Multi-step Git know-how is kept in the direct references of the skill that owns the consequential decision, so installed agents can discover it without an umbrella workflow skill.
 
-See [`docs/SKILL-CATALOG.md`](docs/SKILL-CATALOG.md) for routing boundaries,
-[`docs/HANDOFF-CONTRACT.md`](docs/HANDOFF-CONTRACT.md) for consequence-boundary handoffs, and
-[`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md) for supported environments.
+See [`docs/SKILL-CATALOG.md`](docs/SKILL-CATALOG.md) for routing boundaries, [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md) for supported environments, and [`docs/DESIGN-RATIONALE.md`](docs/DESIGN-RATIONALE.md) for the package design. Consequence-boundary handoff fields are stated directly in the relevant skills so they remain available when a skill is installed independently.
 
 ## Development
 
-Generate release archives from a Git checkout. The builder uses the Git index to select package files.
-
 ```sh
 python3 scripts/validate_skills.py
-python3 scripts/evaluate_fixtures.py
 python3 scripts/smoke_test_git.py
 python3 scripts/build_release.py --check
 ```
 
-List or link skills for local development:
+Link all packaged skills for local development:
 
 ```sh
-./scripts/list-skills.sh
-./scripts/link-skills.sh --dry-run
-./scripts/link-skills.sh
+python3 scripts/link_skills.py --dry-run
+python3 scripts/link_skills.py
 ```
 
-Agent-runtime test cases are documented in
-[`docs/VALIDATION-PLAN.md`](docs/VALIDATION-PLAN.md).
+The release builder requires a clean committed Git checkout and selects package files from the Git index rather than a filesystem walk.
 
 ## License
 
