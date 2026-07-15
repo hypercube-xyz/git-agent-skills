@@ -1,50 +1,35 @@
-# Validation Plan
+# Validation plan
 
-Validation uses five layers.
+Validation applies to the exact source, tools, and scenarios exercised. It does not certify every future agent/runtime/environment combination.
 
-## 1. Package contract
+## Package, routing, and overlap contract
 
-`python3 scripts/validate_skills.py` checks catalog parity, frontmatter, direct references, required
-runtime-contract elements, context-size heuristics, package files, group completeness, and selected
-high-consequence invariants.
+`scripts/validate_skills.py` checks:
 
-## 2. Static routing and failure fixtures
+- catalog, plugin, filesystem, README, and tier parity,
+- required skill sections, direct triggers for every bundled reference and script,
+- missing, orphaned, chained, or duplicated references and untriggered skill-local scripts,
+- exact routing/scenario coverage for every catalogued skill,
+- unknown, removed, missing, or duplicated fixture entries,
+- at least three positive and two negative routing cases per skill,
+- realistic skill-specific stale-state, partial-failure, and prompt-injection contract scenarios per skill,
+- duplicate objectives and high-overlap skill pairs without explicit routing boundaries,
+- reciprocal boundaries for known high-risk intersections.
 
-`python3 scripts/evaluate_fixtures.py` checks every case in `tests/routing.json` and at least two
-boundary/failure scenarios per skill. Each routing case records:
+Lexical overlap is only a review signal. A failure means the package needs a human ownership/routing review; a pass does not prove semantic non-overlap for every possible request.
 
-- expected and forbidden skills;
-- expected consequence classes;
-- evidence that should be inspected;
-- actions that must not occur.
+The scenario file is a static contract inventory. It records prompts and observable assertions that an external runner should evaluate, but the repository validator only checks fixture quality and coverage. A static pass must not be reported as an agent-runtime evaluation.
 
-These fixtures check coverage and reviewability. Model execution is covered by layer 4.
+## Git and package semantics
 
-## 3. Deterministic Git and package semantics
+`scripts/smoke_test_git.py` creates disposable repositories and executes focused cases for desired effects and protected-state/prohibited-effect boundaries. It covers the v1.0.0 semantic surfaces plus mailbox replay, shallow/partial completeness repair, object-corruption containment, branch-stack restacking, subtree/vendor synchronization, and multi-identity/signing/hooks.
 
-`python3 scripts/smoke_test_git.py` uses disposable repositories to test selected invariants,
-including exact force-with-lease rejection, post-push remote queries, tag objects, NUL-safe worktree
-and filename handling, destructive-clean preview, linked-worktree protection, reflog recovery,
-shared-tag-namespace prune visibility, atomic multi-ref push, submodule gitlinks, remote redaction,
-and installer preflight behavior.
+A skipped environment-dependent test is reported; zero skips is preferred for release evidence.
 
-## 4. Agent-runtime evaluation
+## Release gate
 
-`tests/agent-runtime-cases.json` contains observable cases that static validation does not run. Run
-high-risk skills and overlapping routing pairs against each supported runtime and model tier.
-Capture tool calls, inspected sources, checkpoints, mutations, retries, validation, and final
-results.
+`scripts/build_release.py` runs both validators, requires a clean committed tracked tree, selects regular files from the Git index, rejects symlinks/unmerged entries/unsupported modes, creates a deterministic ZIP with one embedded manifest, and emits SHA-256 and sidecar metadata. `--skip-validation` remains truthfully represented in the sidecar.
 
-Measure task success, protected-state violations, unsafe attempts, routing confusion, tool calls,
-clarification count, token cost, and repeated-run consistency. Use `without skill`, `current skill`,
-and `reduced skill` comparisons for skills whose marginal value is uncertain.
+CI checks grouped skill discovery and the Claude Code plugin manifest with pinned clients on Node 24 for pull requests, pushes to `main`, and manual runs. A separate Node 26/latest-client job runs only after non-PR builds, is non-blocking, and is not release evidence for a pinned client version.
 
-## 5. Release gate
-
-`python3 scripts/build_release.py --check` runs the static and semantic checks, builds two independent
-archives, compares them byte-for-byte, and emits:
-
-- a versioned ZIP;
-- a SHA-256 sidecar;
-- a release JSON containing source-tree identity, tool versions, validation status, artifact hash,
-  and tested environment.
+Independent model comparisons are intentionally not stored as source files. Run them in an authorized evaluation environment and retain the results as CI or experiment artifacts rather than package runtime content.

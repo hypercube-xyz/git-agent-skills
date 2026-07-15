@@ -4,7 +4,6 @@ import argparse, json, os, sys
 from pathlib import Path
 from typing import Optional
 
-
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description="Link all packaged skills after an all-target preflight.")
@@ -37,36 +36,28 @@ def main() -> int:
         print("preflight failed; no changes made:", file=sys.stderr)
         for e in errors: print(f"- {e}", file=sys.stderr)
         return 2
-    for source,dest,old in plan:
+    for source,dest,_old in plan:
         print(f"{'WOULD LINK' if args.dry_run else 'LINK'} {dest} -> {source}")
-    if args.dry_run:
-        return 0
+    if args.dry_run: return 0
     target.mkdir(parents=True, exist_ok=True)
     touched: list[tuple[Path, Optional[str]]] = []
     try:
         for source,dest,old in plan:
-            # Record the original state before the first mutation so a failure while
-            # creating the replacement link can still restore a foreign symlink.
             touched.append((dest,old))
-            if dest.is_symlink():
-                dest.unlink()
+            if dest.is_symlink(): dest.unlink()
             dest.symlink_to(source, target_is_directory=True)
     except Exception as exc:
         rollback_errors: list[str] = []
         for dest,old in reversed(touched):
             try:
-                if dest.is_symlink():
-                    dest.unlink()
-                elif dest.exists():
-                    raise OSError("rollback target became a non-symlink")
-                if old is not None:
-                    dest.symlink_to(old, target_is_directory=True)
+                if dest.is_symlink(): dest.unlink()
+                elif dest.exists(): raise OSError("rollback target became a non-symlink")
+                if old is not None: dest.symlink_to(old, target_is_directory=True)
             except OSError as rollback_exc:
                 rollback_errors.append(f"{dest}: {rollback_exc}")
         if rollback_errors:
             print(f"linking failed and rollback was incomplete: {exc}", file=sys.stderr)
-            for error in rollback_errors:
-                print(f"- {error}", file=sys.stderr)
+            for error in rollback_errors: print(f"- {error}", file=sys.stderr)
         else:
             print(f"linking failed; changes from this invocation were rolled back: {exc}", file=sys.stderr)
         return 3
