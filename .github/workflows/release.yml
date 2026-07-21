@@ -117,7 +117,7 @@ jobs:
           version="${RELEASE_TAG#v}"
           zip="dist/git-agent-skills-${version}.zip"
           checksum="${zip}.sha256"
-          metadata="${zip}.release.json"
+          metadata="${zip%.zip}.release.json"
 
           assets=("${zip}" "${checksum}" "${metadata}")
           for asset in "${assets[@]}"; do

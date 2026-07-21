@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "package_version": "1.2.0",
+  "package_version": "1.2.1",
   "release_date": "2026-07-21",
   "base_release": {
     "tag": "v1.1.0",

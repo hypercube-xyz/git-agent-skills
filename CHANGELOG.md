@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 - 2026-07-21
+
+- Fix release workflow metadata filename: `${zip%.zip}.release.json` instead of `${zip}.release.json`
+
 ## 1.2.0 - 2026-07-21
 
 - Add SECURITY-EXECUTION.md contract, inject untrusted-content and executable-Git boundary into all 24 skills, and harden mailbox ingestion.
