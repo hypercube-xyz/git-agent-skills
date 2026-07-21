@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.0 - 2026-07-21
+
+- Add SECURITY-EXECUTION.md contract, inject untrusted-content and executable-Git boundary into all 24 skills, and harden mailbox ingestion.
+- Add controlled_git_env with ambient config/credential isolation, atomic linker, and deterministic security regression checks.
+- Harden release build: immutable committed blobs, atomic per-file writes, portable path validation, symlink-component rejection.
+- Make build_release.py a pure packager — remove validation orchestration; CI runs validators before calling builder.
+- Add cross-platform CI: blocking tests on Linux, macOS, and Windows; release publication on Linux only.
+- Add --mode auto/symlink/copy to link_skills.py with Windows copy fallback and rollback.
+- Fail closed on existing release asset digest mismatch instead of automatic clobber.
+- Treat PATH as trusted input for Git executable discovery; document the contract in resolve_git().
+- Add platform-specific trusted symlink allowlist with target verification (macOS only).
+- Fix linker symlink check to inspect raw path before resolve().
+
 ## 1.1.0 - 2026-07-16
 
 - Make bundled script discovery explicit and validate every skill-local script trigger by exact relative path.

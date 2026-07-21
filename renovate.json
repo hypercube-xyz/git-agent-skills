@@ -1,0 +1,29 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": ["custom.regex"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^.github\\/workflows\\/validate\\.yml$/"],
+      "matchStrings": ["skills@(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      "depNameTemplate": "skills",
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^.github\\/workflows\\/validate\\.yml$/"],
+      "matchStrings": ["@anthropic-ai\\/claude-code@(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      "depNameTemplate": "@anthropic-ai/claude-code",
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Dependabot owns GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "enabled": false
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import sys
 import uuid
 from dataclasses import dataclass
@@ -33,6 +34,42 @@ def atomic_symlink(source: Path | str, dest: Path) -> None:
         tmp.unlink(missing_ok=True)
 
 
+def atomic_copy(source: Path, dest: Path) -> None:
+    tmp = dest.parent / f".{dest.name}.tmp-{uuid.uuid4().hex}"
+    try:
+        shutil.copytree(source, tmp, symlinks=False)
+        os.replace(tmp, dest)
+    finally:
+        if tmp.exists():
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
+def can_symlink() -> bool:
+    if sys.platform == "win32":
+        try:
+            import tempfile as _t
+            td = Path(_t.mkdtemp())
+            (td / "test").symlink_to(td, target_is_directory=True)
+            (td / "test").unlink()
+            td.rmdir()
+            return True
+        except OSError:
+            return False
+    return True
+
+
+def install(source: Path, dest: Path, mode: str) -> None:
+    if mode == "symlink":
+        atomic_symlink(source, dest)
+    elif mode == "copy":
+        atomic_copy(source, dest)
+    else:  # auto
+        if can_symlink():
+            atomic_symlink(source, dest)
+        else:
+            atomic_copy(source, dest)
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     skills_path = root / "skills"
@@ -50,6 +87,8 @@ def main() -> int:
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--force-symlinks", action="store_true", help="Replace foreign symlinks, never files/directories.")
+    parser.add_argument("--mode", choices=["auto", "symlink", "copy"], default="auto",
+                        help="Installation mode: auto (symlink or copy fallback), symlink, copy.")
     args = parser.parse_args()
 
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
@@ -69,8 +108,11 @@ def main() -> int:
         errors.append("duplicate skill names")
 
     target_input = args.target.expanduser()
+    # Check raw path for symlink before resolving — .resolve() follows symlinks.
+    if target_input.is_symlink():
+        errors.append(f"target must be a real directory, not a symlink: {target_input}")
     target = target_input.resolve(strict=False)
-    if target.exists() and (target.is_symlink() or not target.is_dir()):
+    if target.exists() and not target.is_dir():
         errors.append(f"target must resolve to a real directory: {target_input}")
 
     plan: list[Change] = []
@@ -107,9 +149,10 @@ def main() -> int:
             print(f"- {error}", file=sys.stderr)
         return 2
 
+    action = "LINK" if args.mode != "copy" else "COPY"
     print(f"target: {target} (from {target_input})")
     for change in plan:
-        print(f"{'WOULD LINK' if args.dry_run else 'LINK'} {change.dest} -> {change.source}")
+        print(f"{'WOULD ' + action if args.dry_run else action} {change.dest} -> {change.source}")
     if args.dry_run:
         return 0
 
@@ -123,29 +166,30 @@ def main() -> int:
                     raise OSError(f"destination changed after preflight: {change.dest}")
             elif observed != change.previous:
                 raise OSError(f"symlink changed after preflight: {change.dest}")
-            atomic_symlink(change.source, change.dest)
+            install(change.source, change.dest, args.mode)
             touched.append(change)
     except Exception as exc:
         rollback_errors: list[str] = []
         for change in reversed(touched):
             try:
-                if not change.dest.is_symlink():
-                    raise OSError("rollback target became a non-symlink")
-                if change.previous is None:
-                    change.dest.unlink()
-                else:
-                    atomic_symlink(change.previous, change.dest)
+                if change.dest.is_symlink():
+                    if change.previous is None:
+                        change.dest.unlink()
+                    else:
+                        atomic_symlink(change.previous, change.dest)
+                elif change.dest.is_dir():
+                    shutil.rmtree(change.dest)
             except OSError as rollback_exc:
                 rollback_errors.append(f"{change.dest}: {rollback_exc}")
         if rollback_errors:
-            print(f"linking failed and rollback was incomplete: {exc}", file=sys.stderr)
+            print(f"install failed and rollback was incomplete: {exc}", file=sys.stderr)
             for error in rollback_errors:
                 print(f"- {error}", file=sys.stderr)
         else:
-            print(f"linking failed; invocation changes were rolled back: {exc}", file=sys.stderr)
+            print(f"install failed; invocation changes were rolled back: {exc}", file=sys.stderr)
         return 3
 
-    print(f"linked {len(plan)} skills; {len(names) - len(plan)} already correct")
+    print(f"installed {len(plan)} skills; {len(names) - len(plan)} already correct")
     return 0
 
 

@@ -32,6 +32,14 @@ A skill must stop rather than imply these controls exist when the runtime cannot
 
 Treat paths and refs as structured data, not shell fragments. Prefer NUL-delimited or machine-readable output, use `--end-of-options` or `--` before paths, avoid shell interpolation, escape terminal control characters, reject unsupported special files, verify canonical containment, and re-check identity immediately before replacement or deletion.
 
+### Known limitation: concurrent local attacker TOCTOU
+
+Path validation and atomic writes re-check symlink components before `os.replace`, but a concurrent local process can swap a parent directory for a symlink between the check and the write. Fully closing this requires `openat`/`renameat`-style no-follow semantics that Python's `pathlib` does not provide portably. The release builder and linker do not defend against a concurrent local attacker with write access to the output parent directory. This is a known limitation, not a regression.
+
+### Known limitation: partial output set
+
+Each release output (ZIP, checksum, metadata) is written atomically per file, but the three-file set is not transactional. Abrupt termination after the first file but before the third leaves a partial set. Rerunning the deterministic builder reconciles it.
+
 ## Unknown outcomes and retries
 
 Timeout, transport failure, or a nonzero exit status does not prove that no external effect occurred. Before retrying, re-query current state and classify each intended effect as completed, absent, or unknown. Retry only effects proven absent and safe to repeat. Invalidate prior approval when the target, object ID, destination, account, command class, or blast radius changes.

@@ -23,11 +23,6 @@ ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
 EXCLUDE_NAMES = {".DS_Store"}
 EXCLUDE_PREFIXES = {"dist", ".git"}
-VALIDATION = [
-    [sys.executable, "scripts/validate_skills.py"],
-    [sys.executable, "scripts/security_regression.py"],
-    [sys.executable, "scripts/smoke_test_git.py"],
-]
 WINDOWS_RESERVED = {
     "CON", "PRN", "AUX", "NUL",
     *(f"COM{i}" for i in range(1, 10)),
@@ -44,15 +39,9 @@ class Entry:
     data: bytes
 
 
-def run(cmd: list[str]) -> None:
-    proc = subprocess.run(cmd, cwd=ROOT, env=controlled_git_env())
-    if proc.returncode:
-        raise SystemExit(proc.returncode)
-
-
-def git(*args: str, text: bool = False, check: bool = False) -> subprocess.CompletedProcess:
+def git(*args: str, text: bool = False, check: bool = False, root: Path = ROOT) -> subprocess.CompletedProcess:
     proc = subprocess.run(
-        [resolve_git(), "-C", str(ROOT), *args],
+        [resolve_git(), "-C", str(root), *args],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=text,
@@ -65,12 +54,12 @@ def git(*args: str, text: bool = False, check: bool = False) -> subprocess.Compl
     return proc
 
 
-def source_revision() -> str:
-    return git("rev-parse", "--verify", "HEAD", text=True, check=True).stdout.strip()
+def source_revision(root: Path = ROOT) -> str:
+    return git("rev-parse", "--verify", "HEAD", text=True, check=True, root=root).stdout.strip()
 
 
-def source_tree_oid(revision: str) -> str:
-    return git("rev-parse", "--verify", f"{revision}^{{tree}}", text=True, check=True).stdout.strip()
+def source_tree_oid(revision: str, root: Path = ROOT) -> str:
+    return git("rev-parse", "--verify", f"{revision}^{{tree}}", text=True, check=True, root=root).stdout.strip()
 
 
 def validate_path(raw: bytes) -> PurePosixPath:
@@ -97,8 +86,8 @@ def validate_path(raw: bytes) -> PurePosixPath:
     return path
 
 
-def tracked_files(revision: str) -> list[Entry]:
-    proc = git("ls-tree", "-r", "-z", "--full-tree", revision)
+def tracked_files(revision: str, root: Path = ROOT) -> list[Entry]:
+    proc = git("ls-tree", "-r", "-z", "--full-tree", revision, root=root)
     if proc.returncode:
         raise SystemExit("unable to enumerate committed release files")
 
@@ -127,7 +116,7 @@ def tracked_files(revision: str) -> list[Entry]:
             raise SystemExit(f"portable path collision: {previous} and {rel}")
 
         oid = raw_oid.decode("ascii")
-        blob = git("cat-file", "blob", oid, check=True).stdout
+        blob = git("cat-file", "blob", oid, check=True, root=root).stdout
         entries.append(Entry(rel=rel, mode=mode, data=blob))
 
     return sorted(entries, key=lambda entry: entry.rel.as_posix())
@@ -174,7 +163,7 @@ def catalog_from_entries(entries: list[Entry]) -> dict:
     raise SystemExit("committed release input lacks skills/catalog.json")
 
 
-def release_metadata(entries: list[Entry], catalog: dict, revision: str) -> dict[str, object]:
+def release_metadata(entries: list[Entry], catalog: dict, revision: str, root: Path = ROOT) -> dict[str, object]:
     return {
         "schema_version": 2,
         "package": "git-agent-skills",
@@ -184,7 +173,7 @@ def release_metadata(entries: list[Entry], catalog: dict, revision: str) -> dict
         "source_identity": {
             "method": "sha256 over sorted committed paths, Git modes, and immutable blob content",
             "source_tree_sha256": tree_digest(entries),
-            "git_tree_oid": source_tree_oid(revision),
+            "git_tree_oid": source_tree_oid(revision, root=root),
             "base_revision": catalog.get("base_release", {}),
             "source_revision": {"kind": "git-commit", "commit": revision},
             "upstream_repository": "https://github.com/hypercube-xyz/git-agent-skills",
@@ -238,7 +227,16 @@ def is_within(path: Path, parent: Path) -> bool:
         return False
 
 
+_TRUSTED_SYMLINKS: dict[Path, Path] = {}
+if sys.platform == "darwin":
+    _TRUSTED_SYMLINKS = {
+        Path("/tmp"): Path("/private/tmp"),
+        Path("/var"): Path("/private/var"),
+    }
+
+
 def reject_symlink_components(path: Path) -> None:
+    # Walk raw abspath components; reject symlinks except known macOS root aliases.
     absolute = Path(os.path.abspath(path))
     current = Path(absolute.anchor)
     parts = absolute.parts[1:] if absolute.anchor else absolute.parts
@@ -249,15 +247,20 @@ def reject_symlink_components(path: Path) -> None:
         except FileNotFoundError:
             break
         if stat.S_ISLNK(mode):
-            raise SystemExit(f"release output contains a symlink component: {current}")
+            trusted_target = _TRUSTED_SYMLINKS.get(current)
+            if trusted_target is None:
+                raise SystemExit(f"release output contains a symlink component: {current}")
+            resolved = current.resolve(strict=False)
+            if resolved != trusted_target:
+                raise SystemExit(f"trusted symlink {current} points to {resolved}, expected {trusted_target}")
 
 
-def validate_output_paths(output: Path, entries: list[Entry]) -> tuple[Path, Path, Path]:
+def validate_output_paths(output: Path, entries: list[Entry], root: Path = ROOT) -> tuple[Path, Path, Path]:
     raw_output = output.expanduser()
     reject_symlink_components(raw_output)
     output = raw_output.resolve(strict=False)
-    root = ROOT.resolve(strict=True)
-    dist = DIST.resolve(strict=False)
+    root = root.resolve(strict=True)
+    dist = (root / "dist").resolve(strict=False)
     if is_within(output, root) and not is_within(output, dist):
         raise SystemExit("release output inside the repository must be under dist/")
     if output == dist or output.name in {"", ".", ".."}:
@@ -281,20 +284,19 @@ def release_record(
     entries: list[Entry],
     catalog: dict,
     revision: str,
-    validation_executed: bool,
     reproducibility_checked: bool,
     artifact: dict[str, object],
+    root: Path = ROOT,
 ) -> dict[str, object]:
-    record = release_metadata(entries, catalog, revision)
+    record = release_metadata(entries, catalog, revision, root=root)
     record["build_environment"] = {
         "python": sys.version.split()[0],
         "git": tool_version([resolve_git(), "--version"]),
     }
     record["validation"] = {
-        "result": "passed" if validation_executed else "skipped",
-        "commands_executed": [" ".join(command) for command in VALIDATION] if validation_executed else [],
+        "result": "not run by builder; CI validates before invoking builder",
         "reproducibility_check": "passed" if reproducibility_checked else "not-run",
-        "independent_agent_runtime_comparison": "not run unless supplied by an authorized external runner",
+        "reproducibility_note": "in-process deterministic serialization check; cross-environment reproducibility requires comparing digests from independent jobs",
     }
     record["artifact"] = artifact
     return record
@@ -303,13 +305,8 @@ def release_record(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build a deterministic release archive from immutable committed blobs.")
     parser.add_argument("--check", action="store_true", help="Build twice in memory and fail if bytes differ.")
-    parser.add_argument("--skip-validation", action="store_true", help="Skip validators before packaging.")
     parser.add_argument("--output", type=Path, help="Write ZIP here instead of dist/.")
     args = parser.parse_args()
-
-    if not args.skip_validation:
-        for command in VALIDATION:
-            run(command)
 
     revision = source_revision()
     entries = tracked_files(revision)
@@ -328,7 +325,6 @@ def main() -> int:
         entries,
         catalog,
         revision,
-        validation_executed=not args.skip_validation,
         reproducibility_checked=args.check,
         artifact=artifact,
     )

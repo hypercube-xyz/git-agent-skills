@@ -85,7 +85,15 @@ python3 scripts/link_skills.py --dry-run
 python3 scripts/link_skills.py
 ```
 
-The release builder requires a clean committed Git checkout and selects package files from the Git index rather than a filesystem walk.
+The release builder is a pure packager: it reads immutable committed blobs via `git ls-tree` and `git cat-file`, never touches the working tree, and does not run validators. CI validates the checked-out revision before calling the builder. Each release output (ZIP, checksum, metadata) is written atomically per file; abrupt termination may leave a partial output set — rerunning the deterministic builder reconciles it.
+
+## Compatibility
+
+- **Skills and installation:** Linux, macOS, Windows (Python 3.12+, Git 2.35+)
+- **Release publishing:** Linux CI only; artifact is a platform-neutral ZIP
+- **No OS/process sandbox** is provided by this repository
+- **Concurrent local attacker** with write access to the output parent directory is not defended against (known TOCTOU limitation)
+- **Hard-killed processes** may leave temporary directories in the OS temp prefix
 
 ## License
 
