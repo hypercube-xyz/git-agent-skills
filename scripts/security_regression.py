@@ -278,16 +278,22 @@ except Exception as exc:
 # --- D. Installer mode (behavior) ---
 
 def installer_mode_test() -> None:
-    import inspect
     src = (ROOT / "scripts/link_skills.py").read_text(encoding="utf-8")
-    if "--mode" not in src:
-        raise AssertionError("linker does not have --mode argument")
-    if "atomic_copy" not in src:
-        raise AssertionError("linker does not have copy fallback")
-    if "can_symlink" not in src:
-        raise AssertionError("linker does not have symlink capability check")
-    if "target_input.is_symlink()" not in src:
-        raise AssertionError("linker does not check raw symlink before resolve()")
+    required = {
+        "--mode": "mode argument",
+        "--force-copies": "forced copy-upgrade path",
+        "atomic_copy": "copy fallback",
+        "can_symlink": "symlink capability check",
+        "MARKER_CONTENT": "validated copy-install marker",
+        "promote_staged": "staged destination promotion",
+        "cleanup_backups": "post-success backup cleanup",
+        "rollback(applied)": "invocation rollback",
+        "is_reparse_point": "Windows reparse-point rejection",
+        "raw.is_file(follow_symlinks=False)": "special-file rejection",
+    }
+    for token, label in required.items():
+        if token not in src:
+            raise AssertionError(f"linker does not contain {label}")
 
 
 try:

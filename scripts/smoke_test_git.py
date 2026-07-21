@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -815,6 +816,169 @@ def test_installer_dry_run(td):
     assert cp.returncode == 0 and not target.exists()
 
 
+def _run_installer(target: Path, *extra: str) -> subprocess.CompletedProcess[str]:
+    root = Path(__file__).resolve().parents[1]
+    cp = subprocess.run(
+        [
+            sys.executable,
+            str(root / "scripts/link_skills.py"),
+            "--target",
+            str(target),
+            "--mode",
+            "copy",
+            *extra,
+        ],
+        text=True,
+        capture_output=True,
+    )
+    if cp.returncode:
+        raise AssertionError(
+            f"installer failed ({cp.returncode}): stdout={cp.stdout!r}, "
+            f"stderr={cp.stderr!r}"
+        )
+    return cp
+
+
+def _first_catalog_skill() -> str:
+    root = Path(__file__).resolve().parents[1]
+    catalog = json.loads((root / "skills/catalog.json").read_text(encoding="utf-8"))
+    return catalog["skills"][0]["name"]
+
+
+def test_installer_copy_rerun(td):
+    mod = load_helper("scripts/link_skills.py", "link_skills_copy_rerun")
+    target = td / "skills"
+    _run_installer(target)
+    first = target / _first_catalog_skill()
+    marker = first / mod.MARKER_NAME
+    assert marker.read_text(encoding="utf-8") == mod.MARKER_CONTENT
+    sentinel = first / "local-only-sentinel"
+    sentinel.write_text("old\n", encoding="utf-8")
+    _run_installer(target)
+    assert not sentinel.exists()
+    assert marker.read_text(encoding="utf-8") == mod.MARKER_CONTENT
+
+
+def test_installer_force_copy_upgrade(td):
+    mod = load_helper("scripts/link_skills.py", "link_skills_force_upgrade")
+    target = td / "skills"
+    _run_installer(target)
+    first = target / _first_catalog_skill()
+    (first / mod.MARKER_NAME).unlink()
+    _run_installer(target, "--force-copies")
+    assert (first / mod.MARKER_NAME).read_text(encoding="utf-8") == mod.MARKER_CONTENT
+
+
+def test_installer_copy_rollback(td):
+    mod = load_helper("scripts/link_skills.py", "link_skills_copy_rollback")
+    target = td / "skills"
+    _run_installer(target)
+    first = target / _first_catalog_skill()
+    sentinel = first / "rollback-sentinel"
+    sentinel.write_text("preserve me\n", encoding="utf-8")
+
+    original_argv = sys.argv[:]
+    real_install = mod.install
+    calls = {"n": 0}
+
+    def flaky(source, dest, mode):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            raise OSError("injected copy failure")
+        return real_install(source, dest, mode)
+
+    mod.install = flaky
+    sys.argv = [
+        "link_skills.py",
+        "--target",
+        str(target),
+        "--mode",
+        "copy",
+    ]
+    try:
+        rc = mod.main()
+    finally:
+        mod.install = real_install
+        sys.argv = original_argv
+
+    assert rc == 3
+    assert sentinel.read_text(encoding="utf-8") == "preserve me\n"
+    assert not list(target.glob(".*.backup-*"))
+    assert not list(target.glob(".*.tmp-*"))
+
+
+def test_installer_nested_link_rejected(td):
+    mod = load_helper("scripts/link_skills.py", "link_skills_nested_link")
+    source = td / "source"
+    outside = td / "outside"
+    source.mkdir()
+    outside.mkdir()
+    link = source / "redirect"
+
+    if os.name == "nt":
+        cp = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(link), str(outside)],
+            text=True,
+            capture_output=True,
+        )
+        if cp.returncode:
+            raise SkipTest("unable to create disposable Windows junction")
+    else:
+        link.symlink_to(outside, target_is_directory=True)
+
+    try:
+        mod.reject_nested_symlinks(source)
+    except SystemExit:
+        pass
+    else:
+        raise AssertionError("nested link or junction accepted by copy preflight")
+
+
+def test_installer_special_file_rejected(td):
+    if not hasattr(os, "mkfifo"):
+        raise SkipTest("FIFO creation unavailable")
+    mod = load_helper("scripts/link_skills.py", "link_skills_special_file")
+    source = td / "source"
+    source.mkdir()
+    os.mkfifo(source / "pipe")
+    try:
+        mod.reject_nested_symlinks(source)
+    except SystemExit:
+        pass
+    else:
+        raise AssertionError("special filesystem entry accepted by copy preflight")
+
+
+def test_installer_mode_transition(td):
+    mod = load_helper("scripts/link_skills.py", "link_skills_mode_transition")
+    if not mod.can_symlink():
+        raise SkipTest("directory symlinks unavailable")
+    root = Path(__file__).resolve().parents[1]
+    target = td / "skills"
+    _run_installer(target)
+    first_name = _first_catalog_skill()
+    first = target / first_name
+
+    cp = subprocess.run(
+        [
+            sys.executable,
+            str(root / "scripts/link_skills.py"),
+            "--target",
+            str(target),
+            "--mode",
+            "symlink",
+        ],
+        text=True,
+        capture_output=True,
+    )
+    assert cp.returncode == 0, cp.stderr
+    assert first.is_symlink()
+
+    _run_installer(target)
+    assert first.is_dir() and not first.is_symlink()
+    assert (first / mod.MARKER_NAME).read_text(encoding="utf-8") == mod.MARKER_CONTENT
+
+
 def test_release_metadata_filename(td):
     mod = load_helper("scripts/build_release.py", "build_release_metadata_filename")
     output = td / "git-agent-skills-1.1.0.zip"
@@ -935,12 +1099,16 @@ def main(argv=None):
         ("release metadata filename", test_release_metadata_filename, {"macos"}),
         ("skipped validation metadata", test_skipped_validation_metadata, {"macos"}),
         ("release provenance fields", test_release_provenance_fields, {"macos"}),
-        ("installer all-target preflight", test_installer_preflight, {"macos"}),
-        ("installer rollback", test_installer_rollback, {"macos"}),
-        ("installer dry-run no mutation", test_installer_dry_run, {"macos"}),
-        # --- Windows-specific: installer copy fallback, CRLF/LF mailbox, reserved paths ---
-        ("installer rollback", test_installer_rollback, {"windows"}),
-        ("installer dry-run no mutation", test_installer_dry_run, {"windows"}),
+        ("installer all-target preflight", test_installer_preflight, {"macos", "windows"}),
+        ("installer symlink rollback", test_installer_rollback, {"macos"}),
+        ("installer dry-run no mutation", test_installer_dry_run, {"macos", "windows"}),
+        ("installer copy rerun and update", test_installer_copy_rerun, {"macos", "windows"}),
+        ("installer forced copy upgrade", test_installer_force_copy_upgrade, {"macos", "windows"}),
+        ("installer copy rollback", test_installer_copy_rollback, {"macos", "windows"}),
+        ("installer nested link rejection", test_installer_nested_link_rejected, {"macos", "windows"}),
+        ("installer special-file rejection", test_installer_special_file_rejected, {"macos"}),
+        ("installer copy-symlink transition", test_installer_mode_transition, {"macos"}),
+        # --- Windows-specific: copy fallback, CRLF/LF mailbox, reserved paths ---
     ]
     parser = argparse.ArgumentParser(
         description="Run disposable Git and package semantic tests."

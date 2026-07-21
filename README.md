@@ -89,7 +89,7 @@ The release builder is a pure packager: it reads immutable committed blobs via `
 
 ## Compatibility
 
-- **Skills and installation:** Linux, macOS, Windows (Python 3.12+, Git 2.35+)
+- **Skills and installation:** Linux, macOS, Windows (Python 3.14, Git 2.35+)
 - **Release publishing:** Linux CI only; artifact is a platform-neutral ZIP
 - **No OS/process sandbox** is provided by this repository
 - **Concurrent local attacker** with write access to the output parent directory is not defended against (known TOCTOU limitation)
