@@ -23,6 +23,8 @@ npx skills add hypercube-xyz/git-agent-skills --skill craft-commits
 - Keep `SKILL.md` focused; load conditional detail from direct references.
 - Verify intended effects, incidental bounds, protected state, and remote results where applicable.
 
+See [`docs/SECURITY-EXECUTION.md`](docs/SECURITY-EXECUTION.md) for the common untrusted-content, executable-Git, retry, recovery-artifact, and runtime-enforcement contract.
+
 ## Skill groups
 
 Groups organize documentation and evaluation priority. Installers expose all skills unless they support explicit selection.
@@ -71,6 +73,7 @@ See [`docs/SKILL-CATALOG.md`](docs/SKILL-CATALOG.md) for routing boundaries, [`d
 
 ```sh
 python3 scripts/validate_skills.py
+python3 scripts/security_regression.py
 python3 scripts/smoke_test_git.py
 python3 scripts/build_release.py --check
 ```

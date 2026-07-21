@@ -10,6 +10,8 @@ import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
+from security_git_env import controlled_git_env, resolve_git
+
 sys.dont_write_bytecode = True
 
 
@@ -36,8 +38,9 @@ class SkipTest(Exception):
 
 
 def git(cwd, *args, check=True, env=None):
+    effective_env = controlled_git_env(env)
     cp = subprocess.run(
-        ["git", *args], cwd=cwd, text=True, capture_output=True, env=env
+        [resolve_git(), *args], cwd=cwd, text=True, capture_output=True, env=effective_env
     )
     if check and cp.returncode:
         raise RuntimeError(f"git {args}: {cp.stderr or cp.stdout}")
@@ -191,6 +194,7 @@ def test_identity_include(td):
     )
     env = os.environ.copy()
     env["HOME"] = str(home)
+    env["GIT_AGENT_SKILLS_ALLOW_HOME"] = "1"
     env["GIT_CONFIG_NOSYSTEM"] = "1"
     assert (
         git(work, "config", "user.email", env=env).stdout.strip()
