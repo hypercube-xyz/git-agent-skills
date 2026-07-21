@@ -85,7 +85,7 @@ python3 scripts/link_skills.py --dry-run
 python3 scripts/link_skills.py
 ```
 
-The release builder is a pure packager: it reads immutable committed blobs via `git ls-tree` and `git cat-file`, never touches the working tree, and does not run validators. CI validates the checked-out revision before calling the builder. Each release output (ZIP, checksum, metadata) is written atomically per file; abrupt termination may leave a partial output set — rerunning the deterministic builder reconciles it.
+The release builder is a pure packager: it reads immutable committed blobs via `git ls-tree` and `git cat-file`, does not read working-tree file content as package input, and does not run validators. CI validates the checked-out revision before calling the builder. Each release output (ZIP, checksum, metadata) is written atomically per file; abrupt termination may leave a partial output set — rerunning the deterministic builder reconciles it.
 
 ## Compatibility
 
@@ -93,7 +93,7 @@ The release builder is a pure packager: it reads immutable committed blobs via `
 - **Release publishing:** Linux CI only; artifact is a platform-neutral ZIP
 - **No OS/process sandbox** is provided by this repository
 - **Concurrent local attacker** with write access to the output parent directory is not defended against (known TOCTOU limitation)
-- **Hard-killed processes** may leave temporary directories in the OS temp prefix
+- **Hard-killed processes** may leave process-local directories in the OS temp prefix and installer staging or backup directories beside the target
 
 ## License
 

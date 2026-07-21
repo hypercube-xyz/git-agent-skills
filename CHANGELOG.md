@@ -3,7 +3,7 @@
 ## 1.2.0 - 2026-07-21
 
 - Add SECURITY-EXECUTION.md contract, inject untrusted-content and executable-Git boundary into all 24 skills, and harden mailbox ingestion.
-- Add controlled_git_env with ambient config/credential isolation, atomic linker, and deterministic security regression checks.
+- Add controlled_git_env with ambient config/credential isolation, staged per-destination installer promotion with invocation rollback, and deterministic security regression checks.
 - Harden release build: immutable committed blobs, atomic per-file writes, portable path validation, symlink-component rejection.
 - Make build_release.py a pure packager — remove validation orchestration; CI runs validators before calling builder.
 - Add cross-platform CI: blocking tests on Linux, macOS, and Windows; release publication on Linux only.

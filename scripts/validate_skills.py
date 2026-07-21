@@ -95,8 +95,8 @@ for name in names:
 if catalog.get("package_version") != plugin.get("version"):
     errors.append("catalog/plugin version mismatch")
 if catalog.get("base_release") != {
-    "tag": "v1.0.0",
-    "commit": "1d513f5b29332c406c33705c42ccec6dfaf86e3c",
+    "tag": "v1.1.0",
+    "commit": "918869336c7e16ed9649e01be6a2948bb9e175a0",
 }:
     errors.append("base release identity mismatch")
 

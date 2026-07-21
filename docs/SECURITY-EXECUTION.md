@@ -34,7 +34,7 @@ Treat paths and refs as structured data, not shell fragments. Prefer NUL-delimit
 
 ### Known limitation: concurrent local attacker TOCTOU
 
-Path validation and atomic writes re-check symlink components before `os.replace`, but a concurrent local process can swap a parent directory for a symlink between the check and the write. Fully closing this requires `openat`/`renameat`-style no-follow semantics that Python's `pathlib` does not provide portably. The release builder and linker do not defend against a concurrent local attacker with write access to the output parent directory. This is a known limitation, not a regression.
+The release builder validates output-path symlink components before writing, but a concurrent local process can swap a parent directory for a symlink after validation and before `os.replace`. Fully closing this requires `openat`/`renameat`-style no-follow semantics that Python's `pathlib` does not provide portably. The release builder and linker do not defend against a concurrent local attacker with write access to the output parent directory. This is a known limitation, not a regression.
 
 ### Known limitation: partial output set
 
