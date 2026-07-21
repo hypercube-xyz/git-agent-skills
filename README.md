@@ -23,6 +23,8 @@ npx skills add hypercube-xyz/git-agent-skills --skill craft-commits
 - Keep `SKILL.md` focused; load conditional detail from direct references.
 - Verify intended effects, incidental bounds, protected state, and remote results where applicable.
 
+See [`docs/SECURITY-EXECUTION.md`](docs/SECURITY-EXECUTION.md) for the common untrusted-content, executable-Git, retry, recovery-artifact, and runtime-enforcement contract.
+
 ## Skill groups
 
 Groups organize documentation and evaluation priority. Installers expose all skills unless they support explicit selection.
@@ -71,6 +73,7 @@ See [`docs/SKILL-CATALOG.md`](docs/SKILL-CATALOG.md) for routing boundaries, [`d
 
 ```sh
 python3 scripts/validate_skills.py
+python3 scripts/security_regression.py
 python3 scripts/smoke_test_git.py
 python3 scripts/build_release.py --check
 ```
@@ -82,7 +85,15 @@ python3 scripts/link_skills.py --dry-run
 python3 scripts/link_skills.py
 ```
 
-The release builder requires a clean committed Git checkout and selects package files from the Git index rather than a filesystem walk.
+The release builder is a pure packager: it reads immutable committed blobs via `git ls-tree` and `git cat-file`, does not read working-tree file content as package input, and does not run validators. CI validates the checked-out revision before calling the builder. Each release output (ZIP, checksum, metadata) is written atomically per file; abrupt termination may leave a partial output set — rerunning the deterministic builder reconciles it.
+
+## Compatibility
+
+- **Skills and installation:** Linux, macOS, Windows (Python 3.14, Git 2.35+)
+- **Release publishing:** Linux CI only; artifact is a platform-neutral ZIP
+- **No OS/process sandbox** is provided by this repository
+- **Concurrent local attacker** with write access to the output parent directory is not defended against (known TOCTOU limitation)
+- **Hard-killed processes** may leave process-local directories in the OS temp prefix and installer staging or backup directories beside the target
 
 ## License
 

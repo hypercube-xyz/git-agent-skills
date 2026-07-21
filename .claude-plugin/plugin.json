@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "git-agent-skills",
   "displayName": "Git Agent Skills",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Evidence-driven Git workflow skills with proportional controls for local, external, and critical-impact paths.",
   "author": {
     "name": "hypercube-xyz",

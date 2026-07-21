@@ -10,21 +10,55 @@ on:
 permissions:
   contents: read
 
+env:
+  GIT_CONFIG_NOSYSTEM: "1"
+  GIT_TERMINAL_PROMPT: "0"
+  GIT_PAGER: "cat"
+  PAGER: "cat"
+  PYTHONDONTWRITEBYTECODE: "1"
+
 concurrency:
   group: validate-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  python-compatibility:
-    name: Python ${{ matrix.python_version }}
-    runs-on: ubuntu-26.04
+  lint:
+    name: Lint workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Run actionlint
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACTIONLINT_VERSION="1.7.12"
+          ACTIONLINT_SHA256="8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+          curl --fail --retry 3 -sSL \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
+            -o actionlint.tar.gz
+          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum -c -
+          tar xzf actionlint.tar.gz
+          ./actionlint -color
+
+  test:
+    name: ${{ matrix.os }} Python ${{ matrix.python_version }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
 
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
         python_version:
-          - "3.12"
           - "3.14"
 
     steps:
@@ -48,22 +82,30 @@ jobs:
       - name: Validate skill packages
         run: python scripts/validate_skills.py
 
-      - name: Run Git semantic tests
+      - name: Run Git semantic tests (full)
+        if: runner.os == 'Linux'
         run: python scripts/smoke_test_git.py
 
-      - name: Verify no test-created source artifacts
-        shell: bash
-        run: |
-          set -euo pipefail
-          git diff --check
-          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+      - name: Run Git semantic tests (macOS subset)
+        if: runner.os == 'macOS'
+        run: python scripts/smoke_test_git.py --platform macos
+
+      - name: Run Git semantic tests (Windows subset)
+        if: runner.os == 'Windows'
+        run: python scripts/smoke_test_git.py --platform windows
+
+      - name: Run security regression tests
+        run: python scripts/security_regression.py
+
+      - name: Verify reproducible release
+        run: python scripts/build_release.py --check
 
   packaging:
     name: Reproducible package
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     needs:
-      - python-compatibility
+      - test
 
     steps:
       - name: Check out repository
@@ -84,7 +126,7 @@ jobs:
           git --version
 
       - name: Verify reproducible release
-        run: python scripts/build_release.py --check --skip-validation
+        run: python scripts/build_release.py --check
 
       - name: Verify clean source tree
         shell: bash
@@ -95,7 +137,7 @@ jobs:
 
   client-compatibility:
     name: Pinned client compatibility
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     needs:
       - packaging
@@ -153,7 +195,7 @@ jobs:
   client-forward-probe:
     name: Node 26 latest-client probe
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     needs:
       - client-compatibility

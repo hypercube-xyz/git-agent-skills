@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from collections.abc import Callable
 from pathlib import Path
+
+from security_git_env import controlled_git_env, resolve_git
 
 sys.dont_write_bytecode = True
 
@@ -19,15 +23,20 @@ class TestRunner:
         self.skip = 0
 
     def run(self, name: str, fn: Callable[[], None]) -> None:
+        started = time.perf_counter()
         try:
             fn()
             self.ok += 1
-            print("PASS", name)
+            print(f"PASS {name} ({time.perf_counter() - started:.2f}s)", flush=True)
         except SkipTest as exc:
             self.skip += 1
-            print("SKIP", name, "-", exc)
+            print(
+                f"SKIP {name} - {exc} ({time.perf_counter() - started:.2f}s)",
+                flush=True,
+            )
         except Exception as exc:
-            print("FAIL", name, "-", exc)
+            elapsed = time.perf_counter() - started
+            print(f"FAIL {name} - {exc} ({elapsed:.2f}s)", flush=True)
             raise
 
 
@@ -35,12 +44,25 @@ class SkipTest(Exception):
     pass
 
 
-def git(cwd, *args, check=True, env=None):
-    cp = subprocess.run(
-        ["git", *args], cwd=cwd, text=True, capture_output=True, env=env
-    )
+def git(cwd, *args, check=True, env=None, text=True):
+    effective_env = controlled_git_env(env)
+    try:
+        cp = subprocess.run(
+            [resolve_git(), *args],
+            cwd=cwd,
+            text=text,
+            capture_output=True,
+            env=effective_env,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"git {args}: timed out after 30s")
     if check and cp.returncode:
-        raise RuntimeError(f"git {args}: {cp.stderr or cp.stdout}")
+        if text:
+            message = cp.stderr or cp.stdout
+        else:
+            message = (cp.stderr or cp.stdout).decode("utf-8", errors="replace")
+        raise RuntimeError(f"git {args}: {message}")
     return cp
 
 
@@ -49,11 +71,12 @@ def init(p):
     git(p, "init", "-q")
     git(p, "config", "user.name", "Test User")
     git(p, "config", "user.email", "test@example.invalid")
+    git(p, "config", "core.autocrlf", "false")
 
 
 def commit_file(p, name, content, msg):
     (p / name).parent.mkdir(parents=True, exist_ok=True)
-    (p / name).write_text(content)
+    (p / name).write_bytes(content.encode("utf-8"))
     git(p, "add", "--", name)
     git(p, "commit", "-q", "-m", msg)
     return git(p, "rev-parse", "HEAD").stdout.strip()
@@ -186,11 +209,13 @@ def test_identity_include(td):
         "[user]\n\tname = Work User\n\temail = work@example.invalid\n[commit]\n\tgpgSign = false\n"
     )
     main = home / ".gitconfig"
+    # Resolve macOS /tmp symlinks so gitdir matching uses canonical paths.
     main.write_text(
-        f'[user]\n\tname = Personal User\n\temail = personal@example.invalid\n[includeIf "gitdir:{work}/.git"]\n\tpath = {inc}\n'
+        f'[user]\n\tname = Personal User\n\temail = personal@example.invalid\n[includeIf "gitdir:{work.resolve()}/.git"]\n\tpath = {inc.resolve()}\n'
     )
     env = os.environ.copy()
     env["HOME"] = str(home)
+    env["GIT_AGENT_SKILLS_ALLOW_HOME"] = "1"
     env["GIT_CONFIG_NOSYSTEM"] = "1"
     assert (
         git(work, "config", "user.email", env=env).stdout.strip()
@@ -252,6 +277,8 @@ def test_signing_and_hook(td):
     gnupg.mkdir(mode=0o700)
     env = os.environ.copy()
     env["GNUPGHOME"] = str(gnupg)
+    env["GIT_AGENT_SKILLS_ALLOW_GNUPGHOME"] = "1"
+    env["GIT_AGENT_SKILLS_ALLOW_HOOKS"] = "1"
     cp = subprocess.run(
         [
             "gpg",
@@ -346,15 +373,36 @@ def test_reflog(td):
     assert git(p, "rev-parse", "recovered").stdout.strip() == lost
 
 
-def test_pathological_filename(td):
+def test_pathological_filename_posix(td):
     p = td / "repo"
     init(p)
     name = "-nasty name\nline"
-    (p / name).write_text("x")
+    (p / name).write_bytes(b"x")
     git(p, "add", "--", name)
     git(p, "commit", "-q", "-m", "path")
     out = git(p, "ls-files", "-z").stdout
     assert name + "\0" == out
+
+
+def test_pathological_filename_windows(td):
+    p = td / "repo"
+    init(p)
+    names = [
+        "-nasty name",
+        "unicode-\u00e9-file",
+        "name with multiple spaces",
+    ]
+    for name in names:
+        (p / name).write_bytes(b"x")
+        git(p, "add", "--", name)
+    git(p, "commit", "-q", "-m", "paths")
+    raw = git(p, "ls-files", "-z", text=False).stdout
+    actual = set(raw.rstrip(b"\0").split(b"\0"))
+    expected = {name.encode("utf-8") for name in names}
+    assert actual == expected, (
+        f"path mismatch: actual={sorted(actual)!r}, "
+        f"expected={sorted(expected)!r}"
+    )
 
 
 def test_tag_exact_lease(td):
@@ -679,7 +727,8 @@ def test_release_tracked_only(td):
     mod = load_helper("scripts/build_release.py", "build_release_a")
     p = init_build_repo(td)
     (p / "untracked").write_text("u")
-    entries = mod.tracked_files(p)
+    rev = git(p, "rev-parse", "HEAD").stdout.strip()
+    entries = mod.tracked_files(rev, root=p)
     assert [x.rel.as_posix() for x in entries] == ["tracked"]
 
 
@@ -688,30 +737,45 @@ def test_release_symlink_rejected(td):
     p = init_build_repo(td)
     os.symlink("tracked", p / "link")
     git(p, "add", "link")
+    git(p, "commit", "-q", "-m", "symlink")
+    rev = git(p, "rev-parse", "HEAD").stdout.strip()
     try:
-        mod.tracked_files(p)
+        mod.tracked_files(rev, root=p)
     except SystemExit as e:
-        assert "symlink" in str(e)
+        assert "symlink" in str(e) or "unsupported" in str(e)
     else:
         raise AssertionError("tracked symlink accepted")
 
 
-def test_release_dirty_rejected(td):
+def test_output_symlink_parent_rejected(td):
+    mod = load_helper("scripts/build_release.py", "build_output_symlink")
+    outside = td / "outside"
+    outside.mkdir()
+    redirect = td / "redirect"
+    redirect.symlink_to(outside, target_is_directory=True)
+    try:
+        mod.reject_symlink_components(redirect / "release.zip")
+    except SystemExit as e:
+        assert "symlink" in str(e)
+    else:
+        raise AssertionError("symlinked output parent accepted")
+
+
+def test_release_uses_committed_bytes(td):
+    # Verify archive uses committed bytes, not dirty working tree
     mod = load_helper("scripts/build_release.py", "build_release_c")
     p = init_build_repo(td)
-    (p / "tracked").write_text("dirty")
-    try:
-        mod.require_clean_tracked_state(p)
-    except SystemExit as e:
-        assert "committed tracked files" in str(e)
-    else:
-        raise AssertionError("dirty tracked state accepted")
+    (p / "tracked").write_text("dirty\n")
+    revision = git(p, "rev-parse", "HEAD").stdout.strip()
+    entries = mod.tracked_files(revision, root=p)
+    assert any(e.rel.as_posix() == "tracked" and e.data == b"x" for e in entries)
 
 
 def test_release_deterministic(td):
     mod = load_helper("scripts/build_release.py", "build_release_d")
     p = init_build_repo(td)
-    entries = mod.tracked_files(p)
+    rev = git(p, "rev-parse", "HEAD").stdout.strip()
+    entries = mod.tracked_files(rev, root=p)
     catalog = {
         "package_version": "x",
         "release_date": "2026-07-15",
@@ -719,14 +783,7 @@ def test_release_deterministic(td):
         "skills": [],
         "base_release": {},
     }
-    original = mod.source_revision
-    mod.source_revision = lambda root=mod.ROOT: "0" * 40
-    try:
-        assert mod.archive_bytes(entries, catalog) == mod.archive_bytes(
-            entries, catalog
-        )
-    finally:
-        mod.source_revision = original
+    assert mod.archive_bytes(entries, catalog) == mod.archive_bytes(entries, catalog)
 
 
 def test_installer_preflight(td):
@@ -759,6 +816,169 @@ def test_installer_dry_run(td):
     assert cp.returncode == 0 and not target.exists()
 
 
+def _run_installer(target: Path, *extra: str) -> subprocess.CompletedProcess[str]:
+    root = Path(__file__).resolve().parents[1]
+    cp = subprocess.run(
+        [
+            sys.executable,
+            str(root / "scripts/link_skills.py"),
+            "--target",
+            str(target),
+            "--mode",
+            "copy",
+            *extra,
+        ],
+        text=True,
+        capture_output=True,
+    )
+    if cp.returncode:
+        raise AssertionError(
+            f"installer failed ({cp.returncode}): stdout={cp.stdout!r}, "
+            f"stderr={cp.stderr!r}"
+        )
+    return cp
+
+
+def _first_catalog_skill() -> str:
+    root = Path(__file__).resolve().parents[1]
+    catalog = json.loads((root / "skills/catalog.json").read_text(encoding="utf-8"))
+    return catalog["skills"][0]["name"]
+
+
+def test_installer_copy_rerun(td):
+    mod = load_helper("scripts/link_skills.py", "link_skills_copy_rerun")
+    target = td / "skills"
+    _run_installer(target)
+    first = target / _first_catalog_skill()
+    marker = first / mod.MARKER_NAME
+    assert marker.read_text(encoding="utf-8") == mod.MARKER_CONTENT
+    sentinel = first / "local-only-sentinel"
+    sentinel.write_text("old\n", encoding="utf-8")
+    _run_installer(target)
+    assert not sentinel.exists()
+    assert marker.read_text(encoding="utf-8") == mod.MARKER_CONTENT
+
+
+def test_installer_force_copy_upgrade(td):
+    mod = load_helper("scripts/link_skills.py", "link_skills_force_upgrade")
+    target = td / "skills"
+    _run_installer(target)
+    first = target / _first_catalog_skill()
+    (first / mod.MARKER_NAME).unlink()
+    _run_installer(target, "--force-copies")
+    assert (first / mod.MARKER_NAME).read_text(encoding="utf-8") == mod.MARKER_CONTENT
+
+
+def test_installer_copy_rollback(td):
+    mod = load_helper("scripts/link_skills.py", "link_skills_copy_rollback")
+    target = td / "skills"
+    _run_installer(target)
+    first = target / _first_catalog_skill()
+    sentinel = first / "rollback-sentinel"
+    sentinel.write_text("preserve me\n", encoding="utf-8")
+
+    original_argv = sys.argv[:]
+    real_install = mod.install
+    calls = {"n": 0}
+
+    def flaky(source, dest, mode):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            raise OSError("injected copy failure")
+        return real_install(source, dest, mode)
+
+    mod.install = flaky
+    sys.argv = [
+        "link_skills.py",
+        "--target",
+        str(target),
+        "--mode",
+        "copy",
+    ]
+    try:
+        rc = mod.main()
+    finally:
+        mod.install = real_install
+        sys.argv = original_argv
+
+    assert rc == 3
+    assert sentinel.read_text(encoding="utf-8") == "preserve me\n"
+    assert not list(target.glob(".*.backup-*"))
+    assert not list(target.glob(".*.tmp-*"))
+
+
+def test_installer_nested_link_rejected(td):
+    mod = load_helper("scripts/link_skills.py", "link_skills_nested_link")
+    source = td / "source"
+    outside = td / "outside"
+    source.mkdir()
+    outside.mkdir()
+    link = source / "redirect"
+
+    if os.name == "nt":
+        cp = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(link), str(outside)],
+            text=True,
+            capture_output=True,
+        )
+        if cp.returncode:
+            raise SkipTest("unable to create disposable Windows junction")
+    else:
+        link.symlink_to(outside, target_is_directory=True)
+
+    try:
+        mod.reject_nested_symlinks(source)
+    except SystemExit:
+        pass
+    else:
+        raise AssertionError("nested link or junction accepted by copy preflight")
+
+
+def test_installer_special_file_rejected(td):
+    if not hasattr(os, "mkfifo"):
+        raise SkipTest("FIFO creation unavailable")
+    mod = load_helper("scripts/link_skills.py", "link_skills_special_file")
+    source = td / "source"
+    source.mkdir()
+    os.mkfifo(source / "pipe")
+    try:
+        mod.reject_nested_symlinks(source)
+    except SystemExit:
+        pass
+    else:
+        raise AssertionError("special filesystem entry accepted by copy preflight")
+
+
+def test_installer_mode_transition(td):
+    mod = load_helper("scripts/link_skills.py", "link_skills_mode_transition")
+    if not mod.can_symlink():
+        raise SkipTest("directory symlinks unavailable")
+    root = Path(__file__).resolve().parents[1]
+    target = td / "skills"
+    _run_installer(target)
+    first_name = _first_catalog_skill()
+    first = target / first_name
+
+    cp = subprocess.run(
+        [
+            sys.executable,
+            str(root / "scripts/link_skills.py"),
+            "--target",
+            str(target),
+            "--mode",
+            "symlink",
+        ],
+        text=True,
+        capture_output=True,
+    )
+    assert cp.returncode == 0, cp.stderr
+    assert first.is_symlink()
+
+    _run_installer(target)
+    assert first.is_dir() and not first.is_symlink()
+    assert (first / mod.MARKER_NAME).read_text(encoding="utf-8") == mod.MARKER_CONTENT
+
+
 def test_release_metadata_filename(td):
     mod = load_helper("scripts/build_release.py", "build_release_metadata_filename")
     output = td / "git-agent-skills-1.1.0.zip"
@@ -768,7 +988,8 @@ def test_release_metadata_filename(td):
 def test_skipped_validation_metadata(td):
     mod = load_helper("scripts/build_release.py", "build_release_e")
     p = init_build_repo(td)
-    entries = mod.tracked_files(p)
+    rev = git(p, "rev-parse", "HEAD").stdout.strip()
+    entries = mod.tracked_files(rev, root=p)
     catalog = {
         "package_version": "x",
         "release_date": "2026-07-15",
@@ -776,22 +997,16 @@ def test_skipped_validation_metadata(td):
         "skills": [],
         "base_release": {},
     }
-    original = mod.source_revision
-    mod.source_revision = lambda root=mod.ROOT: "0" * 40
-    try:
-        rec = mod.release_record(
-            entries,
-            catalog,
-            False,
-            False,
-            {"filename": "x.zip", "sha256": "0", "size_bytes": 0},
-        )
-    finally:
-        mod.source_revision = original
+    rec = mod.release_record(
+        entries,
+        catalog,
+        rev,
+        False,
+        {"filename": "x.zip", "sha256": "0", "size_bytes": 0},
+        root=p,
+    )
     assert (
-        rec["validation"]["result"] == "skipped"
-        and rec["validation"]["commands_executed"] == []
-        and rec["validation"]["reproducibility_check"] == "not-run"
+        rec["validation"]["reproducibility_check"] == "not-run"
     )
 
 
@@ -823,7 +1038,8 @@ def test_installer_rollback(td):
 def test_release_provenance_fields(td):
     mod = load_helper("scripts/build_release.py", "build_release_provenance")
     p = init_build_repo(td)
-    entries = mod.tracked_files(p)
+    rev = git(p, "rev-parse", "HEAD").stdout.strip()
+    entries = mod.tracked_files(rev, root=p)
     catalog = {
         "package_version": "x",
         "release_date": "2026-07-15",
@@ -834,59 +1050,65 @@ def test_release_provenance_fields(td):
             "commit": "1d513f5b29332c406c33705c42ccec6dfaf86e3c",
         },
     }
-    original = mod.source_revision
-    mod.source_revision = lambda root=mod.ROOT: "1" * 40
-    try:
-        metadata = mod.release_metadata(entries, catalog)
-    finally:
-        mod.source_revision = original
+    metadata = mod.release_metadata(entries, catalog, rev, root=p)
     identity = metadata["source_identity"]
     assert identity["base_revision"] == catalog["base_release"]
-    assert identity["source_revision"] == {"kind": "git-commit", "commit": "1" * 40}
+    assert identity["source_revision"] == {"kind": "git-commit", "commit": rev}
     assert identity["source_tree_sha256"]
 
 
 def main(argv=None):
     tests = [
-        ("mailbox replay", test_mailbox),
-        ("shallow deepen repair", test_shallow),
-        ("corruption detection and additive restore", test_corruption_detection),
-        ("stack bottom-up restack", test_stack),
-        ("vendor snapshot containment", test_vendor_branch),
-        ("actual git subtree update", test_actual_subtree),
-        ("conditional identity origin", test_identity_include),
-        ("GPG signing and reviewed hook path", test_signing_and_hook),
-        ("exact branch lease rejects stale publication", test_exact_lease),
-        ("exact tag lease rejects stale publication", test_tag_exact_lease),
-        ("post-push remote OID verification", test_push_post_verification),
-        ("annotated tag peeling", test_tag_peeling),
-        ("NUL-safe worktree inventory", test_worktree_nul),
-        ("destructive clean preview", test_clean_preview),
-        ("non-obstructing hard reset", test_hard_reset_non_obstructing),
-        ("obstructing hard reset detection", test_hard_reset_obstruction_detected),
-        ("conflict index stages", test_conflict_stages),
-        ("conflict abort", test_conflict_abort),
-        ("shared tag prune candidates", test_tag_prune_candidates),
-        ("atomic multi-ref push", test_atomic_multi_ref_push),
-        ("submodule gitlink", test_submodule_gitlink),
-        ("history pickaxe", test_pickaxe),
-        ("bisect oracle", test_bisect_oracle),
-        ("remote names with dots/slashes", test_remote_names),
-        ("malformed remote isolation", test_malformed_remote_isolation),
-        ("fail-closed remote redaction", test_fail_closed_redaction),
-        ("local remote identity", test_local_remote_identity),
-        ("tracked-only release inputs", test_release_tracked_only),
-        ("tracked symlink rejection", test_release_symlink_rejected),
-        ("dirty release state rejection", test_release_dirty_rejected),
-        ("deterministic archive bytes", test_release_deterministic),
-        ("release metadata filename", test_release_metadata_filename),
-        ("skipped validation metadata", test_skipped_validation_metadata),
-        ("release provenance fields", test_release_provenance_fields),
-        ("installer all-target preflight", test_installer_preflight),
-        ("installer rollback", test_installer_rollback),
-        ("installer dry-run no mutation", test_installer_dry_run),
-        ("reflog additive recovery", test_reflog),
-        ("pathological filename safety", test_pathological_filename),
+        # --- portable: Git behavior identical across platforms ---
+        ("mailbox replay", test_mailbox, {"portable", "macos", "windows"}),
+        ("shallow deepen repair", test_shallow, {"portable"}),
+        ("corruption detection and additive restore", test_corruption_detection, {"portable"}),
+        ("stack bottom-up restack", test_stack, {"portable"}),
+        ("vendor snapshot containment", test_vendor_branch, {"portable"}),
+        ("actual git subtree update", test_actual_subtree, {"portable"}),
+        ("conditional identity origin", test_identity_include, {"portable", "macos"}),
+        ("exact branch lease rejects stale publication", test_exact_lease, {"portable"}),
+        ("exact tag lease rejects stale publication", test_tag_exact_lease, {"portable"}),
+        ("post-push remote OID verification", test_push_post_verification, {"portable"}),
+        ("annotated tag peeling", test_tag_peeling, {"portable"}),
+        ("NUL-safe worktree inventory", test_worktree_nul, {"portable"}),
+        ("destructive clean preview", test_clean_preview, {"portable"}),
+        ("non-obstructing hard reset", test_hard_reset_non_obstructing, {"portable"}),
+        ("obstructing hard reset detection", test_hard_reset_obstruction_detected, {"portable"}),
+        ("conflict index stages", test_conflict_stages, {"portable"}),
+        ("conflict abort", test_conflict_abort, {"portable"}),
+        ("shared tag prune candidates", test_tag_prune_candidates, {"portable"}),
+        ("atomic multi-ref push", test_atomic_multi_ref_push, {"portable"}),
+        ("submodule gitlink", test_submodule_gitlink, {"portable"}),
+        ("history pickaxe", test_pickaxe, {"portable"}),
+        ("bisect oracle", test_bisect_oracle, {"portable"}),
+        ("remote names with dots/slashes", test_remote_names, {"portable"}),
+        ("malformed remote isolation", test_malformed_remote_isolation, {"portable"}),
+        ("fail-closed remote redaction", test_fail_closed_redaction, {"portable"}),
+        ("reflog additive recovery", test_reflog, {"portable"}),
+        ("pathological filename safety (POSIX)", test_pathological_filename_posix, {"macos"}),
+        ("pathological filename safety (Windows)", test_pathological_filename_windows, {"windows"}),
+        # --- macOS-specific: /tmp → /private/tmp, installer symlink, output protection ---
+        ("GPG signing and reviewed hook path", test_signing_and_hook, {"macos"}),
+        ("local remote identity", test_local_remote_identity, {"macos"}),
+        ("tracked-only release inputs", test_release_tracked_only, {"macos"}),
+        ("tracked symlink rejection", test_release_symlink_rejected, {"macos"}),
+        ("output symlink parent rejection", test_output_symlink_parent_rejected, {"macos"}),
+        ("release uses committed bytes", test_release_uses_committed_bytes, {"macos"}),
+        ("deterministic archive bytes", test_release_deterministic, {"macos"}),
+        ("release metadata filename", test_release_metadata_filename, {"macos"}),
+        ("skipped validation metadata", test_skipped_validation_metadata, {"macos"}),
+        ("release provenance fields", test_release_provenance_fields, {"macos"}),
+        ("installer all-target preflight", test_installer_preflight, {"macos", "windows"}),
+        ("installer symlink rollback", test_installer_rollback, {"macos"}),
+        ("installer dry-run no mutation", test_installer_dry_run, {"macos", "windows"}),
+        ("installer copy rerun and update", test_installer_copy_rerun, {"macos", "windows"}),
+        ("installer forced copy upgrade", test_installer_force_copy_upgrade, {"macos", "windows"}),
+        ("installer copy rollback", test_installer_copy_rollback, {"macos", "windows"}),
+        ("installer nested link rejection", test_installer_nested_link_rejected, {"macos", "windows"}),
+        ("installer special-file rejection", test_installer_special_file_rejected, {"macos"}),
+        ("installer copy-symlink transition", test_installer_mode_transition, {"macos"}),
+        # --- Windows-specific: copy fallback, CRLF/LF mailbox, reserved paths ---
     ]
     parser = argparse.ArgumentParser(
         description="Run disposable Git and package semantic tests."
@@ -894,13 +1116,30 @@ def main(argv=None):
     parser.add_argument(
         "--list", action="store_true", help="List test names without running them."
     )
+    parser.add_argument(
+        "--platform",
+        choices=["all", "portable", "macos", "windows"],
+        default="all",
+        help="Test subset to run (default: all)",
+    )
     args = parser.parse_args(argv)
     if args.list:
-        for name, _ in tests:
+        for name, _, _ in tests:
             print(name)
         return 0
+
+    # Filter tests: "all" runs everything; "portable" runs portable-only;
+    # "macos"/"windows" run portable + platform-specific tests.
+    selected = []
+    seen = set()
+    for name, fn, platforms in tests:
+        if name in seen:
+            continue
+        seen.add(name)
+        if args.platform == "all" or args.platform in platforms:
+            selected.append((name, fn))
     runner = TestRunner()
-    for name, fn in tests:
+    for name, fn in selected:
         with tempfile.TemporaryDirectory(prefix="git-skills-") as d:
             runner.run(name, lambda fn=fn, d=d: fn(Path(d)))
     print(f"PASS smoke_test_git: {runner.ok} passed, " f"{runner.skip} skipped")

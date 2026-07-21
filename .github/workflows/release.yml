@@ -1,0 +1,159 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GIT_CONFIG_NOSYSTEM: "1"
+  GIT_TERMINAL_PROMPT: "0"
+  GIT_PAGER: "cat"
+  PAGER: "cat"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+
+      - name: Validate release tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "${RELEASE_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            printf 'Unsupported release tag: %s\n' "${RELEASE_TAG}" >&2
+            exit 1
+          fi
+
+          tag_commit="$(git rev-list -n 1 "${RELEASE_TAG}")"
+
+          if ! git merge-base --is-ancestor "${tag_commit}" origin/main; then
+            printf 'Release tag %s does not point to a commit on main.\n' "${RELEASE_TAG}" >&2
+            exit 1
+          fi
+
+      - name: Record tool versions
+        run: |
+          set -euo pipefail
+          python --version
+          git --version
+
+      - name: Validate skills
+        run: python scripts/validate_skills.py
+
+      - name: Run Git semantic tests
+        run: python scripts/smoke_test_git.py
+
+      - name: Run security regression tests
+        run: python scripts/security_regression.py
+
+      - name: Verify reproducible release
+        run: python scripts/build_release.py --check
+
+      - name: Verify clean source tree
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+  release:
+    name: Release
+    needs: validate
+    if: github.repository == 'hypercube-xyz/git-agent-skills'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+
+      - name: Build release
+        run: python scripts/build_release.py --check
+
+      - name: Upload release artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          version="${RELEASE_TAG#v}"
+          zip="dist/git-agent-skills-${version}.zip"
+          checksum="${zip}.sha256"
+          metadata="${zip}.release.json"
+
+          assets=("${zip}" "${checksum}" "${metadata}")
+          for asset in "${assets[@]}"; do
+            if [[ ! -f "${asset}" ]]; then
+              printf 'Missing release asset: %s\n' "${asset}" >&2
+              exit 1
+            fi
+          done
+
+          if gh release view "${RELEASE_TAG}" &>/dev/null; then
+            printf 'Release %s already exists, verifying assets\n' "${RELEASE_TAG}"
+            missing=()
+            for asset in "${assets[@]}"; do
+              name="$(basename "${asset}")"
+              if ! gh release view "${RELEASE_TAG}" --json assets --jq ".assets[].name" 2>/dev/null | grep -qxF "${name}"; then
+                missing+=("${asset}")
+              else
+                remote_digest="$(gh release download "${RELEASE_TAG}" --pattern "${name}" --output - 2>/dev/null | sha256sum | cut -d' ' -f1)"
+                local_digest="$(sha256sum "${asset}" | cut -d' ' -f1)"
+                if [[ "${remote_digest}" != "${local_digest}" ]]; then
+                  printf 'Asset %s digest mismatch (remote=%s local=%s)\n' "${name}" "${remote_digest}" "${local_digest}" >&2
+                  printf 'Existing release asset differs from local artifact. Failing closed to preserve evidence.\n' >&2
+                  printf 'To repair, delete the remote asset or run an approved release-repair workflow.\n' >&2
+                  exit 1
+                fi
+              fi
+            done
+            if [[ ${#missing[@]} -gt 0 ]]; then
+              printf 'Uploading %d missing asset(s)\n' "${#missing[@]}"
+              gh release upload "${RELEASE_TAG}" "${missing[@]}"
+            else
+              printf 'All assets present and verified\n'
+            fi
+          else
+            gh release create "${RELEASE_TAG}" \
+              --title "${RELEASE_TAG}" \
+              --generate-notes \
+              "${assets[@]}"
+          fi

@@ -95,8 +95,8 @@ for name in names:
 if catalog.get("package_version") != plugin.get("version"):
     errors.append("catalog/plugin version mismatch")
 if catalog.get("base_release") != {
-    "tag": "v1.0.0",
-    "commit": "1d513f5b29332c406c33705c42ccec6dfaf86e3c",
+    "tag": "v1.1.0",
+    "commit": "918869336c7e16ed9649e01be6a2948bb9e175a0",
 }:
     errors.append("base release identity mismatch")
 
@@ -149,12 +149,17 @@ client_compat = compatibility.get("packaging_clients", {})
 required_doc_values = [
     python_compat.get("minimum"),
     *python_compat.get("ci_matrix", []),
-    ci_compat.get("os"),
+    *ci_compat.get("blocking_os", []),
+    ci_compat.get("release_os"),
 ]
 for value in filter(None, required_doc_values):
     if str(value) not in compat_doc:
         errors.append(f"compatibility documentation missing {value}")
-required_workflow_values = [*python_compat.get("ci_matrix", []), ci_compat.get("os")]
+required_workflow_values = [
+    *python_compat.get("ci_matrix", []),
+    *ci_compat.get("blocking_os", []),
+    ci_compat.get("release_os"),
+]
 for group in (
     client_compat.get("blocking", {}),
     client_compat.get("forward_probe", {}),

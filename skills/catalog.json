@@ -1,16 +1,15 @@
 {
   "schema_version": 1,
-  "package_version": "1.1.0",
-  "release_date": "2026-07-16",
+  "package_version": "1.2.0",
+  "release_date": "2026-07-21",
   "base_release": {
-    "tag": "v1.0.0",
-    "commit": "1d513f5b29332c406c33705c42ccec6dfaf86e3c"
+    "tag": "v1.1.0",
+    "commit": "918869336c7e16ed9649e01be6a2948bb9e175a0"
   },
   "compatibility": {
     "python": {
-      "minimum": "3.12",
+      "minimum": "3.14",
       "ci_matrix": [
-        "3.12",
         "3.14"
       ]
     },
@@ -19,7 +18,12 @@
       "strategy": "feature-detect optional commands and record the exact build version"
     },
     "ci": {
-      "os": "ubuntu-26.04"
+      "blocking_os": [
+        "ubuntu-latest",
+        "macos-latest",
+        "windows-latest"
+      ],
+      "release_os": "ubuntu-latest"
     },
     "packaging_clients": {
       "blocking": {
