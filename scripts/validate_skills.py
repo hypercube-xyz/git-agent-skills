@@ -149,12 +149,17 @@ client_compat = compatibility.get("packaging_clients", {})
 required_doc_values = [
     python_compat.get("minimum"),
     *python_compat.get("ci_matrix", []),
-    ci_compat.get("os"),
+    *ci_compat.get("blocking_os", []),
+    ci_compat.get("release_os"),
 ]
 for value in filter(None, required_doc_values):
     if str(value) not in compat_doc:
         errors.append(f"compatibility documentation missing {value}")
-required_workflow_values = [*python_compat.get("ci_matrix", []), ci_compat.get("os")]
+required_workflow_values = [
+    *python_compat.get("ci_matrix", []),
+    *ci_compat.get("blocking_os", []),
+    ci_compat.get("release_os"),
+]
 for group in (
     client_compat.get("blocking", {}),
     client_compat.get("forward_probe", {}),

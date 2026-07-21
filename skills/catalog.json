@@ -8,7 +8,7 @@
   },
   "compatibility": {
     "python": {
-      "minimum": "3.12",
+      "minimum": "3.14",
       "ci_matrix": [
         "3.14"
       ]

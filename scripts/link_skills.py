@@ -12,13 +12,38 @@ from dataclasses import dataclass
 from pathlib import Path
 
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+MARKER_NAME = ".git-agent-skills-install-marker"
+
+
+def reject_nested_symlinks(source: Path) -> None:
+    """Reject symlinks, junctions, and unsupported filesystem entries inside *source*.
+
+    This must be called before ``atomic_copy``, which dereferences symlinks
+    with ``shutil.copytree(symlinks=False)``.  Without this preflight, a
+    checkout containing nested symlinks (e.g.
+    ``skills/example/references/private -> ~/.ssh``) could cause copy mode
+    to pull files from outside the package root into the installation
+    directory.
+    """
+    for entry in source.rglob("*"):
+        try:
+            if entry.is_symlink():
+                raise SystemExit(
+                    f"refusing to copy skill directory containing a symlink: {entry}"
+                )
+        except OSError:
+            # Recurse into protected directories may fail; surface the OS error.
+            raise SystemExit(
+                f"cannot inspect entry inside skill source {source}: {entry}"
+            ) from None
 
 
 @dataclass(frozen=True)
 class Change:
     source: Path
     dest: Path
-    previous: str | None
+    previous: str | None  # symlink target when replacing a symlink
+    was_copy: bool = False  # True when replacing a copy-installed directory
 
 
 def current_symlink(dest: Path) -> str | None:
@@ -38,7 +63,14 @@ def atomic_copy(source: Path, dest: Path) -> None:
     tmp = dest.parent / f".{dest.name}.tmp-{uuid.uuid4().hex}"
     try:
         shutil.copytree(source, tmp, symlinks=False)
-        os.replace(tmp, dest)
+        (tmp / MARKER_NAME).write_text("", encoding="utf-8")
+        # os.replace cannot atomically replace a non-empty directory on all
+        # platforms (macOS returns ENOTEMPTY).  Remove the previous
+        # installation first — the preflight and pre-install checks guarantee
+        # that *dest* is either absent or a copy-installed directory we own.
+        if dest.exists():
+            shutil.rmtree(dest)
+        tmp.rename(dest)
     finally:
         if tmp.exists():
             shutil.rmtree(tmp, ignore_errors=True)
@@ -87,6 +119,8 @@ def main() -> int:
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--force-symlinks", action="store_true", help="Replace foreign symlinks, never files/directories.")
+    parser.add_argument("--force-copies", action="store_true",
+                        help="Replace copy-installed skill directories even without the install marker.")
     parser.add_argument("--mode", choices=["auto", "symlink", "copy"], default="auto",
                         help="Installation mode: auto (symlink or copy fallback), symlink, copy.")
     args = parser.parse_args()
@@ -115,6 +149,11 @@ def main() -> int:
     if target.exists() and not target.is_dir():
         errors.append(f"target must resolve to a real directory: {target_input}")
 
+    # Determine the effective installation mode for preflight decisions.
+    effective_mode = args.mode
+    if effective_mode == "auto":
+        effective_mode = "symlink" if can_symlink() else "copy"
+
     plan: list[Change] = []
     for name in names:
         candidate = skills_root / name
@@ -125,6 +164,9 @@ def main() -> int:
         if source.parent != skills_root or source.name != name or not source.is_dir():
             errors.append(f"skill source escapes package root: {name}")
             continue
+        if effective_mode == "copy":
+            # Reject nested symlinks inside the source before copy dereferences them.
+            reject_nested_symlinks(source)
         dest = target / name
         if dest.parent != target:
             errors.append(f"destination escapes target: {dest}")
@@ -138,8 +180,18 @@ def main() -> int:
                 errors.append(f"foreign symlink: {dest} -> {current}")
             else:
                 plan.append(Change(source, dest, current))
-        elif dest.exists():
-            errors.append(f"refusing to replace non-symlink: {dest}")
+        elif dest.is_dir() and (dest / MARKER_NAME).exists():
+            # Copy-installed directory from a previous run — safe to replace.
+            plan.append(Change(source, dest, None, was_copy=True))
+        elif dest.is_dir() and args.force_copies:
+            plan.append(Change(source, dest, None, was_copy=True))
+        elif dest.is_dir():
+            errors.append(
+                f"refusing to replace non-symlink directory without install marker: {dest}"
+                f" (use --force-copies to override)"
+            )
+        elif dest.is_file():
+            errors.append(f"refusing to replace non-symlink file: {dest}")
         else:
             plan.append(Change(source, dest, None))
 
@@ -160,12 +212,16 @@ def main() -> int:
     touched: list[Change] = []
     try:
         for change in plan:
-            observed = current_symlink(change.dest)
-            if change.previous is None:
-                if observed is not None or change.dest.exists():
+            if change.was_copy:
+                if not change.dest.is_dir() or not (change.dest / MARKER_NAME).exists():
+                    raise OSError(f"copy destination changed after preflight: {change.dest}")
+            elif change.previous is None:
+                if change.dest.exists():
                     raise OSError(f"destination changed after preflight: {change.dest}")
-            elif observed != change.previous:
-                raise OSError(f"symlink changed after preflight: {change.dest}")
+            else:
+                observed = current_symlink(change.dest)
+                if observed != change.previous:
+                    raise OSError(f"symlink changed after preflight: {change.dest}")
             install(change.source, change.dest, args.mode)
             touched.append(change)
     except Exception as exc:
