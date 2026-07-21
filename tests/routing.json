@@ -689,7 +689,7 @@
       "id": "manage-tags-negative-2",
       "skill": "manage-tags",
       "expect": "do-not-route",
-      "prompt": "Create a branch named v1.2.0."
+      "prompt": "Create a branch named v1.2.1."
     },
     {
       "id": "migrate-repository-positive-1",
