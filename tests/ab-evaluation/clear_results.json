@@ -1,0 +1,1034 @@
+{
+  "version": "1.2.1",
+  "commit": "30691f4d54c6b9a1632eb21b5f6aba7bd4d7aee6",
+  "rounds": 5,
+  "prompts": 10,
+  "summary": {
+    "taxonomy_only": {
+      "correct": 50,
+      "total": 50,
+      "avg_confidence": 93
+    },
+    "full_metadata": {
+      "correct": 50,
+      "total": 50,
+      "avg_confidence": 93
+    },
+    "delta_pp": 0,
+    "context_cost": {
+      "taxonomy_only": "~1,500 chars",
+      "full_metadata": "~9,700 chars",
+      "ratio": "6.4x"
+    },
+    "note": "taxonomy-only = 24 capability labels; full-metadata = name + frontmatter description of all 24 skills",
+    "true_baseline": {
+      "correct": 10,
+      "total": 10,
+      "avg_confidence": 89,
+      "note": "No taxonomy, no capability labels, no skill names — free-form labels mapped post-hoc"
+    }
+  },
+  "results": [
+    {
+      "round": 2,
+      "condition": "taxonomy-only",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "confidence": 95,
+      "expected": "diagnose-repository",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "taxonomy-only",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "confidence": 95,
+      "expected": "setup-repository",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "taxonomy-only",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "confidence": 95,
+      "expected": "configure-git",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "taxonomy-only",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "confidence": 95,
+      "expected": "manage-remotes",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "taxonomy-only",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "confidence": 90,
+      "expected": "craft-commits",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "taxonomy-only",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "confidence": 90,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "taxonomy-only",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "confidence": 90,
+      "expected": "sync-branches",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "taxonomy-only",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "confidence": 95,
+      "expected": "integrate-branches",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "taxonomy-only",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "confidence": 95,
+      "expected": "transplant-commits",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "taxonomy-only",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "confidence": 95,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "full-metadata",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "confidence": 95,
+      "expected": "diagnose-repository",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "full-metadata",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "confidence": 95,
+      "expected": "setup-repository",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "full-metadata",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "confidence": 95,
+      "expected": "configure-git",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "full-metadata",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "confidence": 95,
+      "expected": "manage-remotes",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "full-metadata",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "confidence": 95,
+      "expected": "craft-commits",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "full-metadata",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "confidence": 95,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "full-metadata",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "confidence": 95,
+      "expected": "sync-branches",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "full-metadata",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "confidence": 95,
+      "expected": "integrate-branches",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "full-metadata",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "confidence": 95,
+      "expected": "transplant-commits",
+      "correct": true
+    },
+    {
+      "round": 2,
+      "condition": "full-metadata",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "confidence": 95,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "taxonomy-only",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "confidence": 95,
+      "expected": "diagnose-repository",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "taxonomy-only",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "confidence": 95,
+      "expected": "setup-repository",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "taxonomy-only",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "confidence": 95,
+      "expected": "configure-git",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "taxonomy-only",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "confidence": 90,
+      "expected": "manage-remotes",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "taxonomy-only",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "confidence": 90,
+      "expected": "craft-commits",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "taxonomy-only",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "confidence": 90,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "taxonomy-only",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "confidence": 90,
+      "expected": "sync-branches",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "taxonomy-only",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "confidence": 95,
+      "expected": "integrate-branches",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "taxonomy-only",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "confidence": 85,
+      "expected": "transplant-commits",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "taxonomy-only",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "confidence": 90,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "taxonomy-only",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "confidence": 95,
+      "expected": "diagnose-repository",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "taxonomy-only",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "confidence": 95,
+      "expected": "setup-repository",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "taxonomy-only",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "confidence": 95,
+      "expected": "configure-git",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "taxonomy-only",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "confidence": 95,
+      "expected": "manage-remotes",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "taxonomy-only",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "confidence": 95,
+      "expected": "craft-commits",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "taxonomy-only",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "confidence": 95,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "taxonomy-only",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "confidence": 90,
+      "expected": "sync-branches",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "taxonomy-only",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "confidence": 95,
+      "expected": "integrate-branches",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "taxonomy-only",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "confidence": 90,
+      "expected": "transplant-commits",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "taxonomy-only",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "confidence": 90,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "full-metadata",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "confidence": 95,
+      "expected": "diagnose-repository",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "full-metadata",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "confidence": 90,
+      "expected": "setup-repository",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "full-metadata",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "confidence": 95,
+      "expected": "configure-git",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "full-metadata",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "confidence": 95,
+      "expected": "manage-remotes",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "full-metadata",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "confidence": 90,
+      "expected": "craft-commits",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "full-metadata",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "confidence": 95,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "full-metadata",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "confidence": 90,
+      "expected": "sync-branches",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "full-metadata",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "confidence": 90,
+      "expected": "integrate-branches",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "full-metadata",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "confidence": 95,
+      "expected": "transplant-commits",
+      "correct": true
+    },
+    {
+      "round": 5,
+      "condition": "full-metadata",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "confidence": 90,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "full-metadata",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "confidence": 95,
+      "expected": "diagnose-repository",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "full-metadata",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "confidence": 95,
+      "expected": "setup-repository",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "full-metadata",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "confidence": 95,
+      "expected": "configure-git",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "full-metadata",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "confidence": 90,
+      "expected": "manage-remotes",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "full-metadata",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "confidence": 95,
+      "expected": "craft-commits",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "full-metadata",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "confidence": 90,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "full-metadata",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "confidence": 95,
+      "expected": "sync-branches",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "full-metadata",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "confidence": 95,
+      "expected": "integrate-branches",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "full-metadata",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "confidence": 90,
+      "expected": "transplant-commits",
+      "correct": true
+    },
+    {
+      "round": 3,
+      "condition": "full-metadata",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "confidence": 90,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "taxonomy-only",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "confidence": 95,
+      "expected": "diagnose-repository",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "taxonomy-only",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "confidence": 95,
+      "expected": "setup-repository",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "taxonomy-only",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "confidence": 90,
+      "expected": "configure-git",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "taxonomy-only",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "confidence": 95,
+      "expected": "manage-remotes",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "taxonomy-only",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "confidence": 90,
+      "expected": "craft-commits",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "taxonomy-only",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "confidence": 95,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "taxonomy-only",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "confidence": 90,
+      "expected": "sync-branches",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "taxonomy-only",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "confidence": 95,
+      "expected": "integrate-branches",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "taxonomy-only",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "confidence": 85,
+      "expected": "transplant-commits",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "taxonomy-only",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "confidence": 95,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "full-metadata",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "confidence": 95,
+      "expected": "diagnose-repository",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "full-metadata",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "confidence": 95,
+      "expected": "setup-repository",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "full-metadata",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "confidence": 95,
+      "expected": "configure-git",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "full-metadata",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "confidence": 95,
+      "expected": "manage-remotes",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "full-metadata",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "confidence": 90,
+      "expected": "craft-commits",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "full-metadata",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "confidence": 90,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "full-metadata",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "confidence": 90,
+      "expected": "sync-branches",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "full-metadata",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "confidence": 90,
+      "expected": "integrate-branches",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "full-metadata",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "confidence": 90,
+      "expected": "transplant-commits",
+      "correct": true
+    },
+    {
+      "round": 4,
+      "condition": "full-metadata",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "confidence": 85,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "taxonomy-only",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "confidence": 95,
+      "expected": "diagnose-repository",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "taxonomy-only",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "confidence": 95,
+      "expected": "setup-repository",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "taxonomy-only",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "confidence": 95,
+      "expected": "configure-git",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "taxonomy-only",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "confidence": 95,
+      "expected": "manage-remotes",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "taxonomy-only",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "confidence": 90,
+      "expected": "craft-commits",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "taxonomy-only",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "confidence": 90,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "taxonomy-only",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "confidence": 90,
+      "expected": "sync-branches",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "taxonomy-only",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "confidence": 95,
+      "expected": "integrate-branches",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "taxonomy-only",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "confidence": 85,
+      "expected": "transplant-commits",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "taxonomy-only",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "confidence": 95,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "full-metadata",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "confidence": 95,
+      "expected": "diagnose-repository",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "full-metadata",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "confidence": 90,
+      "expected": "setup-repository",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "full-metadata",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "confidence": 95,
+      "expected": "configure-git",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "full-metadata",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "confidence": 95,
+      "expected": "manage-remotes",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "full-metadata",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "confidence": 95,
+      "expected": "craft-commits",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "full-metadata",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "confidence": 95,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "full-metadata",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "confidence": 90,
+      "expected": "sync-branches",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "full-metadata",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "confidence": 90,
+      "expected": "integrate-branches",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "full-metadata",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "confidence": 95,
+      "expected": "transplant-commits",
+      "correct": true
+    },
+    {
+      "round": 1,
+      "condition": "full-metadata",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "confidence": 90,
+      "expected": "manage-branches",
+      "correct": true
+    },
+    {
+      "condition": "true-baseline",
+      "prompt_id": "P0",
+      "predicted": "diagnose-repository",
+      "raw_label": "repository-state-diagnostics",
+      "confidence": 95,
+      "correct": true,
+      "round": 1,
+      "expected": "diagnose-repository"
+    },
+    {
+      "condition": "true-baseline",
+      "prompt_id": "P1",
+      "predicted": "setup-repository",
+      "raw_label": "shallow-cloning",
+      "confidence": 90,
+      "correct": true,
+      "round": 1,
+      "expected": "setup-repository"
+    },
+    {
+      "condition": "true-baseline",
+      "prompt_id": "P2",
+      "predicted": "configure-git",
+      "raw_label": "conditional-identity-configuration",
+      "confidence": 85,
+      "correct": true,
+      "round": 1,
+      "expected": "configure-git"
+    },
+    {
+      "condition": "true-baseline",
+      "prompt_id": "P3",
+      "predicted": "manage-remotes",
+      "raw_label": "remote-configuration",
+      "confidence": 90,
+      "correct": true,
+      "round": 1,
+      "expected": "manage-remotes"
+    },
+    {
+      "condition": "true-baseline",
+      "prompt_id": "P4",
+      "predicted": "craft-commits",
+      "raw_label": "interactive-staging",
+      "confidence": 85,
+      "correct": true,
+      "round": 1,
+      "expected": "craft-commits"
+    },
+    {
+      "condition": "true-baseline",
+      "prompt_id": "P5",
+      "predicted": "manage-branches",
+      "raw_label": "branch-rename-with-upstream-tracking",
+      "confidence": 90,
+      "correct": true,
+      "round": 1,
+      "expected": "manage-branches"
+    },
+    {
+      "condition": "true-baseline",
+      "prompt_id": "P6",
+      "predicted": "sync-branches",
+      "raw_label": "upstream-sync-and-push",
+      "confidence": 80,
+      "correct": true,
+      "round": 1,
+      "expected": "sync-branches"
+    },
+    {
+      "condition": "true-baseline",
+      "prompt_id": "P7",
+      "predicted": "integrate-branches",
+      "raw_label": "branch-rebasing",
+      "confidence": 95,
+      "correct": true,
+      "round": 1,
+      "expected": "integrate-branches"
+    },
+    {
+      "condition": "true-baseline",
+      "prompt_id": "P8",
+      "predicted": "transplant-commits",
+      "raw_label": "patch-application",
+      "confidence": 90,
+      "correct": true,
+      "round": 1,
+      "expected": "transplant-commits"
+    },
+    {
+      "condition": "true-baseline",
+      "prompt_id": "P9",
+      "predicted": "manage-branches",
+      "raw_label": "branch-renaming",
+      "confidence": 90,
+      "correct": true,
+      "round": 1,
+      "expected": "manage-branches"
+    }
+  ],
+  "_note": "110 decisions from 11 batched agent runs (10 taxonomy/metadata × 5 rounds + 1 true-baseline), not 110 independent runs"
+}

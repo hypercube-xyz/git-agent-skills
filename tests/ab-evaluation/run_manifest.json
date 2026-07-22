@@ -1,0 +1,81 @@
+{
+  "repository": "hypercube-xyz/git-agent-skills",
+  "commit": "30691f4d54c6b9a1632eb21b5f6aba7bd4d7aee6",
+  "package_version": "1.2.1",
+  "run_date": "2026-07-22",
+  "model": "deepseek-v4-pro-openai-compat",
+  "runtime": "Hermes Agent (sub-agent delegation)",
+  "suites": {
+    "clear-case": {
+      "prompts": 10,
+      "source": "routing.json positive fixtures",
+      "conditions": [
+        "true-baseline",
+        "taxonomy-only",
+        "full-metadata"
+      ],
+      "result": "100% in all three conditions; ceiling hit",
+      "rounds": {
+        "true-baseline": 1,
+        "taxonomy-only": 5,
+        "full-metadata": 5
+      }
+    },
+    "near-boundary": {
+      "prompts": 40,
+      "pairs": 10,
+      "types": [
+        "clear-left",
+        "clear-right",
+        "boundary",
+        "underspecified"
+      ],
+      "pair_selection": "top 10 by Jaccard similarity (≥0.13) from 27 overlap signals",
+      "conditions": [
+        "taxonomy-only",
+        "full-metadata"
+      ],
+      "result": "taxonomy 37/40, metadata 40/40",
+      "rounds": {
+        "taxonomy-only": 1,
+        "full-metadata": 1
+      }
+    }
+  },
+  "condition_definitions": {
+    "true-baseline": "User prompt only; free-form capability label mapped to the package taxonomy after the response",
+    "taxonomy-only": "24 skill names + one-line catalog summaries",
+    "full-metadata": "24 skill names + full frontmatter descriptions"
+  },
+  "limitations": [
+    "Near-boundary suite has one batched run per condition, so it has no variance estimate.",
+    "10 of 27 overlap pairs were tested.",
+    "Prompt order was not randomized.",
+    "One model/runtime was tested.",
+    "Findings are specific to the evaluated prompts and require replication before broader generalization."
+  ],
+  "batched_condition_runs": {
+    "clear-case": {
+      "taxonomy-only": 5,
+      "full-metadata": 5,
+      "true-baseline": 1,
+      "total": 11
+    },
+    "near-boundary": {
+      "taxonomy-only": 1,
+      "full-metadata": 1,
+      "total": 2
+    },
+    "total": 13
+  },
+  "observations": {
+    "clear-case": 110,
+    "near-boundary": 80,
+    "total": 190
+  },
+  "artifact_notes": [
+    "Each condition run evaluated its suite as a batch; observations within a run are not statistically independent.",
+    "Raw near-boundary responses are included. Clear-case results are included as parsed scored observations; raw clear-case response text was not preserved in this artifact."
+  ],
+  "verification_scope": "The artifact deterministically verifies scoring from recorded outputs and frozen ground truth; it does not rerun the original model invocations."
+}

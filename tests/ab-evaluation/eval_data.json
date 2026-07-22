@@ -1,0 +1,103 @@
+{
+  "version": "1.2.1",
+  "commit": "30691f4d54c6b9a1632eb21b5f6aba7bd4d7aee6",
+  "rounds": 5,
+  "skills_meta": {
+    "configure-git": "Inspect and change Git configuration, identity, signing, attributes, ignore rules, hooks, aliases, credential-helper selection, and repository policy at the correct scope. Use when the desired outcome is configuration rather than repository history or content. Do not use to manage remote URLs, rewrite commits, or store secrets.",
+    "craft-commits": "Inspect local changes, partition them into coherent atomic commits, stage exact content, and write repository-conformant commit messages. Use when the desired result is durable, reviewable project history: committing selected work, splitting mixed changes, amending an unpublished commit, or improving commit structure. Follow repository policy and history first; use Conventional Commits only when no convention exists. Do not use for temporary WIP/rescue artifacts, push, or published-history rewrite.",
+    "diagnose-repository": "Diagnose confusing Git repository state, interrupted operations, detached or unborn HEAD, index/worktree mismatches, ignored or untracked files, and repository integrity symptoms. Use when the user asks what state Git is in or why status, diff, switch, merge, or commit behaves unexpectedly. Do not use to perform the eventual recovery or history rewrite.",
+    "edit-commit-history": "Reorder, squash, fixup, split, drop, reword, or otherwise rewrite an existing commit series, including controlled updates to a published branch with an exact force-with-lease. Use when commit topology or metadata must change. Do not use for ordinary amend of one unpublished tip, branch integration, or repository-wide filtering.",
+    "find-regression": "Locate the first bad commit with Git bisect or an equivalent bounded search using a reproducible good/bad/skip classifier. Use when behavior can be tested across revisions. Do not use for open-ended history search, flaky tests without classification, or immediate code repair.",
+    "integrate-branches": "Combine complete lines of development through merge, fast-forward, or local rebase, including choosing an integration strategy and validating the result. Use when the outcome is to incorporate one branch into another. Do not use for selected commits, ordinary upstream synchronization, conflict-only resolution, or editing an arbitrary commit series.",
+    "investigate-history": "Trace when, why, and by whom code or repository state changed using log, show, blame, pickaxe, regex history search, path history, merge ancestry, and patch equivalence. Use for provenance and historical explanation. Do not use for executable regression bisection, mutation, or code-review judgment.",
+    "manage-branches": "Create, switch, rename, copy, delete, and inspect local branches and their upstream metadata without integrating histories. Use for local branch lifecycle and safe navigation, including detached HEAD preservation. Do not use for merge/rebase, remote synchronization, worktree lifecycle, or history editing.",
+    "manage-large-files": "Diagnose and manage large or binary files with Git LFS or repository policy, including push-size rejection, missing LFS objects, pointer mismatches, tracking changes, and bounded migration of selected paths. Use when storage format or host size limits are the problem. Do not use for general repository performance tuning or arbitrary history rewrite.",
+    "manage-remotes": "Inspect, add, rename, remove, and edit Git remotes, fetch/push URLs, and refspecs; fetch remote observations when needed. Use when the problem is remote identity or topology. Do not use to reconcile branch histories, perform ordinary push/pull integration, migrate every ref, or expose credentials.",
+    "manage-stacked-branches": "Inspect, restack, and optionally coordinate publication of multiple dependent review branches while preserving each layer's intended diff and using exact remote leases. Use for branch stacks, chained pull requests, parent-branch changes, or stack-wide reorder/split/drop decisions. Do not use for one branch integration, one commit series, selected cherry-picks, ordinary pushes, or branch creation alone.",
+    "manage-submodules": "Add, initialize, update, synchronize, relocate, remove, and diagnose Git submodules and their gitlink commits. Use when a superproject tracks another repository by commit. Do not use for ordinary directories, subtree integration, or monorepo package management.",
+    "manage-tags": "Create, inspect, sign, verify, move, delete, and optionally publish one exact Git tag under explicit controls. Use when the desired outcome is a tag/ref and its object identity. Do not use to prepare release files, publish packages, or treat the same peeled commit as automatically idempotent.",
+    "manage-worktrees": "Create, inspect, move, lock, unlock, repair, remove, and safely prune linked Git worktrees. Use for parallel checkouts that share one object database. Do not use for ordinary branch switching or for pruning unspecified candidates.",
+    "migrate-repository": "Plan and execute a bounded repository migration or mirror between hosting systems, including refs, objects, LFS, submodules, default branch, protections, and post-cutover verification. Use for whole-repository transfer or repository-wide filtering tied to migration. Do not use for one remote edit, one branch push, or routine clone.",
+    "optimize-large-repository": "Improve developer productivity in large repositories using measurement, sparse checkout, partial clone, scalar/maintenance, commit-graph, multi-pack-index, and bounded repository cleanup. Use when clone, status, checkout, fetch, or object maintenance is slow. Do not use for LFS storage policy or destructive pruning without evidence.",
+    "preserve-work": "Temporarily preserve current tracked, staged, untracked, or ignored work before switching context or attempting a risky operation. Use for stash, temporary commits, patches, or a safety branch chosen by evidence. Do not use to recover already lost work or discard changes.",
+    "recover-lost-work": "Find and restore commits, branches, staged blobs, or file content that became unreachable or disappeared after reset, rebase, branch deletion, detached HEAD, stash loss, or accidental overwrite. Use when the desired state is not currently named or its exact object is unknown. Do not use for ordinary reversal of known state.",
+    "repair-repository-integrity": "Diagnose, contain, and repair damaged Git object, pack, ref, alternates, shallow, or promisor integrity using a verified healthy source and additive recovery. Use for bad objects, missing blobs/trees/commits, broken refs, pack/index corruption, or an existing shallow/partial clone that cannot materialize required objects. Do not use for merely unreachable intact work, LFS-only failures, routine clone setup, optimization, or pruning.",
+    "resolve-conflicts": "Resolve semantic conflicts during merge, rebase, cherry-pick, revert, stash application, or sequencer operations. Use when the index has unmerged stages or Git has stopped for conflict resolution. Do not use merely to start an integration or to accept one side mechanically.",
+    "setup-repository": "Create or obtain one working Git repository by initializing, cloning, selecting clone depth or object filters, and establishing the initial local branch. Use for first-time repository setup. Do not use for ongoing configuration, submodule operations, large-repository tuning after setup, or full repository migration.",
+    "sync-branches": "Reconcile one local branch with its upstream or another verified remote branch through fetch plus fast-forward, pull-policy choice, or ordinary non-force push. Use for ahead/behind, divergent pull, non-fast-forward push rejection, first publication, and upstream tracking. Do not use for remote topology, local-only branch integration, or published-history rewrite.",
+    "transplant-commits": "Replay selected exact commits or a reviewed patch/mailbox series onto another local line of history, preserving ordering, provenance, empties, and conflict semantics. Use when only particular logical changes should move. Do not use to integrate a whole branch, rewrite an existing series in place, create a temporary preservation patch, or publish.",
+    "undo-changes": "Reverse a known local Git state change: unstage paths, restore tracked content, abort an in-progress operation, revert a known commit, or move an unpublished ref with an explicit preservation policy. Use when the target and desired earlier state are known. Do not use to discover lost work or rewrite published history."
+  },
+  "prompts": [
+    {
+      "id": "P0",
+      "prompt": "Why is HEAD detached and what state is this repo in?",
+      "skill": "diagnose-repository",
+      "expect": "route",
+      "expected_skill": "diagnose-repository"
+    },
+    {
+      "id": "P1",
+      "prompt": "Clone this repository with only the last 50 commits.",
+      "skill": "setup-repository",
+      "expect": "route",
+      "expected_skill": "setup-repository"
+    },
+    {
+      "id": "P2",
+      "prompt": "Use different Git identities for work and personal repository paths.",
+      "skill": "configure-git",
+      "expect": "route",
+      "expected_skill": "configure-git"
+    },
+    {
+      "id": "P3",
+      "prompt": "Set up upstream and fork remotes without pushing.",
+      "skill": "manage-remotes",
+      "expect": "route",
+      "expected_skill": "manage-remotes"
+    },
+    {
+      "id": "P4",
+      "prompt": "Split these local changes into two atomic commits.",
+      "skill": "craft-commits",
+      "expect": "route",
+      "expected_skill": "craft-commits"
+    },
+    {
+      "id": "P5",
+      "prompt": "Rename this local branch and keep its upstream metadata correct.",
+      "skill": "manage-branches",
+      "expect": "route",
+      "expected_skill": "manage-branches"
+    },
+    {
+      "id": "P6",
+      "prompt": "Update my local branch from its upstream and publish only this ref.",
+      "skill": "sync-branches",
+      "expect": "route",
+      "expected_skill": "sync-branches"
+    },
+    {
+      "id": "P7",
+      "prompt": "Rebase this one feature branch onto current main.",
+      "skill": "integrate-branches",
+      "expect": "route",
+      "expected_skill": "integrate-branches"
+    },
+    {
+      "id": "P8",
+      "prompt": "Apply this mailing-list patch series.",
+      "skill": "preserve-work",
+      "expect": "do-not-route",
+      "expected_skill": "transplant-commits"
+    },
+    {
+      "id": "P9",
+      "prompt": "Rename a local branch without creating a worktree.",
+      "skill": "manage-worktrees",
+      "expect": "do-not-route",
+      "expected_skill": "manage-branches"
+    }
+  ]
+}
