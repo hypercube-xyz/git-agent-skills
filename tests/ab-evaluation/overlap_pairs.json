@@ -1,0 +1,265 @@
+{
+  "pairs": [
+    {
+      "left": "configure-git",
+      "right": "manage-branches",
+      "score": 0.12,
+      "routed": false,
+      "error": false
+    },
+    {
+      "left": "configure-git",
+      "right": "undo-changes",
+      "score": 0.1,
+      "routed": false,
+      "error": false
+    },
+    {
+      "left": "craft-commits",
+      "right": "edit-commit-history",
+      "score": 0.11,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "craft-commits",
+      "right": "integrate-branches",
+      "score": 0.14,
+      "routed": false,
+      "error": false
+    },
+    {
+      "left": "craft-commits",
+      "right": "undo-changes",
+      "score": 0.16,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "edit-commit-history",
+      "right": "integrate-branches",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "edit-commit-history",
+      "right": "manage-stacked-branches",
+      "score": 0.12,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "edit-commit-history",
+      "right": "migrate-repository",
+      "score": 0.1,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "edit-commit-history",
+      "right": "undo-changes",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "integrate-branches",
+      "right": "manage-branches",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "integrate-branches",
+      "right": "manage-stacked-branches",
+      "score": 0.11,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "integrate-branches",
+      "right": "sync-branches",
+      "score": 0.12,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "integrate-branches",
+      "right": "transplant-commits",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "integrate-branches",
+      "right": "undo-changes",
+      "score": 0.12,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "manage-branches",
+      "right": "manage-worktrees",
+      "score": 0.15,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "manage-branches",
+      "right": "undo-changes",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "manage-large-files",
+      "right": "migrate-repository",
+      "score": 0.11,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "manage-large-files",
+      "right": "optimize-large-repository",
+      "score": 0.12,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "manage-remotes",
+      "right": "sync-branches",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "manage-tags",
+      "right": "undo-changes",
+      "score": 0.1,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "migrate-repository",
+      "right": "setup-repository",
+      "score": 0.11,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "optimize-large-repository",
+      "right": "repair-repository-integrity",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "preserve-work",
+      "right": "recover-lost-work",
+      "score": 0.1,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "preserve-work",
+      "right": "undo-changes",
+      "score": 0.12,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "recover-lost-work",
+      "right": "repair-repository-integrity",
+      "score": 0.12,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "recover-lost-work",
+      "right": "undo-changes",
+      "score": 0.11,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "transplant-commits",
+      "right": "undo-changes",
+      "score": 0.11,
+      "routed": true,
+      "error": false
+    }
+  ],
+  "top10": [
+    {
+      "left": "craft-commits",
+      "right": "undo-changes",
+      "score": 0.16,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "manage-branches",
+      "right": "manage-worktrees",
+      "score": 0.15,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "craft-commits",
+      "right": "integrate-branches",
+      "score": 0.14,
+      "routed": false,
+      "error": false
+    },
+    {
+      "left": "edit-commit-history",
+      "right": "integrate-branches",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "edit-commit-history",
+      "right": "undo-changes",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "integrate-branches",
+      "right": "manage-branches",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "integrate-branches",
+      "right": "transplant-commits",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "manage-branches",
+      "right": "undo-changes",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "manage-remotes",
+      "right": "sync-branches",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    },
+    {
+      "left": "optimize-large-repository",
+      "right": "repair-repository-integrity",
+      "score": 0.13,
+      "routed": true,
+      "error": false
+    }
+  ]
+}

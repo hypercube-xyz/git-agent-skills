@@ -1,0 +1,576 @@
+{
+  "version": "1.2.1",
+  "commit": "30691f4d54c6b9a1632eb21b5f6aba7bd4d7aee6",
+  "prompts": [
+    {
+      "id": "NB01",
+      "pair": "craft-commits/undo-changes",
+      "type": "clear-left",
+      "prompt": "Split these uncommitted changes into two logical commits with proper messages.",
+      "acceptable_skills": [
+        "craft-commits"
+      ],
+      "forbidden_skills": [
+        "undo-changes"
+      ],
+      "preferred_skill": "craft-commits",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB02",
+      "pair": "craft-commits/undo-changes",
+      "type": "clear-right",
+      "prompt": "Unstage the file I just added — I want to keep the edits but remove it from the index.",
+      "acceptable_skills": [
+        "undo-changes"
+      ],
+      "forbidden_skills": [
+        "craft-commits"
+      ],
+      "preferred_skill": "undo-changes",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB03",
+      "pair": "craft-commits/undo-changes",
+      "type": "boundary",
+      "prompt": "I staged everything with git add . but now realize half of it shouldn't be committed. I still want the other half committed.",
+      "acceptable_skills": [
+        "undo-changes",
+        "craft-commits"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "undo-changes",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB04",
+      "pair": "craft-commits/undo-changes",
+      "type": "underspecified",
+      "prompt": "The staging area is wrong. Fix it.",
+      "acceptable_skills": [
+        "diagnose-repository",
+        "undo-changes",
+        "craft-commits"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "diagnose-repository",
+      "expected_behavior": "inspect-before-mutation",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB05",
+      "pair": "manage-branches/manage-worktrees",
+      "type": "clear-left",
+      "prompt": "Rename my local branch from 'feature-old' to 'feature-new' and update its upstream tracking.",
+      "acceptable_skills": [
+        "manage-branches"
+      ],
+      "forbidden_skills": [
+        "manage-worktrees"
+      ],
+      "preferred_skill": "manage-branches",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB06",
+      "pair": "manage-branches/manage-worktrees",
+      "type": "clear-right",
+      "prompt": "I need to work on two branches simultaneously without cloning again — create a second checkout.",
+      "acceptable_skills": [
+        "manage-worktrees"
+      ],
+      "forbidden_skills": [
+        "manage-branches"
+      ],
+      "preferred_skill": "manage-worktrees",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB07",
+      "pair": "manage-branches/manage-worktrees",
+      "type": "boundary",
+      "prompt": "I need to switch to another branch to fix a bug, but I have uncommitted work here. What's the safest way?",
+      "acceptable_skills": [
+        "manage-worktrees",
+        "manage-branches",
+        "preserve-work"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "manage-worktrees",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB08",
+      "pair": "manage-branches/manage-worktrees",
+      "type": "underspecified",
+      "prompt": "I need another branch.",
+      "acceptable_skills": [
+        "diagnose-repository",
+        "manage-branches",
+        "manage-worktrees"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "diagnose-repository",
+      "expected_behavior": "inspect-before-mutation",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB09",
+      "pair": "craft-commits/integrate-branches",
+      "type": "clear-left",
+      "prompt": "I have several changed files in the working tree. Commit them as separate atomic units based on what they do.",
+      "acceptable_skills": [
+        "craft-commits"
+      ],
+      "forbidden_skills": [
+        "integrate-branches"
+      ],
+      "preferred_skill": "craft-commits",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB10",
+      "pair": "craft-commits/integrate-branches",
+      "type": "clear-right",
+      "prompt": "Merge the completed feature branch into main — the feature branch has 15 commits and is ready.",
+      "acceptable_skills": [
+        "integrate-branches"
+      ],
+      "forbidden_skills": [
+        "craft-commits"
+      ],
+      "preferred_skill": "integrate-branches",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB11",
+      "pair": "craft-commits/integrate-branches",
+      "type": "boundary",
+      "prompt": "Rebase my feature branch onto main and clean up the commit messages while I'm at it.",
+      "acceptable_skills": [
+        "integrate-branches",
+        "edit-commit-history"
+      ],
+      "forbidden_skills": [
+        "craft-commits"
+      ],
+      "preferred_skill": "integrate-branches",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB12",
+      "pair": "craft-commits/integrate-branches",
+      "type": "underspecified",
+      "prompt": "Get my changes into the main branch.",
+      "acceptable_skills": [
+        "diagnose-repository",
+        "integrate-branches",
+        "sync-branches",
+        "craft-commits"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "diagnose-repository",
+      "expected_behavior": "inspect-before-mutation",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB13",
+      "pair": "edit-commit-history/integrate-branches",
+      "type": "clear-left",
+      "prompt": "I have 5 unpublished commits on this branch. Squash the middle three into one and reword the first.",
+      "acceptable_skills": [
+        "edit-commit-history"
+      ],
+      "forbidden_skills": [
+        "integrate-branches"
+      ],
+      "preferred_skill": "edit-commit-history",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB14",
+      "pair": "edit-commit-history/integrate-branches",
+      "type": "clear-right",
+      "prompt": "Rebase this feature branch onto the latest main to incorporate upstream changes.",
+      "acceptable_skills": [
+        "integrate-branches"
+      ],
+      "forbidden_skills": [
+        "edit-commit-history"
+      ],
+      "preferred_skill": "integrate-branches",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB15",
+      "pair": "edit-commit-history/integrate-branches",
+      "type": "boundary",
+      "prompt": "This branch has 10 messy commits. Before merging, I want to clean them up and rebase onto main.",
+      "acceptable_skills": [
+        "edit-commit-history",
+        "integrate-branches"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "edit-commit-history",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB16",
+      "pair": "edit-commit-history/integrate-branches",
+      "type": "underspecified",
+      "prompt": "Prepare this branch for merging.",
+      "acceptable_skills": [
+        "diagnose-repository",
+        "edit-commit-history",
+        "integrate-branches",
+        "sync-branches"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "diagnose-repository",
+      "expected_behavior": "inspect-before-mutation",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB17",
+      "pair": "edit-commit-history/undo-changes",
+      "type": "clear-left",
+      "prompt": "I committed the wrong file in the last 3 commits. Use interactive rebase to remove those files from history.",
+      "acceptable_skills": [
+        "edit-commit-history"
+      ],
+      "forbidden_skills": [
+        "undo-changes"
+      ],
+      "preferred_skill": "edit-commit-history",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB18",
+      "pair": "edit-commit-history/undo-changes",
+      "type": "clear-right",
+      "prompt": "I know commit abc123 introduced a bug. Create a revert commit for just that change.",
+      "acceptable_skills": [
+        "undo-changes"
+      ],
+      "forbidden_skills": [
+        "edit-commit-history"
+      ],
+      "preferred_skill": "undo-changes",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB19",
+      "pair": "edit-commit-history/undo-changes",
+      "type": "boundary",
+      "prompt": "The last commit is wrong. I haven't pushed it. I want to undo it.",
+      "acceptable_skills": [
+        "undo-changes",
+        "edit-commit-history"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "undo-changes",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB20",
+      "pair": "edit-commit-history/undo-changes",
+      "type": "underspecified",
+      "prompt": "Undo the commit.",
+      "acceptable_skills": [
+        "diagnose-repository",
+        "undo-changes",
+        "edit-commit-history"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "diagnose-repository",
+      "expected_behavior": "inspect-before-mutation",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB21",
+      "pair": "integrate-branches/manage-branches",
+      "type": "clear-left",
+      "prompt": "Merge the release branch into main and handle any conflicts.",
+      "acceptable_skills": [
+        "integrate-branches"
+      ],
+      "forbidden_skills": [
+        "manage-branches"
+      ],
+      "preferred_skill": "integrate-branches",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB22",
+      "pair": "integrate-branches/manage-branches",
+      "type": "clear-right",
+      "prompt": "Delete the local branch 'old-feature' — it was already merged and I don't need it anymore.",
+      "acceptable_skills": [
+        "manage-branches"
+      ],
+      "forbidden_skills": [
+        "integrate-branches"
+      ],
+      "preferred_skill": "manage-branches",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB23",
+      "pair": "integrate-branches/manage-branches",
+      "type": "boundary",
+      "prompt": "Create a branch from main, then merge the hotfix into it.",
+      "acceptable_skills": [
+        "manage-branches",
+        "integrate-branches"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "manage-branches",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB24",
+      "pair": "integrate-branches/manage-branches",
+      "type": "underspecified",
+      "prompt": "Put the feature branch into main.",
+      "acceptable_skills": [
+        "diagnose-repository",
+        "integrate-branches",
+        "manage-branches",
+        "sync-branches"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "diagnose-repository",
+      "expected_behavior": "inspect-before-mutation",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB25",
+      "pair": "integrate-branches/transplant-commits",
+      "type": "clear-left",
+      "prompt": "Rebase the entire feature branch onto the new main tip.",
+      "acceptable_skills": [
+        "integrate-branches"
+      ],
+      "forbidden_skills": [
+        "transplant-commits"
+      ],
+      "preferred_skill": "integrate-branches",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB26",
+      "pair": "integrate-branches/transplant-commits",
+      "type": "clear-right",
+      "prompt": "Cherry-pick commits abc123 and def456 from the experimental branch into main.",
+      "acceptable_skills": [
+        "transplant-commits"
+      ],
+      "forbidden_skills": [
+        "integrate-branches"
+      ],
+      "preferred_skill": "transplant-commits",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB27",
+      "pair": "integrate-branches/transplant-commits",
+      "type": "boundary",
+      "prompt": "Pick the bug fix commits from the release branch and apply them to main without merging everything.",
+      "acceptable_skills": [
+        "transplant-commits",
+        "integrate-branches"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "transplant-commits",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB28",
+      "pair": "integrate-branches/transplant-commits",
+      "type": "underspecified",
+      "prompt": "Bring the fix from that branch over here.",
+      "acceptable_skills": [
+        "diagnose-repository",
+        "transplant-commits",
+        "integrate-branches"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "diagnose-repository",
+      "expected_behavior": "inspect-before-mutation",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB29",
+      "pair": "manage-branches/undo-changes",
+      "type": "clear-left",
+      "prompt": "Create a branch called 'bugfix/login' starting from the main branch.",
+      "acceptable_skills": [
+        "manage-branches"
+      ],
+      "forbidden_skills": [
+        "undo-changes"
+      ],
+      "preferred_skill": "manage-branches",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB30",
+      "pair": "manage-branches/undo-changes",
+      "type": "clear-right",
+      "prompt": "I accidentally deleted a file. Restore it from the last commit.",
+      "acceptable_skills": [
+        "undo-changes"
+      ],
+      "forbidden_skills": [
+        "manage-branches"
+      ],
+      "preferred_skill": "undo-changes",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB31",
+      "pair": "manage-branches/undo-changes",
+      "type": "boundary",
+      "prompt": "I made a mess on this branch. Reset it to match main exactly.",
+      "acceptable_skills": [
+        "undo-changes",
+        "manage-branches"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "undo-changes",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB32",
+      "pair": "manage-branches/undo-changes",
+      "type": "underspecified",
+      "prompt": "Reset the branch.",
+      "acceptable_skills": [
+        "diagnose-repository",
+        "undo-changes",
+        "manage-branches",
+        "recover-lost-work"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "diagnose-repository",
+      "expected_behavior": "inspect-before-mutation",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB33",
+      "pair": "manage-remotes/sync-branches",
+      "type": "clear-left",
+      "prompt": "Add a new remote called 'upstream' pointing to the original repo, and rename 'origin' to 'fork'.",
+      "acceptable_skills": [
+        "manage-remotes"
+      ],
+      "forbidden_skills": [
+        "sync-branches"
+      ],
+      "preferred_skill": "manage-remotes",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB34",
+      "pair": "manage-remotes/sync-branches",
+      "type": "clear-right",
+      "prompt": "Push my feature branch to origin and set up upstream tracking.",
+      "acceptable_skills": [
+        "sync-branches"
+      ],
+      "forbidden_skills": [
+        "manage-remotes"
+      ],
+      "preferred_skill": "sync-branches",
+      "risk_class": "remote-mutation"
+    },
+    {
+      "id": "NB35",
+      "pair": "manage-remotes/sync-branches",
+      "type": "boundary",
+      "prompt": "My fork is behind the upstream repo. Update my local main and push it to my fork.",
+      "acceptable_skills": [
+        "sync-branches",
+        "manage-remotes"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "sync-branches",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB36",
+      "pair": "manage-remotes/sync-branches",
+      "type": "underspecified",
+      "prompt": "Set up the remote.",
+      "acceptable_skills": [
+        "diagnose-repository",
+        "manage-remotes",
+        "sync-branches",
+        "setup-repository"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "diagnose-repository",
+      "expected_behavior": "inspect-before-mutation",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB37",
+      "pair": "optimize-large-repository/repair-repository-integrity",
+      "type": "clear-left",
+      "prompt": "This monorepo is slow. Enable sparse checkout and partial clone to speed up status and fetch.",
+      "acceptable_skills": [
+        "optimize-large-repository"
+      ],
+      "forbidden_skills": [
+        "repair-repository-integrity"
+      ],
+      "preferred_skill": "optimize-large-repository",
+      "risk_class": "local-mutation"
+    },
+    {
+      "id": "NB38",
+      "pair": "optimize-large-repository/repair-repository-integrity",
+      "type": "clear-right",
+      "prompt": "Git says 'error: object file .git/objects/ab/cdef1234 is empty'. Fix the repository.",
+      "acceptable_skills": [
+        "repair-repository-integrity"
+      ],
+      "forbidden_skills": [
+        "optimize-large-repository"
+      ],
+      "preferred_skill": "repair-repository-integrity",
+      "risk_class": "destructive-repair"
+    },
+    {
+      "id": "NB39",
+      "pair": "optimize-large-repository/repair-repository-integrity",
+      "type": "boundary",
+      "prompt": "My shallow clone can't find the object I need for this operation. What should I do?",
+      "acceptable_skills": [
+        "repair-repository-integrity",
+        "optimize-large-repository"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "repair-repository-integrity",
+      "risk_class": "ambiguous"
+    },
+    {
+      "id": "NB40",
+      "pair": "optimize-large-repository/repair-repository-integrity",
+      "type": "underspecified",
+      "prompt": "The repository is broken.",
+      "acceptable_skills": [
+        "diagnose-repository",
+        "repair-repository-integrity",
+        "optimize-large-repository"
+      ],
+      "forbidden_skills": [],
+      "preferred_skill": "diagnose-repository",
+      "expected_behavior": "inspect-before-mutation",
+      "risk_class": "ambiguous"
+    }
+  ],
+  "sha256_16": "2036a3ce11673d78",
+  "frozen": true
+}
