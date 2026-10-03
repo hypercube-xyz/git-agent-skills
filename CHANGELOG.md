@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.0 - 2026-10-03
+
+- Rewrite the operating contract of all 24 Git skills around observed state, Git-specific decisions, bounded actions, and result verification. Skill names and install paths stay stable; consumers that parse skill prose or headings must review the new structure.
+- Expand conditional references for rewrites, stacks, branch divergence, mailbox replay, integrity repair, and other high-risk cases. Keep exact-scope authorization, verified handoffs, and unknown-outcome recovery in the skill contracts.
+- Distinguish configured remote URLs from effective fetch/push endpoints in the bundled inspection helper and state its redaction limits: host, path, remote name, and config origin may still be sensitive.
+- Fix platform-filtered smoke runs so portable cases remain included. Add regression coverage for bounded bisect convergence and portable repository fixtures.
+- Correct release-gate documentation to reflect that validation runs separately and the builder packages immutable committed blobs. The historical v1.2.1 routing record remains historical evidence, not v3 execution validation.
+
 ## 1.2.1 - 2026-07-21
 
 - Fix release workflow metadata filename: `${zip%.zip}.release.json` instead of `${zip}.release.json`

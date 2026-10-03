@@ -40,9 +40,15 @@ The release builder validates output-path symlink components before writing, but
 
 Each release output (ZIP, checksum, metadata) is written atomically per file, but the three-file set is not transactional. Abrupt termination after the first file but before the third leaves a partial set. Rerunning the deterministic builder reconciles it.
 
+## Remote endpoint observations
+
+The bundled remote helper reports configured URLs and native Git-resolved effective fetch/push endpoints without contacting a remote. It removes URL userinfo, query, and fragment from display values; it is not a general secret detector. Host, path, remote name, config origin, and refspec can still contain sensitive content. Inspect and redact those fields before showing or logging them. URL rewrite rules can make the effective push destination differ from the configured or fetch URL; bind authorization, lease, and post-push query to the verified push endpoint.
+
+A named-remote push can update local remote-tracking refs based on the push result. Where fetch and push endpoints differ, re-query or bounded-fetch the selected fetch observation when that state matters; the local tracking ref alone is not proof that the fetch destination moved.
+
 ## Unknown outcomes and retries
 
-Timeout, transport failure, or a nonzero exit status does not prove that no external effect occurred. Before retrying, re-query current state and classify each intended effect as completed, absent, or unknown. Retry only effects proven absent and safe to repeat. Invalidate prior approval when the target, object ID, destination, account, command class, or blast radius changes.
+Timeout, transport failure, or a nonzero exit status does not prove that no external effect occurred. Before retrying, re-query current state and classify each intended effect as completed, absent, or unknown. Retry only effects proven absent and safe to repeat. Revalidate mutable object IDs and targets before acting; obtain new approval when the revalidated effect materially exceeds the authorized target, destination, account, command class, or blast radius.
 
 Use compare-and-swap semantics where Git supports them: exact leases for remote rewrites and expected-old-object checks for local ref mutation.
 

@@ -1,5 +1,12 @@
-# Stack publication
+# Publishing a rewritten stack
 
-Immediately before publication, fetch every destination ref and record exact expected OIDs. Prepare explicit `<local>:<remote>` refspecs and one exact lease per rewritten ref. Verify branch protection and whether the server supports atomic push. Use atomic publication only when all refs must change together; otherwise define an order and recovery state. After any ambiguous or partial result, query every ref independently and stop before retrying.
+Read this when several dependent refs may change remotely. Prepare a table per ref: old local OID, intended new OID, exact remote ref, observed remote OID or absence, effective push endpoint, branch policy, and recovery ref. Include only refs whose change is authorized; `--no-follow-tags` avoids incidental tag publication.
 
-The stack owner retains the branch DAG, recovery refs, bottom-up restack, per-layer diff verification, and coordinated publication plan. `resolve-conflicts` may support one stopped layer, and `sync-branches` may provide bounded single-ref evidence, but neither independently publishes the stack. Stop on a moved parent, ambiguous squash equivalence, policy change, or partial publication.
+## Choose transaction shape
+
+- If every ref must change together, verify server support for `git push --atomic` and use explicit refspecs plus one exact `--force-with-lease=<ref>:<observed-oid>` per rewritten ref.
+- If partial publication is acceptable, choose an order that leaves reviewers a usable parent chain, and state how each intermediate remote state can be recovered.
+- A new remote ref has no old commit for ancestry. Treat creation separately and detect a concurrent creation before retry.
+- Multiple push URLs mean multiple destinations. Either authorize and verify each, or address one verified endpoint explicitly.
+
+Immediately before push, refresh every destination ref at the same endpoint used for publication. A moved ref or changed protection invalidates the whole coordinated plan. After push or timeout, query all destination refs independently; classify each as intended, old/absent, changed by another actor, or unknown. Retry only effects proven absent under still-valid scope. Do not call a partial set successful, and do not force a rollback over new concurrent work.

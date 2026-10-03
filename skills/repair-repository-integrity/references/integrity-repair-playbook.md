@@ -1,24 +1,24 @@
 # Integrity repair playbook
 
-## Classify
+Read this when ordinary Git refs, objects, packs, or alternates are damaged. Stop garbage collection, pruning, aggressive maintenance, reset, and destructive checkout until local-only state and diagnostics are preserved.
 
-- Ref failure: loose/packed ref syntax, target OID, reflog, namespace collision.
-- Object failure: exact OID/type, loose versus packed, checksum/read failure.
-- Pack failure: `.pack`/`.idx` pairing, index verification, interrupted maintenance.
-- Shared-store failure: alternates path, permissions, lifecycle, and source health.
-- Storage failure: I/O errors, disk/full/bit-rot signals; stop writes first.
+## Classify exact failure
 
-## Recovery-source order
+- Ref: inspect loose/packed syntax, target OID, namespace collisions, reflog, and whether the target object exists.
+- Object: record exact OID/type, loose versus packed location, checksum/read failure, and which refs or trees require it.
+- Pack: identify `.pack`/`.idx` pairing and whether an interrupted write or storage error occurred; do not delete the original pack while testing an index rebuild.
+- Alternate/shared store: inspect path, permissions, lifecycle, and source health. An object readable only through an alternate is not independently materialized.
+- Storage: I/O, disk-full, or bit-rot signals require stopping writes and assessing the filesystem before repository repair.
 
-Prefer a verified healthy remote/clone, immutable bundle/backup, or target-scoped artifact. Validate source refs/objects before transfer. Never use the damaged repository as the sole authority for what is healthy.
+Use bounded object/ref reads first; interpret `git fsck` in the context of shallow and promisor semantics. Do not label an intentionally promised blob as corruption merely because it is absent locally.
 
-## Action preference
+## Recovery source and action
 
-1. Preserve exact damaged state and local-only refs/worktrees.
-2. Reconstruct in quarantine or a fresh clone.
-3. Acquire exact missing objects or rebuild indexes without deleting original packs.
-4. Repair exact refs only after object targets validate.
-5. Replay local-only state and compare refs/content.
-6. Cut over after acceptance; keep rollback/evidence until stable.
+Prefer a verified healthy remote/clone, immutable bundle/backup, or exact target-scoped artifact. Validate source object type and bytes against its OID, as well as provenance and completeness for the required ref. Never treat the damaged target as the sole authority.
 
-Do not use `prune`, expire reflogs, delete packs, or run aggressive repack as an exploratory step.
+1. Preserve the damaged repository, reflogs, local-only refs, worktrees, index, untracked/ignored files, and exact errors.
+2. Reconstruct in quarantine or a fresh clone when feasible. Use additive object acquisition, exact ref correction, or index rebuild without deleting original evidence.
+3. Materialize objects before retiring an alternate. Replay local-only state only after its OIDs and content are validated.
+4. Test required refs, object reads, history traversal, checkout, and representative repository workflow in quarantine; then accept a cutover with a recovery copy retained.
+
+If damage expands or storage remains unreliable, stop. A successful fetch or fsck command does not establish that every required object and protected local state survived.
