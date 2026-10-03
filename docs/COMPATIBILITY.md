@@ -14,7 +14,7 @@
   A non-blocking Node 26 probe exercises the latest available client releases on pushes to `main`
   and manual workflow runs.
 
-## Version 3 migration
+## Version 2 migration
 
 The 24 skill names and paths are unchanged. Their instruction structure and decision rules changed, so consumers that parse headings or prose must review those integrations. The remote inspection helper retains its configured remote fields and adds effective endpoint observations; callers should treat its display fields as potentially sensitive.
 

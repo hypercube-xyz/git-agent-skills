@@ -1,4 +1,4 @@
-# Git Agent Skills v3 plan
+# Git Agent Skills v2 plan
 
 ## Outcome and baseline
 
@@ -44,7 +44,7 @@ corrections. Leave unrelated `.serena/` content alone.
 1. Sol discovery: read all skills/resources and inspect packaging/evaluation gaps.
 2. Root: freeze this design, define acceptance criteria, retain final review ownership.
 3. Sol high: rewrite all skills and conditional references; update consistent
-   package metadata and documentation for 3.0.0. Add focused mechanical regression
+   package metadata and documentation for 2.0.0. Add focused mechanical regression
    checks for changed examples or confirmed gaps. Do not publish or commit.
 4. Root: review every resulting skill/reference and full diff against source
    evidence; send concrete findings back to Sol high until addressed.
@@ -83,12 +83,12 @@ corrections. Leave unrelated `.serena/` content alone.
   identify exact inputs, model/runtime, actions, assertions, failures, and limits.
 - Correct stale release documentation. Release input remains immutable committed
   blobs; checks execute separately. Do not weaken release or validation gates.
-- Publish 3.0.0 only after release prerequisites pass. Verify remote tag identity,
+- Publish 2.0.0 only after release prerequisites pass. Verify remote tag identity,
   workflow result, and downloadable artifact checksums before calling it released.
 
 ## Compatibility
 
-Version 3 changes instruction structure and procedural expectations across every
+Version 2 changes instruction structure and procedural expectations across every
 skill. Consumers parsing prose/headings must migrate; names and installation
 paths remain stable. Keep runtime helpers compatible unless a demonstrated defect
 requires a documented schema change. No automatic rewrite of consumer repositories
