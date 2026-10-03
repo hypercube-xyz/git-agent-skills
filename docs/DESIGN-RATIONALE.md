@@ -17,9 +17,9 @@ recognize the requested outcome
 → report evidence and remaining uncertainty
 ```
 
-## Version 3 operating contract
+## Version 2 operating contract
 
-All 24 skill names and independent installation paths remain stable. Version 3 changes the instructions inside them: each skill must distinguish observed state, the Git-specific choice it supports, the bounded operation, and the checks that prove the result. Conditional references supply mechanics for uncommon consequential paths. Runtime-critical boundaries stay inside each installed skill; this package does not rely on the maintainer's private authoring baseline at execution time.
+All 24 skill names and independent installation paths remain stable. Version 2 changes the instructions inside them: each skill must distinguish observed state, the Git-specific choice it supports, the bounded operation, and the checks that prove the result. Conditional references supply mechanics for uncommon consequential paths. Runtime-critical boundaries stay inside each installed skill; this package does not rely on the maintainer's private authoring baseline at execution time.
 
 Generic guard text was shortened where it obscured the decision. The retained controls cover untrusted repository content, executable Git configuration, exact refs and pathspecs, shared state, authorization, partial outcomes, and truthful claims. Feature-dependent commands require detection against the installed Git version and object format.
 

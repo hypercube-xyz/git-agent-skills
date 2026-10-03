@@ -1,6 +1,6 @@
 # Git Agent Skills
 
-Git Agent Skills v3 gives coding agents evidence-based decisions for 24 Git outcomes. Each independently installable skill connects observed repository state to a bounded Git action and checks the resulting state.
+Git Agent Skills v2 gives coding agents evidence-based decisions for 24 Git outcomes. Each independently installable skill connects observed repository state to a bounded Git action and checks the resulting state.
 
 ## Install
 
@@ -25,7 +25,7 @@ npx skills add hypercube-xyz/git-agent-skills --skill craft-commits
 
 See [`docs/SECURITY-EXECUTION.md`](docs/SECURITY-EXECUTION.md) for the common untrusted-content, executable-Git, retry, recovery-artifact, and runtime-enforcement contract.
 
-Version 3 changes the skill instruction contract while keeping all 24 names and installation paths. Consumers that parse skill prose or headings should review the new layout. The bundled remote helper now reports configured and effective fetch/push endpoints; its output still needs review before display because host, path, remote name, and config origin can contain sensitive data.
+Version 2 changes the skill instruction contract while keeping all 24 names and installation paths. Consumers that parse skill prose or headings should review the new layout. The bundled remote helper now reports configured and effective fetch/push endpoints; its output still needs review before display because host, path, remote name, and config origin can contain sensitive data.
 
 ## Skill groups
 
@@ -88,7 +88,7 @@ python3 scripts/link_skills.py --dry-run
 python3 scripts/link_skills.py
 ```
 
-Static fixtures and historical routing scores do not establish v3 agent behavior. See [`docs/VALIDATION-PLAN.md`](docs/VALIDATION-PLAN.md) for the required blind execution checks and release evidence.
+Static fixtures and historical routing scores do not establish v2 agent behavior. See [`docs/VALIDATION-PLAN.md`](docs/VALIDATION-PLAN.md) for the required blind execution checks and release evidence.
 
 The release builder is a pure packager: it reads immutable committed blobs via `git ls-tree` and `git cat-file`, does not read working-tree file content as package input, and does not run validators. CI validates the checked-out revision before calling the builder. Each release output (ZIP, checksum, metadata) is written atomically per file; abrupt termination may leave a partial output set — rerunning the deterministic builder reconciles it.
 

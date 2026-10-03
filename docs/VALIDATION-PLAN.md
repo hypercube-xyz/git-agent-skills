@@ -16,9 +16,9 @@ Validation applies to the exact source, tools, model/runtime, and scenarios exer
 
 ## Agent execution evidence
 
-Before release, run a risk-based selection of blind tasks with raw disposable repositories and the installed v3 skills. Prioritize routine routes, near-boundary ambiguity, unrelated staged/untracked work, conflicts and sequencer continuation, unborn/bare/partial states, remote endpoint splits, stale refs, partial publication, and untrusted content according to what static and mechanical checks leave uncertain. Inspect tool traces and final refs/index/worktree/remote state against independent assertions, including protected effects. Repeat cases that reveal a skill defect after repair; record unexercised paths as limits, not passes.
+Before release, run a risk-based selection of blind tasks with raw disposable repositories and the installed v2 skills. Prioritize routine routes, near-boundary ambiguity, unrelated staged/untracked work, conflicts and sequencer continuation, unborn/bare/partial states, remote endpoint splits, stale refs, partial publication, and untrusted content according to what static and mechanical checks leave uncertain. Inspect tool traces and final refs/index/worktree/remote state against independent assertions, including protected effects. Repeat cases that reveal a skill defect after repair; record unexercised paths as limits, not passes.
 
-Record exact skill source, model/runtime, prompt, repository fixture, tool trace, checks, outcome, failure, and limits. Preserve the v1.2.1 routing pilot as historical evidence only; it measured routing on one model/runtime, not v3 Git execution. A small blind pass supports only the paths it exercised.
+Record exact skill source, model/runtime, prompt, repository fixture, tool trace, checks, outcome, failure, and limits. Preserve the v1.2.1 routing pilot as historical evidence only; it measured routing on one model/runtime, not v2 Git execution. A small blind pass supports only the paths it exercised.
 
 ## Release gate
 
