@@ -1,23 +1,25 @@
 # Shallow and partial-clone repair
 
+Read this for shallow boundaries, promisor remotes, object filters, lazy materialization, or offline completeness. Inspect the actual common Git directory; a linked worktree's `.git` may be a file.
+
 ## Determine the model
 
-Inspect `.git/shallow`, `extensions.partialClone`, remote promisor/filter config, worktree-specific config, alternates, server capabilities, and the exact missing OIDs. Distinguish:
+Inspect `git rev-parse --is-shallow-repository`, the shallow file via `git rev-parse --git-path shallow`, partial-clone extensions/promisor and filter config, alternates, server capability, and exact required OIDs. Distinguish:
 
 - intentionally shallow ancestry,
 - intentionally promised blobs/trees,
-- an object required but not yet materialized,
+- a required object merely not materialized yet,
 - a promised object unavailable from the promisor,
-- corrupt/inconsistent shallow or promisor metadata.
+- corrupt or inconsistent shallow/promisor metadata.
 
-## Repair choices
+Prevent implicit lazy fetch during local-only diagnosis. A normal object read can contact the promisor; report an unavailable offline check rather than silently using network.
 
-- Need more ancestry: deepen by an explicit amount/date or unshallow from the verified source.
-- Need specific promised objects: fetch/materialize the exact object/path/history surface and verify its OID/type.
-- Need offline operation: enumerate representative build/test/checkout paths and materialize all required objects before disconnecting.
-- Promisor unavailable or filter changed: validate destination/source, use a healthier source, or reconstruct a complete clone; do not edit promisor metadata merely to silence errors.
-- Broken shallow boundary: preserve the shallow file, compare with source ancestry, and reconstruct/deepen from authoritative refs rather than guessing boundary OIDs.
+## Choose bounded repair
 
-## Verification
+- Need more ancestry: deepen by a reviewed count/date or unshallow from the verified source, then verify the exact merge-base/history question.
+- Need selected promised objects: materialize the required object/path/workflow surface from the intended promisor, then verify OID/type and local readability with lazy fetch disabled.
+- Need offline operation: enumerate representative build/test/checkout paths and materialize their dependencies before disconnecting.
+- Promisor unavailable or filter changed: validate source/destination and reconstruct a healthier clone where necessary; do not hand-edit metadata to silence errors.
+- Broken shallow boundary: preserve the file and compare ancestry with source; reconstruct/deepen from authoritative refs instead of guessing boundary OIDs.
 
-Run exact object reads, required history traversal, representative checkouts, and repository workflows. Bound completeness claims: a repaired partial clone may remain intentionally incomplete outside tested/promised surfaces.
+Verify required object reads, history traversal, representative checkouts, and workflow behavior. A repaired partial clone may remain intentionally incomplete outside tested surfaces; state that limit explicitly.

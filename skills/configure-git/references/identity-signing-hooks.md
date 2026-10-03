@@ -1,20 +1,19 @@
-# Multi-identity, signing, and hooks
+# Identity, signing, and executable configuration
 
-## Identity routing
+Read this when multiple identities, conditional includes, signing, hooks, or credential-adjacent settings affect the requested behavior.
 
-- Inspect `user.name`, `user.email`, `user.useConfigOnly`, environment overrides, and all conditional includes with origin/scope.
-- Prefer path- or remote-derived `includeIf` rules only when the matching boundary is stable and testable.
-- Verify from every affected repository; a config file existing is not evidence that its condition matched.
-- Do not rewrite existing commits merely to fix future identity unless history editing is separately in scope.
+## Identity resolution
+
+Inspect `user.name`, `user.email`, `user.useConfigOnly`, relevant environment variables, and all applicable `includeIf` files with scope and origin. The same key can be multi-valued or overridden by a later scope. Verify `git var GIT_AUTHOR_IDENT` and `git var GIT_COMMITTER_IDENT` in each affected repository/worktree under the intended environment; a config file merely existing does not prove its condition matched.
+
+Prefer a path or remote condition only when the matching boundary is stable and testable. Before unsetting a local value, determine which inherited value will become effective. A future identity fix does not alter existing commit objects; route any requested rewrite separately.
 
 ## Signing
 
-- Establish the required signing format, key selector, trust model, and repository/host policy before changing `commit.gpgSign`, `tag.gpgSign`, `user.signingKey`, or SSH signing settings.
-- Do not print private key material, agent sockets, or credential-helper contents.
-- Test a disposable signed object and verify the signature with the intended verifier. Creation success alone does not establish trust.
+Establish required format, key selector, trust model, and repository/host policy before changing `commit.gpgSign`, `tag.gpgSign`, `user.signingKey`, or SSH signing settings. Do not display private key material, sockets, or credential-helper contents. Create a disposable signed object only in an authorized location, then verify with the intended verifier and authorized signer policy; successful creation alone does not establish trust.
 
-## Hooks
+## Hooks and other programs
 
-- Inspect `core.hooksPath`, repository-managed hook tooling, executable permissions, shell/runtime dependencies, network access, secret handling, and mutation behavior.
-- Hooks are policy-sensitive executable state. Disclose their future effects and do not install hidden global hooks to make another task pass.
-- Verify invocation under the actual worktree/environment and confirm unrelated commands are not intercepted.
+Inspect `core.hooksPath`, repository-managed hook tooling, executable permissions, dependencies, network behavior, secret access, and index/worktree mutations. A local hook can alter the content to be committed. Preserve required hooks and signing behavior; do not install hidden global hooks or bypass policy to complete another task. Test the relevant command in the actual worktree/environment and verify the hook's effects and unrelated commands.
+
+Filters, external diff/merge drivers, credential helpers, URL rewrites, aliases, pagers, editors, and signing programs also select executable behavior. A Git config override can disable a program but is not process or filesystem isolation; stop if the required boundary cannot be enforced.

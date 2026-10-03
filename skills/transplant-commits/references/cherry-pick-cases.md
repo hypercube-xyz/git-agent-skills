@@ -1,11 +1,15 @@
-# Cherry-pick cases
+# Selected commit replay
 
-Resolve exact source OIDs and order. Inspect dependencies, merge parents, patch IDs, and target equivalence. Use `-m` only with an established mainline. For empty results, distinguish already-applied, cancellation, and intentionally empty commits before skip/keep. Verify each logical change exactly once and preserve source refs.
+Read this when exact commits, ranges, merge commits, empties, or backports need decisions. Resolve selected OIDs before action. In a range `A..B`, `A` is excluded; inspect the expanded commit list and topology, not just the text of the range. Preserve source refs and the target's old OID.
 
-## Committed on the wrong branch
+## Dependencies and mainline
 
-Treat moving the intended commits and cleaning the source branch as separate postconditions. First record the source and target OIDs, preserve a recovery ref when needed, and replay the selected commits onto the intended branch. Verify patch equivalence and target tests before any source cleanup. Route an explicitly requested source reversal to `undo-changes`; never reset the source first.
+Inspect each selected patch, parent, and prerequisite. If a selected change depends on omitted work, either include an explicitly agreed prerequisite or adapt within the approved logical change; do not silently import an entire branch. For a merge commit, inspect both parent diffs and specify `-m <parent-number>` only when the intended mainline is established.
 
-## Maintenance backports
+A cherry-pick can become empty because its effect already exists, because conflict resolution canceled it, or because the source commit was intentionally empty. Compare target tree and patch/content equivalence before `--skip` or `--allow-empty`; record the reason.
 
-Identify the exact fix and required prerequisite commits before replay. Preserve order, provenance, and compatibility with the maintenance line. Do not broaden a backport into full branch integration, dependency modernization, or unrelated cleanup. Publication of the maintenance ref remains owned by `sync-branches`.
+## Wrong branch and backport
+
+For commits on the wrong branch, first replay and verify them on the intended branch. Cleaning the source is a separate postcondition and belongs to `undo-changes`; never reset the source first. A maintenance backport must also preserve the maintenance line's compatibility, required dependencies, provenance, and focused tests. Publication belongs to `sync-branches`.
+
+After each stop, re-read sequencer state, index stages, and already-created commits. Verify the final target contains each intended logical change once, in order, with no omitted or imported unrelated commits. OID equality is neither required nor forbidden.

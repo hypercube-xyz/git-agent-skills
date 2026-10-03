@@ -1,9 +1,13 @@
 # Missing-object routing boundaries
 
-- **Unreachable but present:** use `recover-lost-work` and create an additive ref.
-- **Intentionally omitted by shallow/partial clone and fetchable:** materialize/deepen under `repair-repository-integrity` when correctness is blocked; use setup/optimization only when changing intentional policy.
-- **Promised but unavailable, broken shallow metadata, corrupt pack/ref/object:** use `repair-repository-integrity`.
-- **Valid LFS pointer with missing LFS payload:** use `manage-large-files`.
-- **Missing object inside a submodule repository:** use `manage-submodules`, then repair that exact nested repository if needed.
+Read this when an expected commit, blob, tree, submodule, or LFS payload cannot be read. Record the exact object/path and whether failure is local, nested, or external before selecting a recovery owner.
 
-Do not run prune/repack until the class and recovery source are established.
+| Evidence | Owner and limit |
+|---|---|
+| Object exists but no named ref reaches it | `recover-lost-work`: validate content and add a retaining ref or new path. |
+| Object was intentionally omitted by shallow/partial clone | `repair-repository-integrity` when required correctness is blocked; materialize/deepen from a verified source. |
+| Promised object unavailable, broken shallow metadata, corrupt ref/pack/object | `repair-repository-integrity`: preserve evidence and reconstruct or repair exact state. |
+| Git blob is a valid LFS pointer but payload is missing | `manage-large-files`: verify pointer OID and LFS source. |
+| Missing commit is inside a submodule repository | `manage-submodules` owns the relationship; repair the exact nested repository if its object model is damaged. |
+
+A failed read in a partial clone can trigger implicit lazy fetch; disable it for local-only classification. A clean `git fsck` may accept promised missing objects, so it is not proof of offline completeness. Do not prune, repack, reset, or replace a clone until the class, local-only state, and recovery source are established.

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Inspect effective Git remote configuration without disclosing credentials."""
+"""Inspect configured and effective URLs, redacting userinfo/query/fragment.
+
+Paths, hosts, remote names and config origins remain visible. This is not a
+general secret detector; do not display its output if those fields are sensitive.
+"""
 from __future__ import annotations
 import argparse, json, re, subprocess, sys
 from pathlib import Path
@@ -24,11 +28,12 @@ def run_config(repo: Path) -> bytes:
             "--show-origin",
             "--show-scope",
             "--get-regexp",
-            r"^remote\..*\.(url|pushurl|fetch)$",
+            r"^(remote\..*\.(url|pushurl|fetch)|url\..*\.(insteadof|pushinsteadof))$",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,
+        timeout=15,
     )
     if proc.returncode == 1 and not proc.stdout:
         return b""
@@ -100,9 +105,26 @@ def sanitize_url(value: str) -> dict[str, Union[str, bool]]:
     return {"display": "", "classified": False}
 
 
+def effective_urls(repo: Path, name: str, push: bool) -> list[dict[str, Union[str, bool]]]:
+    # Git owns longest-prefix rewrite and explicit-pushurl precedence. No network.
+    proc = subprocess.run(
+        ["git", "-C", str(repo), "remote", "get-url", "--all",
+         *(["--push"] if push else []), "--", name],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=15,
+    )
+    if proc.returncode:
+        return [{"display": "", "classified": False}]
+    return [sanitize_url(value) for value in proc.stdout.decode("utf-8", "strict").splitlines()]
+
+
 def inspect(repo: Path) -> dict[str, object]:
     remotes: dict[str, dict[str, list[dict[str, object]]]] = {}
-    for scope, origin, key, value in parse_records(run_config(repo)):
+    records = parse_records(run_config(repo))
+    # get-url is line-delimited: reject controls before interpreting its records,
+    # including rewrite keys/values which could introduce a hidden extra line.
+    unsafe_lines = any(any(ord(ch) < 32 or ord(ch) == 127 for ch in key + value)
+                       for _, _, key, value in records)
+    for scope, origin, key, value in records:
         match = REMOTE_KEY.match(key)
         if not match:
             continue
@@ -117,6 +139,10 @@ def inspect(repo: Path) -> dict[str, object]:
         remotes.setdefault(name, {"url": [], "pushurl": [], "fetch": []})[kind].append(
             entry
         )
+    for name, remote in remotes.items():
+        for label, push in (("effective_fetch", False), ("effective_push", True)):
+            remote[label] = ([{"display": "", "classified": False}] if unsafe_lines
+                             else effective_urls(repo, name, push))
     return {"repository": str(repo.resolve()), "remotes": remotes}
 
 
@@ -127,8 +153,8 @@ def main() -> int:
     a = p.parse_args()
     try:
         payload = inspect(Path(a.repo))
-    except (OSError, RuntimeError, ValueError) as exc:
-        print(f"inspect-remotes: {exc}", file=sys.stderr)
+    except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired):
+        print("inspect-remotes: inspection failed; raw config and command output withheld", file=sys.stderr)
         return 2
     print(json.dumps(payload, indent=None if a.compact else 2, sort_keys=True))
     return 0

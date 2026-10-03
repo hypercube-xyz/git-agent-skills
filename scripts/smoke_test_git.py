@@ -123,6 +123,7 @@ def test_corruption_detection(td):
     if not obj.exists():
         raise SkipTest("object packed unexpectedly")
     backup = obj.read_bytes()
+    obj.chmod(0o600)  # Disposable loose objects are read-only on Windows.
     obj.unlink()
     cp = git(p, "fsck", "--full", check=False)
     assert cp.returncode != 0 and blob in (cp.stdout + cp.stderr)
@@ -211,7 +212,7 @@ def test_identity_include(td):
     main = home / ".gitconfig"
     # Resolve macOS /tmp symlinks so gitdir matching uses canonical paths.
     main.write_text(
-        f'[user]\n\tname = Personal User\n\temail = personal@example.invalid\n[includeIf "gitdir:{work.resolve()}/.git"]\n\tpath = {inc.resolve()}\n'
+        f'[user]\n\tname = Personal User\n\temail = personal@example.invalid\n[includeIf "gitdir:{work.resolve().as_posix()}/.git"]\n\tpath = "{inc.resolve().as_posix()}"\n'
     )
     env = os.environ.copy()
     env["HOME"] = str(home)
@@ -226,7 +227,7 @@ def test_identity_include(td):
         == "personal@example.invalid"
     )
     assert (
-        str(inc)
+        inc.resolve().as_posix()
         in git(work, "config", "--show-origin", "--get", "user.email", env=env).stdout
     )
 
@@ -463,7 +464,7 @@ def test_worktree_nul(td):
     p = td / "r"
     init(p)
     commit_file(p, "f", "x\n", "x")
-    wt = td / "work tree\nodd"
+    wt = td / ("work tree odd" if os.name == "nt" else "work tree\nodd")
     git(p, "worktree", "add", "-q", "-b", "topic", str(wt))
     cp = subprocess.run(
         ["git", "worktree", "list", "--porcelain", "-z"],
@@ -471,7 +472,10 @@ def test_worktree_nul(td):
         stdout=subprocess.PIPE,
         check=True,
     )
-    assert b"\0" in cp.stdout and os.fsencode(str(wt)) in cp.stdout
+    records = cp.stdout.split(b"\0")
+    paths = [Path(os.fsdecode(row[len(b"worktree "):])) for row in records
+             if row.startswith(b"worktree ")]
+    assert b"\0" in cp.stdout and any(path.samefile(wt) for path in paths)
 
 
 def test_clean_preview(td):
@@ -631,14 +635,17 @@ def test_bisect_oracle(td):
     for i in range(6):
         commits.append(commit_file(p, "value", f"{i}\n", f"c{i}"))
     git(p, "bisect", "start", commits[-1], commits[0])
-    while True:
-        val = int((p / "value").read_text().strip())
-        cp = git(p, "bisect", "bad" if val >= 3 else "good", check=False)
-        text = cp.stdout + cp.stderr
-        if "first bad commit" in text:
-            break
-    found = git(p, "rev-parse", "HEAD").stdout.strip()
-    git(p, "bisect", "reset")
+    try:
+        for _ in range(len(commits)):
+            val = int((p / "value").read_text().strip())
+            cp = git(p, "bisect", "bad" if val >= 3 else "good")
+            if "first bad commit" in cp.stdout.replace("'bad'", "bad"):
+                break
+        else:
+            raise AssertionError("bisect did not converge within the candidate bound")
+        found = git(p, "rev-parse", "HEAD").stdout.strip()
+    finally:
+        git(p, "bisect", "reset")
     assert found == commits[3]
 
 
@@ -697,6 +704,74 @@ def test_fail_closed_redaction(td):
         and safe["classified"]
     )
     assert opaque == {"display": "", "classified": False}
+
+
+def test_effective_remote_endpoints(td):
+    p = td / "r"
+    init(p)
+    helper = load_helper(
+        "skills/manage-remotes/scripts/inspect_remotes.py", "inspect_effective_remotes"
+    )
+    git(p, "remote", "add", "team.one/test", "https://read.example/repo.git")
+    git(p, "config", "url.https://user:secret@write.example/.pushInsteadOf", "https://read.example/")
+    data = helper.inspect(p)["remotes"]["team.one/test"]
+    assert data["effective_fetch"][0]["display"] == "https://read.example/repo.git"
+    assert data["effective_push"][0]["display"] == "https://@write.example/repo.git"
+    assert "secret" not in json.dumps(data)
+    # Explicit push URLs override pushInsteadOf, but still expand insteadOf.
+    git(p, "config", "remote.team.one/test.pushurl", "alias:repo.git")
+    git(p, "config", "url.https://explicit.example/.insteadOf", "alias:")
+    git(p, "config", "--add", "remote.team.one/test.pushurl", "https://second.example/repo.git")
+    data = helper.inspect(p)["remotes"]["team.one/test"]
+    assert [row["display"] for row in data["effective_push"]] == [
+        "https://explicit.example/repo.git", "https://second.example/repo.git"
+    ]
+    git(p, "config", "url.https://bad.example/.insteadOf", "alias:\nsecret")
+    assert not helper.inspect(p)["remotes"]["team.one/test"]["effective_push"][0]["classified"]
+
+
+def test_split_push_observation(td):
+    p = td / "r"
+    init(p)
+    old = commit_file(p, "f", "old\n", "old")
+    git(p, "branch", "-M", "main")
+    read, write = td / "read.git", td / "write.git"
+    for target in (read, write):
+        git(td, "init", "--bare", str(target))
+        git(p, "push", str(target), "HEAD:refs/heads/main")
+    git(p, "remote", "add", "origin", str(read))
+    git(p, "config", "remote.origin.pushurl", str(write))
+    git(p, "fetch", "--no-tags", "origin")
+    new = commit_file(p, "f", "new\n", "new")
+    git(p, "tag", "-a", "private", "-m", "private")
+    git(p, "config", "push.followTags", "true")
+    git(p, "push", "--no-follow-tags", "origin", f"{new}:refs/heads/main")
+    assert git(p, "rev-parse", "refs/remotes/origin/main").stdout.strip() == new
+    assert git(td, "--git-dir", str(read), "rev-parse", "main").stdout.strip() == old
+    assert git(td, "--git-dir", str(write), "rev-parse", "main").stdout.strip() == new
+    assert not git(td, "--git-dir", str(write), "tag").stdout
+    git(p, "fetch", "--no-tags", "origin", "+refs/heads/main:refs/remotes/origin/main")
+    assert git(p, "rev-parse", "refs/remotes/origin/main").stdout.strip() == old
+
+
+def test_platform_selection(td):
+    # Exercise main's real registration/filtering without executing nested suites.
+    from unittest.mock import patch
+    for platform in ("windows", "macos", "portable"):
+        selected = []
+        with patch.object(TestRunner, "run", lambda self, name, fn: selected.append(name)):
+            main(["--platform", platform])
+        assert "exact branch lease rejects stale publication" in selected
+        assert "history pickaxe" in selected
+        if platform == "windows":
+            assert "pathological filename safety (Windows)" in selected
+            assert "pathological filename safety (POSIX)" not in selected
+        elif platform == "macos":
+            assert "pathological filename safety (POSIX)" in selected
+            assert "pathological filename safety (Windows)" not in selected
+        else:
+            assert "pathological filename safety (POSIX)" not in selected
+            assert "pathological filename safety (Windows)" not in selected
 
 
 def test_local_remote_identity(td):
@@ -1085,6 +1160,9 @@ def main(argv=None):
         ("remote names with dots/slashes", test_remote_names, {"portable"}),
         ("malformed remote isolation", test_malformed_remote_isolation, {"portable"}),
         ("fail-closed remote redaction", test_fail_closed_redaction, {"portable"}),
+        ("effective remote endpoint rewrites", test_effective_remote_endpoints, {"portable"}),
+        ("split push endpoint and tracking observation", test_split_push_observation, {"portable"}),
+        ("platform subsets include portable checks", test_platform_selection, {"portable"}),
         ("reflog additive recovery", test_reflog, {"portable"}),
         ("pathological filename safety (POSIX)", test_pathological_filename_posix, {"macos"}),
         ("pathological filename safety (Windows)", test_pathological_filename_windows, {"windows"}),
@@ -1136,7 +1214,7 @@ def main(argv=None):
         if name in seen:
             continue
         seen.add(name)
-        if args.platform == "all" or args.platform in platforms:
+        if args.platform == "all" or args.platform in platforms or "portable" in platforms:
             selected.append((name, fn))
     runner = TestRunner()
     for name, fn in selected:
