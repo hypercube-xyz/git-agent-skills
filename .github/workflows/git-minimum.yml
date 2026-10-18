@@ -1,0 +1,44 @@
+name: Minimum Git compatibility
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  git-235:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+      - name: Build pinned Git 2.35.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${RUNNER_TEMP}"
+          curl --fail --retry 3 -sSL https://www.kernel.org/pub/software/scm/git/git-2.35.0.tar.xz -o git-2.35.0.tar.xz
+          echo '47e677b475226857ceece569fb6ded8b85838ede97ae1e01bd365ac32a468fc8  git-2.35.0.tar.xz' | sha256sum -c -
+          tar -xf git-2.35.0.tar.xz
+          cd git-2.35.0
+          options=("prefix=${RUNNER_TEMP}/git-minimum" NO_GETTEXT=YesPlease NO_TCLTK=YesPlease NO_CURL=YesPlease NO_OPENSSL=YesPlease NO_EXPAT=YesPlease)
+          make -j2 "${options[@]}"
+          make install "${options[@]}"
+          make -C contrib/subtree install "prefix=${RUNNER_TEMP}/git-minimum"
+          echo "${RUNNER_TEMP}/git-minimum/bin" >> "${GITHUB_PATH}"
+      - name: Verify minimum Git and run local mechanics
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git --version)" = 'git version 2.35.0'
+          python --version
+          python scripts/smoke_test_git.py --require-supported
+          python scripts/security_regression.py
+          python scripts/review_regressions.py
+          python scripts/recheck_regressions.py
+          python -m unittest discover -s scripts -p 'test_release_version.py' -v

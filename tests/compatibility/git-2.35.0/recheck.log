@@ -1,0 +1,9 @@
+PASS optional index refresh boundary
+PASS branch copy preserves policy
+PASS amend notes rewrite boundary
+PASS rebase notes rewrite boundary
+PASS rebase autostash boundary
+PASS merge autostash boundary
+PASS checked-out ref correction boundary
+PASS dangling symbolic recovery ref boundary
+PASS symbolic cutover ref boundary

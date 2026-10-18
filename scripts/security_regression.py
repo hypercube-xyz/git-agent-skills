@@ -162,6 +162,8 @@ def package_integrity_test() -> None:
                         "skills": [], "compatibility": {}}),
             encoding="utf-8",
         )
+        (repo / ".claude-plugin").mkdir()
+        (repo / ".claude-plugin/plugin.json").write_text('{"version":"0.0.0"}', encoding="utf-8")
         payload = repo / "payload.txt"
         committed = b"committed\n"
         dirty = b"dirty\n"

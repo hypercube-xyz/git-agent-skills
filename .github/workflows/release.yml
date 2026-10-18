@@ -24,6 +24,9 @@ defaults:
     shell: bash
 
 jobs:
+  minimum-git:
+    uses: ./.github/workflows/git-minimum.yml
+
   validate:
     name: Validate
     runs-on: ubuntu-latest
@@ -59,6 +62,8 @@ jobs:
             exit 1
           fi
 
+          python scripts/build_release.py --release-tag "${RELEASE_TAG}" --validate-only
+
       - name: Record tool versions
         run: |
           set -euo pipefail
@@ -80,8 +85,13 @@ jobs:
       - name: Run recheck regression tests
         run: python scripts/recheck_regressions.py
 
+      - name: Run release version regression tests
+        run: python -m unittest discover -s scripts -p 'test_release_version.py' -v
+
       - name: Verify reproducible release
-        run: python scripts/build_release.py --check
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python scripts/build_release.py --check --release-tag "${RELEASE_TAG}"
 
       - name: Verify clean source tree
         run: |
@@ -91,7 +101,7 @@ jobs:
 
   release:
     name: Release
-    needs: validate
+    needs: [validate, minimum-git]
     if: github.repository == 'hypercube-xyz/git-agent-skills'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -111,7 +121,9 @@ jobs:
           python-version: "3.14"
 
       - name: Build release
-        run: python scripts/build_release.py --check
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python scripts/build_release.py --check --release-tag "${RELEASE_TAG}"
 
       - name: Upload release artifacts
         env:

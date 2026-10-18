@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.0.1 - 2026-10-18
+
+- Require release tags, committed catalog and plugin versions to agree before building; derive release metadata from the validated version.
+- Add a blocking Git 2.35.0 compatibility job and distinguish supported operations from verified safe refusals and unsupported tests.
 - Ignore the config-only `GIT_CONFIG` file selector during remote inspection so configured and effective URLs use the same repository configuration; retain effective command-scope overrides.
 - Close the v2 review gaps in exact transport identity, native submodule effects, symbolic refs, worktree/config transitions, preservation artifacts, and staged verification.
 - Correct remote-helper LF record parsing and username-less SCP handling; bind its inspection to the repository argument while retaining effective configuration.

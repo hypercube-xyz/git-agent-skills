@@ -76,9 +76,13 @@ See [`docs/SKILL-CATALOG.md`](docs/SKILL-CATALOG.md) for routing boundaries, [`d
 ```sh
 python3 scripts/validate_skills.py
 python3 scripts/security_regression.py
+python3 scripts/review_regressions.py
+python3 scripts/recheck_regressions.py
+python3 -m unittest discover -s scripts -p 'test_release_version.py' -v
 python3 scripts/smoke_test_git.py
 python3 scripts/build_release.py --check
 # Build packages committed source; run after committing reviewed changes.
+# Release CI also requires --release-tag v<catalog-version>.
 ```
 
 Link all packaged skills for local development:

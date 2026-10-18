@@ -183,6 +183,20 @@ def release_metadata(entries: list[Entry], catalog: dict, revision: str, root: P
     }
 
 
+def validate_release_versions(entries: list[Entry], catalog: dict, release_tag: str | None) -> None:
+    version = catalog["package_version"]
+    for entry in entries:
+        if entry.rel.as_posix() == ".claude-plugin/plugin.json":
+            plugin_version = json.loads(entry.data.decode("utf-8")).get("version")
+            if plugin_version != version:
+                raise SystemExit(f"release version mismatch: catalog={version!r}, plugin={plugin_version!r}")
+            break
+    else:
+        raise SystemExit("committed release input lacks .claude-plugin/plugin.json")
+    if release_tag is not None and release_tag != f"v{version}":
+        raise SystemExit(f"release version mismatch: tag={release_tag!r}, catalog requires 'v{version}'")
+
+
 def archive_bytes(entries: list[Entry], catalog: dict) -> bytes:
     prefix = f"git-agent-skills-{catalog['package_version']}"
     names = [entry.rel.as_posix() for entry in entries]
@@ -308,11 +322,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Build a deterministic release archive from immutable committed blobs.")
     parser.add_argument("--check", action="store_true", help="Build twice in memory and fail if bytes differ.")
     parser.add_argument("--output", type=Path, help="Write ZIP here instead of dist/.")
+    parser.add_argument("--release-tag", help="Require this exact tag to match committed catalog and plugin versions.")
+    parser.add_argument("--validate-only", action="store_true", help="Validate committed release versions without building or writing artifacts.")
     args = parser.parse_args()
 
     revision = source_revision()
     entries = tracked_files(revision)
     catalog = catalog_from_entries(entries)
+    validate_release_versions(entries, catalog, args.release_tag)
+    if args.validate_only:
+        print(f"PASS: committed release versions match v{catalog['package_version']}")
+        return 0
     first = archive_bytes(entries, catalog)
     if args.check and first != archive_bytes(entries, catalog):
         raise SystemExit("release archives are not deterministic")

@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -219,7 +220,8 @@ class ReviewRegressions(unittest.TestCase):
         if "unknown command" in stale.stderr:
             # Older Git cannot perform the authorized symbolic-target CAS;
             # guidance requires stopping that path, not falling back to OID CAS.
-            self.skipTest("installed Git lacks symbolic-target transactions; stop path verified")
+            self.compatibility_outcome = "safe_refusal"
+            return
         self.assertEqual(transaction(branch).returncode, 0)
         self.assertEqual(git(p, "rev-parse", branch).stdout.strip(), oid)
         self.assertNotEqual(git(p, "symbolic-ref", "refs/tags/transaction", check=False).returncode, 0)
@@ -378,5 +380,26 @@ class ReviewRegressions(unittest.TestCase):
         self.assertEqual(git(p, "config", "--get-all", "test.multivalue").stdout.strip(), retained)
 
 
+class CompatibilityResult(unittest.TextTestResult):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.safe_refusals = []
+
+    def addSuccess(self, test):
+        if getattr(test, "compatibility_outcome", None) == "safe_refusal":
+            self.safe_refusals.append(test.id())
+            self.stream.writeln("SAFE_REFUSAL (symbolic-target transaction unavailable; refs preserved)")
+        else:
+            super().addSuccess(test)
+
+
 if __name__ == "__main__":
-    unittest.main(verbosity=2)
+    program = unittest.main(verbosity=2, exit=False,
+                            testRunner=unittest.TextTestRunner(verbosity=2, resultclass=CompatibilityResult))
+    result = program.result
+    unsupported = len(result.skipped)
+    failed = len(result.failures) + len(result.errors)
+    refused = len(result.safe_refusals)
+    print(f"COMPATIBILITY supported={result.testsRun - unsupported - failed - refused} "
+          f"safe_refusal={refused} unsupported={unsupported} failed={failed}")
+    sys.exit(0 if result.wasSuccessful() and not unsupported else 1)

@@ -1,0 +1,106 @@
+PASS mailbox replay (0.67s)
+PASS shallow deepen repair (0.82s)
+PASS corruption detection and additive restore (0.32s)
+PASS stack bottom-up restack (1.22s)
+PASS vendor snapshot containment (0.83s)
+PASS actual git subtree update (1.34s)
+PASS conditional identity origin (0.38s)
+PASS exact branch lease rejects stale publication (0.86s)
+PASS exact tag lease rejects stale publication (0.79s)
+PASS post-push remote OID verification (0.43s)
+PASS annotated tag peeling (0.31s)
+SAFE_REFUSAL NUL-safe worktree inventory - NUL worktree inventory unavailable; pathological path retained without mutation
+PASS destructive clean preview (0.25s)
+PASS non-obstructing hard reset (0.37s)
+PASS obstructing hard reset detection (0.40s)
+PASS conflict index stages (0.53s)
+PASS conflict abort (0.59s)
+PASS shared tag prune candidates (0.44s)
+PASS atomic multi-ref push (0.42s)
+PASS submodule gitlink (0.74s)
+PASS history pickaxe (0.32s)
+PASS bisect oracle (1.41s)
+PASS remote names with dots/slashes (0.23s)
+PASS malformed remote isolation (0.30s)
+PASS fail-closed remote redaction (0.01s)
+PASS effective remote endpoint rewrites (0.32s)
+PASS split push endpoint and tracking observation (1.00s)
+PASS smoke_test_git: 0 passed, 0 skipped, 0 safe refusals
+PASS smoke_test_git: 0 passed, 0 skipped, 0 safe refusals
+PASS smoke_test_git: 0 passed, 0 skipped, 0 safe refusals
+PASS platform subsets include portable checks (0.09s)
+PASS reflog additive recovery (0.38s)
+PASS pathological filename safety (POSIX) (0.19s)
+PASS pathological filename safety (Windows) (0.24s)
+PASS GPG signing and reviewed hook path (0.33s)
+PASS local remote identity (0.01s)
+PASS tracked-only release inputs (0.23s)
+PASS tracked symlink rejection (0.26s)
+PASS output symlink parent rejection (0.01s)
+PASS release uses committed bytes (0.22s)
+PASS deterministic archive bytes (0.25s)
+PASS release metadata filename (0.01s)
+PASS skipped validation metadata (0.25s)
+PASS release provenance fields (0.25s)
+PASS installer all-target preflight (0.19s)
+install failed; invocation changes were rolled back: injected link failure
+target: /tmp/git-skills-jn3r35ai/skills (from /tmp/git-skills-jn3r35ai/skills)
+LINK /tmp/git-skills-jn3r35ai/skills/configure-git -> /mnt/d/Project/git-agent-skills/skills/configure-git
+LINK /tmp/git-skills-jn3r35ai/skills/craft-commits -> /mnt/d/Project/git-agent-skills/skills/craft-commits
+LINK /tmp/git-skills-jn3r35ai/skills/diagnose-repository -> /mnt/d/Project/git-agent-skills/skills/diagnose-repository
+LINK /tmp/git-skills-jn3r35ai/skills/edit-commit-history -> /mnt/d/Project/git-agent-skills/skills/edit-commit-history
+LINK /tmp/git-skills-jn3r35ai/skills/find-regression -> /mnt/d/Project/git-agent-skills/skills/find-regression
+LINK /tmp/git-skills-jn3r35ai/skills/integrate-branches -> /mnt/d/Project/git-agent-skills/skills/integrate-branches
+LINK /tmp/git-skills-jn3r35ai/skills/investigate-history -> /mnt/d/Project/git-agent-skills/skills/investigate-history
+LINK /tmp/git-skills-jn3r35ai/skills/manage-branches -> /mnt/d/Project/git-agent-skills/skills/manage-branches
+LINK /tmp/git-skills-jn3r35ai/skills/manage-large-files -> /mnt/d/Project/git-agent-skills/skills/manage-large-files
+LINK /tmp/git-skills-jn3r35ai/skills/manage-remotes -> /mnt/d/Project/git-agent-skills/skills/manage-remotes
+LINK /tmp/git-skills-jn3r35ai/skills/manage-stacked-branches -> /mnt/d/Project/git-agent-skills/skills/manage-stacked-branches
+LINK /tmp/git-skills-jn3r35ai/skills/manage-submodules -> /mnt/d/Project/git-agent-skills/skills/manage-submodules
+LINK /tmp/git-skills-jn3r35ai/skills/manage-tags -> /mnt/d/Project/git-agent-skills/skills/manage-tags
+LINK /tmp/git-skills-jn3r35ai/skills/manage-worktrees -> /mnt/d/Project/git-agent-skills/skills/manage-worktrees
+LINK /tmp/git-skills-jn3r35ai/skills/migrate-repository -> /mnt/d/Project/git-agent-skills/skills/migrate-repository
+LINK /tmp/git-skills-jn3r35ai/skills/optimize-large-repository -> /mnt/d/Project/git-agent-skills/skills/optimize-large-repository
+LINK /tmp/git-skills-jn3r35ai/skills/preserve-work -> /mnt/d/Project/git-agent-skills/skills/preserve-work
+LINK /tmp/git-skills-jn3r35ai/skills/recover-lost-work -> /mnt/d/Project/git-agent-skills/skills/recover-lost-work
+LINK /tmp/git-skills-jn3r35ai/skills/repair-repository-integrity -> /mnt/d/Project/git-agent-skills/skills/repair-repository-integrity
+LINK /tmp/git-skills-jn3r35ai/skills/resolve-conflicts -> /mnt/d/Project/git-agent-skills/skills/resolve-conflicts
+LINK /tmp/git-skills-jn3r35ai/skills/setup-repository -> /mnt/d/Project/git-agent-skills/skills/setup-repository
+LINK /tmp/git-skills-jn3r35ai/skills/sync-branches -> /mnt/d/Project/git-agent-skills/skills/sync-branches
+LINK /tmp/git-skills-jn3r35ai/skills/transplant-commits -> /mnt/d/Project/git-agent-skills/skills/transplant-commits
+LINK /tmp/git-skills-jn3r35ai/skills/undo-changes -> /mnt/d/Project/git-agent-skills/skills/undo-changes
+PASS installer symlink rollback (0.12s)
+PASS installer dry-run no mutation (0.19s)
+PASS installer copy rerun and update (1.29s)
+PASS installer forced copy upgrade (1.28s)
+install failed; invocation changes were rolled back: injected copy failure
+target: /tmp/git-skills-c38bv83b/skills (from /tmp/git-skills-c38bv83b/skills)
+COPY /tmp/git-skills-c38bv83b/skills/configure-git -> /mnt/d/Project/git-agent-skills/skills/configure-git
+COPY /tmp/git-skills-c38bv83b/skills/craft-commits -> /mnt/d/Project/git-agent-skills/skills/craft-commits
+COPY /tmp/git-skills-c38bv83b/skills/diagnose-repository -> /mnt/d/Project/git-agent-skills/skills/diagnose-repository
+COPY /tmp/git-skills-c38bv83b/skills/edit-commit-history -> /mnt/d/Project/git-agent-skills/skills/edit-commit-history
+COPY /tmp/git-skills-c38bv83b/skills/find-regression -> /mnt/d/Project/git-agent-skills/skills/find-regression
+COPY /tmp/git-skills-c38bv83b/skills/integrate-branches -> /mnt/d/Project/git-agent-skills/skills/integrate-branches
+COPY /tmp/git-skills-c38bv83b/skills/investigate-history -> /mnt/d/Project/git-agent-skills/skills/investigate-history
+COPY /tmp/git-skills-c38bv83b/skills/manage-branches -> /mnt/d/Project/git-agent-skills/skills/manage-branches
+COPY /tmp/git-skills-c38bv83b/skills/manage-large-files -> /mnt/d/Project/git-agent-skills/skills/manage-large-files
+COPY /tmp/git-skills-c38bv83b/skills/manage-remotes -> /mnt/d/Project/git-agent-skills/skills/manage-remotes
+COPY /tmp/git-skills-c38bv83b/skills/manage-stacked-branches -> /mnt/d/Project/git-agent-skills/skills/manage-stacked-branches
+COPY /tmp/git-skills-c38bv83b/skills/manage-submodules -> /mnt/d/Project/git-agent-skills/skills/manage-submodules
+COPY /tmp/git-skills-c38bv83b/skills/manage-tags -> /mnt/d/Project/git-agent-skills/skills/manage-tags
+COPY /tmp/git-skills-c38bv83b/skills/manage-worktrees -> /mnt/d/Project/git-agent-skills/skills/manage-worktrees
+COPY /tmp/git-skills-c38bv83b/skills/migrate-repository -> /mnt/d/Project/git-agent-skills/skills/migrate-repository
+COPY /tmp/git-skills-c38bv83b/skills/optimize-large-repository -> /mnt/d/Project/git-agent-skills/skills/optimize-large-repository
+COPY /tmp/git-skills-c38bv83b/skills/preserve-work -> /mnt/d/Project/git-agent-skills/skills/preserve-work
+COPY /tmp/git-skills-c38bv83b/skills/recover-lost-work -> /mnt/d/Project/git-agent-skills/skills/recover-lost-work
+COPY /tmp/git-skills-c38bv83b/skills/repair-repository-integrity -> /mnt/d/Project/git-agent-skills/skills/repair-repository-integrity
+COPY /tmp/git-skills-c38bv83b/skills/resolve-conflicts -> /mnt/d/Project/git-agent-skills/skills/resolve-conflicts
+COPY /tmp/git-skills-c38bv83b/skills/setup-repository -> /mnt/d/Project/git-agent-skills/skills/setup-repository
+COPY /tmp/git-skills-c38bv83b/skills/sync-branches -> /mnt/d/Project/git-agent-skills/skills/sync-branches
+COPY /tmp/git-skills-c38bv83b/skills/transplant-commits -> /mnt/d/Project/git-agent-skills/skills/transplant-commits
+COPY /tmp/git-skills-c38bv83b/skills/undo-changes -> /mnt/d/Project/git-agent-skills/skills/undo-changes
+PASS installer copy rollback (0.90s)
+PASS installer nested link rejection (0.01s)
+PASS installer special-file rejection (0.01s)
+PASS installer copy-symlink transition (1.58s)
+PASS smoke_test_git: 49 passed, 0 skipped, 1 safe refusals
