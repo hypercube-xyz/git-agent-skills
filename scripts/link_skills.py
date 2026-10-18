@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -15,6 +16,7 @@ from pathlib import Path
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 MARKER_NAME = ".git-agent-skills-install-marker"
 MARKER_CONTENT = "git-agent-skills-copy-v1\n"
+MANIFEST_NAME = ".git-agent-skills-install-manifest.json"
 _REPARSE_POINT = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
 
 
@@ -88,6 +90,41 @@ def reject_nested_symlinks(source: Path) -> None:
             ) from None
 
 
+def directory_snapshot(directory: Path) -> dict[str, object]:
+    try:
+        reject_nested_symlinks(directory)
+    except SystemExit as exc:
+        raise OSError(str(exc)) from None
+    files = {}
+    directories = []
+    for path in sorted(directory.rglob("*")):
+        relative = path.relative_to(directory).as_posix()
+        if path.is_dir():
+            directories.append(relative)
+        else:
+            files[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return {"files": files, "directories": directories}
+
+
+def copy_modifications(directory: Path, snapshot: dict[str, object]) -> str | None:
+    manifest = directory / MANIFEST_NAME
+    try:
+        baseline = json.loads(manifest.read_text(encoding="utf-8"))
+        if baseline.get("schema_version") != 1 or not isinstance(baseline.get("files"), dict):
+            return "unrecognized manifest"
+        current_files = {key: value for key, value in snapshot["files"].items()
+                         if key not in {MARKER_NAME, MANIFEST_NAME}}
+        if baseline == {"schema_version": 1, "files": current_files,
+                        "directories": snapshot["directories"]}:
+            return None
+        old = baseline["files"]
+        changed = sorted(key for key in old.keys() | current_files.keys()
+                         if old.get(key) != current_files.get(key))
+        return "changed paths: " + ", ".join(changed[:10]) if changed else "directory layout changed"
+    except (OSError, ValueError, AttributeError):
+        return "missing or invalid content manifest (legacy or unverified copy)"
+
+
 @dataclass(frozen=True)
 class Change:
     source: Path
@@ -95,6 +132,7 @@ class Change:
     previous_kind: str
     previous_link: str | None = None
     previous_identity: tuple[int, int, int, int] | None = None
+    previous_snapshot: dict[str, object] | None = None
 
 
 @dataclass(frozen=True)
@@ -150,6 +188,12 @@ def atomic_copy(source: Path, dest: Path) -> Path | None:
     try:
         shutil.copytree(source, tmp, symlinks=False)
         (tmp / MARKER_NAME).write_text(MARKER_CONTENT, encoding="utf-8")
+        snapshot = directory_snapshot(tmp)
+        snapshot["files"].pop(MARKER_NAME)
+        (tmp / MANIFEST_NAME).write_text(
+            json.dumps({"schema_version": 1, **snapshot}, sort_keys=True, indent=2) + "\n",
+            encoding="utf-8",
+        )
         return promote_staged(tmp, dest)
     finally:
         if path_present(tmp):
@@ -196,6 +240,7 @@ def verify_previous_state(change: Change) -> None:
         or change.dest.is_symlink()
         or is_reparse_point(change.dest)
         or directory_identity(change.dest) != change.previous_identity
+        or directory_snapshot(change.dest) != change.previous_snapshot
     ):
         raise OSError(f"copy destination changed after preflight: {change.dest}")
 
@@ -255,7 +300,7 @@ def main() -> int:
     parser.add_argument(
         "--force-copies",
         action="store_true",
-        help="Replace an existing real directory that lacks a valid install marker.",
+        help="Replace real directories, including modified or legacy copies; discards their contents.",
     )
     parser.add_argument(
         "--mode",
@@ -307,6 +352,9 @@ def main() -> int:
             continue
         if effective_mode == "copy":
             reject_nested_symlinks(source)
+            if any(path_present(source / name) for name in (MARKER_NAME, MANIFEST_NAME)):
+                errors.append(f"skill source contains reserved installer metadata: {name}")
+                continue
 
         dest = target / name
         if dest.parent != target:
@@ -326,18 +374,31 @@ def main() -> int:
             errors.append(f"refusing to replace destination reparse point: {dest}")
         elif dest.is_dir():
             identity = directory_identity(dest)
-            if marker_valid(dest):
-                plan.append(
-                    Change(source, dest, "marked-copy", previous_identity=identity)
-                )
-            elif args.force_copies:
-                plan.append(
-                    Change(source, dest, "forced-directory", previous_identity=identity)
-                )
-            else:
+            marked = marker_valid(dest)
+            if not marked and not args.force_copies:
                 errors.append(
                     "refusing to replace directory without a valid install marker: "
                     f"{dest} (use --force-copies to override)"
+                )
+                continue
+            try:
+                snapshot = directory_snapshot(dest)
+            except OSError as exc:
+                errors.append(f"cannot safely inspect copy destination {dest}: {exc}")
+                continue
+            if marked:
+                modifications = copy_modifications(dest, snapshot)
+                if modifications and not args.force_copies:
+                    errors.append(f"refusing to replace modified or unverified copy: {dest}: {modifications} (use --force-copies to discard it)")
+                    continue
+                plan.append(
+                    Change(source, dest, "marked-copy", previous_identity=identity,
+                           previous_snapshot=snapshot)
+                )
+            else:
+                plan.append(
+                    Change(source, dest, "forced-directory", previous_identity=identity,
+                           previous_snapshot=snapshot)
                 )
         elif dest.exists():
             errors.append(f"refusing to replace non-directory destination: {dest}")

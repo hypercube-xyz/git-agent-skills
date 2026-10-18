@@ -940,7 +940,12 @@ def test_installer_copy_rerun(td):
     assert marker.read_text(encoding="utf-8") == mod.MARKER_CONTENT
     sentinel = first / "local-only-sentinel"
     sentinel.write_text("old\n", encoding="utf-8")
-    _run_installer(target)
+    root = Path(__file__).resolve().parents[1]
+    result = subprocess.run([sys.executable, str(root / "scripts/link_skills.py"),
+                             "--target", str(target), "--mode", "copy"], capture_output=True, text=True)
+    assert result.returncode == 2 and "modified or unverified copy" in result.stderr
+    assert sentinel.read_text(encoding="utf-8") == "old\n"
+    _run_installer(target, "--force-copies")
     assert not sentinel.exists()
     assert marker.read_text(encoding="utf-8") == mod.MARKER_CONTENT
 
@@ -980,6 +985,7 @@ def test_installer_copy_rollback(td):
         str(target),
         "--mode",
         "copy",
+        "--force-copies",
     ]
     try:
         rc = mod.main()

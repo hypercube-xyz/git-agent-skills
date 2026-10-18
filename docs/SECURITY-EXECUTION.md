@@ -34,6 +34,13 @@ Treat paths and refs as structured data, not shell fragments. Prefer NUL-delimit
 
 ### Known limitation: concurrent local attacker TOCTOU
 
+Copy installs carry a SHA-256 content manifest and directory inventory. Automatic replacement
+requires the current contents to match that install baseline, independently of the new source.
+Missing/invalid baselines and local changes require explicit `--force-copies`; preflight
+reports changed paths rather than file contents. The complete destination snapshot, including
+metadata, is rechecked immediately before replacement. This detects ordinary intervening
+edits but does not provide an OS-level atomic snapshot or defend against a concurrent attacker.
+
 The release builder rejects output-path symlinks and Windows reparse points (including directory junctions) before resolving destinations or writing. Only the verified macOS root aliases listed in the builder are accepted. A concurrent local process can still replace a parent with a symlink or junction after validation and before `os.replace`. Fully closing this requires OS-level no-follow operations that Python's `pathlib` does not provide portably. The release builder and linker do not defend against a concurrent local attacker with write access to the output parent directory.
 
 ### Known limitation: partial output set

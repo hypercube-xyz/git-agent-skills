@@ -4,6 +4,9 @@
 
 ## 2.0.1 - 2026-10-18
 
+- Reject portable ZIP collisions between files and directory prefixes, including case-folded aliases.
+- Preserve modified copy installations by recording original content manifests; require explicit `--force-copies` for local edits and legacy copies, with content rechecks and invocation rollback.
+- Reuse the complete validation workflow before release publication, including pinned clients, workflow lint and minimum-Git checks; make packaging depend on lint, tests and minimum Git.
 - Require release tags, committed catalog and plugin versions to agree before building; derive release metadata from the validated version.
 - Add a blocking Git 2.35.0 compatibility job and distinguish supported operations from verified safe refusals and unsupported tests.
 - Extend blind agent execution fixtures to 12 tasks and retain exact skill snapshots, prompts, process results and raw Codex CLI traces; report runtime-created metadata separately from protected-state success.

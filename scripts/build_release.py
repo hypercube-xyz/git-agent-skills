@@ -92,7 +92,7 @@ def tracked_files(revision: str, root: Path = ROOT) -> list[Entry]:
         raise SystemExit("unable to enumerate committed release files")
 
     entries: list[Entry] = []
-    collision_keys: dict[str, PurePosixPath] = {}
+    collision_keys: dict[str, tuple[PurePosixPath, str]] = {}
     for record in proc.stdout.split(b"\0"):
         if not record:
             continue
@@ -110,10 +110,13 @@ def tracked_files(revision: str, root: Path = ROOT) -> list[Entry]:
         if raw_type != b"blob" or mode not in {0o100644, 0o100755}:
             raise SystemExit(f"unsupported committed entry {raw_mode.decode()} {raw_type.decode()}: {rel}")
 
-        key = unicodedata.normalize("NFC", rel.as_posix()).casefold()
-        previous = collision_keys.setdefault(key, rel)
-        if previous != rel:
-            raise SystemExit(f"portable path collision: {previous} and {rel}")
+        for length in range(1, len(rel.parts) + 1):
+            prefix = PurePosixPath(*rel.parts[:length])
+            kind = "file" if length == len(rel.parts) else "directory"
+            key = prefix.as_posix().casefold()
+            previous = collision_keys.setdefault(key, (prefix, kind))
+            if previous != (prefix, kind):
+                raise SystemExit(f"portable path collision: {previous[0]} ({previous[1]}) and {prefix} ({kind})")
 
         oid = raw_oid.decode("ascii")
         blob = git("cat-file", "blob", oid, check=True, root=root).stdout

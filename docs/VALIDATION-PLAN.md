@@ -50,3 +50,15 @@ version and tag are derived from that validated catalog. Negative tests cover mi
 tags, mismatched/missing plugin versions, and absence of serialization/writes on rejection.
 The blocking minimum-Git job uses checksum-pinned Git 2.35.0 and fails unsupported skips;
 verified safe refusals are reported separately from supported operations.
+
+Release identity validation precedes a call to the same `validate.yml` workflow used for
+pull requests, evaluated at the caller's source revision. Publication depends on that
+complete workflow, including blocking pinned Skills CLI/Claude Code checks, workflow lint,
+the OS matrix, minimum Git and reproducible packaging. Packaging explicitly depends on
+lint, OS tests and minimum Git. The optional latest-client probe does not run for release
+tags and is not a release gate. Artifact attestations are not implemented.
+
+`scripts/test_file_safety.py` constructs Git trees directly so file/directory case collisions
+are exercised even on Windows. Its disposable installer checks cover original-manifest
+upgrades, local additions/edits/deletions, empty directory changes, legacy/corrupt manifests,
+all-target refusal, and rollback after a deep edit between preflight and replacement.

@@ -24,11 +24,8 @@ defaults:
     shell: bash
 
 jobs:
-  minimum-git:
-    uses: ./.github/workflows/git-minimum.yml
-
   validate:
-    name: Validate
+    name: Validate release identity
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -70,38 +67,19 @@ jobs:
           python --version
           git --version
 
-      - name: Validate skills
-        run: python scripts/validate_skills.py
-
-      - name: Run Git semantic tests
-        run: python scripts/smoke_test_git.py
-
-      - name: Run security regression tests
-        run: python scripts/security_regression.py
-
-      - name: Run review regression tests
-        run: python scripts/review_regressions.py
-
-      - name: Run recheck regression tests
-        run: python scripts/recheck_regressions.py
-
-      - name: Run release version regression tests
-        run: python -m unittest discover -s scripts -p 'test_release_version.py' -v
-
-      - name: Verify reproducible release
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: python scripts/build_release.py --check --release-tag "${RELEASE_TAG}"
-
       - name: Verify clean source tree
         run: |
           set -euo pipefail
           git diff --check
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
+  checks:
+    needs: validate
+    uses: ./.github/workflows/validate.yml
+
   release:
     name: Release
-    needs: [validate, minimum-git]
+    needs: [validate, checks]
     if: github.repository == 'hypercube-xyz/git-agent-skills'
     runs-on: ubuntu-latest
     timeout-minutes: 10
