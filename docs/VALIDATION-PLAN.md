@@ -14,6 +14,12 @@ Validation applies to the exact source, tools, model/runtime, and scenarios exer
 
 `scripts/security_regression.py` checks security contracts and helper behavior. A failed platform privilege prerequisite must be reported separately from a code failure and resolved by CI or another supported environment before making a cross-platform claim.
 
+The destination-safety fixture uses a real directory junction on Windows, which does not require symlink privileges, and a real directory symlink elsewhere. Both the path validator and release CLI must reject the redirected destination without writing artifacts; normal paths remain accepted. Fixture creation errors fail the check rather than skipping it.
+
+`scripts/review_regressions.py` exercises the reviewed helper defects and Git controls in disposable repositories, including paired unsafe/safe variants. Its fixtures preserve intentional configuration overrides rather than allowing the maintenance wrapper to hide fsmonitor or replacement behavior. These checks verify command mechanics and retained state; they do not execute skill prose or certify an agent's decisions.
+
+`scripts/recheck_regressions.py` checks optional index writes, copied branch policy, notes/autostash effects, attached-worktree ref correction, and symbolic-ref dereferencing in disposable repositories. Its isolated fixture environment deliberately permits optional index refresh so the negative control can expose the effect. Reference-kind checks are separate from `--no-deref`, which prevents target mutation but does not by itself enforce a direct-ref precondition. These are Git behavior checks, not blind agent evaluations.
+
 ## Agent execution evidence
 
 Before release, run a risk-based selection of blind tasks with raw disposable repositories and the installed v2 skills. Prioritize routine routes, near-boundary ambiguity, unrelated staged/untracked work, conflicts and sequencer continuation, unborn/bare/partial states, remote endpoint splits, stale refs, partial publication, and untrusted content according to what static and mechanical checks leave uncertain. Inspect tool traces and final refs/index/worktree/remote state against independent assertions, including protected effects. Repeat cases that reveal a skill defect after repair; record unexercised paths as limits, not passes.

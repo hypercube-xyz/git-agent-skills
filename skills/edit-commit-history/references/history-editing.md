@@ -1,6 +1,6 @@
 # History editing: sequenced and published rewrites
 
-Read this only when an existing commit series will change. Record `old_base`, `old_tip`, the selected commit OIDs, intended order/content, and every ref or review consumer before invoking a sequencer. Make a recovery ref outside `refs/heads/` at `old_tip`; verify its OID and ensure `rebase.updateRefs` cannot move it.
+Read this only when an existing commit series will change. Record `old_base`, `old_tip`, the selected commit OIDs, intended order/content, and every ref or review consumer before invoking a sequencer. Make a recovery ref outside `refs/heads/` at `old_tip`; verify its OID and ensure `rebase.updateRefs` cannot move it. Account separately for notes rewriting and autostash configuration before rebase; disabling `rebase.updateRefs` does not prevent either effect.
 
 ## Choose the local operation
 

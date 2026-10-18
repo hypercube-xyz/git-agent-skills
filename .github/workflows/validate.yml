@@ -97,6 +97,12 @@ jobs:
       - name: Run security regression tests
         run: python scripts/security_regression.py
 
+      - name: Run review regression tests
+        run: python scripts/review_regressions.py
+
+      - name: Run recheck regression tests
+        run: python scripts/recheck_regressions.py
+
       - name: Verify reproducible release
         run: python scripts/build_release.py --check
 

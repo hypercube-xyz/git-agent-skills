@@ -250,13 +250,40 @@ def destination_safety_test() -> None:
             outside = repo / "outside"
             outside.mkdir()
             redirect = repo / "redirect"
-            redirect.symlink_to(outside, target_is_directory=True)
-            try:
-                mod.reject_symlink_components(redirect / "release.zip")
-            except SystemExit:
-                pass
+            if os.name == "nt":
+                junction_env = os.environ.copy()
+                junction_env.update(DEST_SAFETY_LINK=str(redirect), DEST_SAFETY_TARGET=str(outside))
+                subprocess.run(
+                    ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command",
+                     "New-Item -ItemType Junction -Path $env:DEST_SAFETY_LINK "
+                     "-Target $env:DEST_SAFETY_TARGET -ErrorAction Stop | Out-Null"],
+                    env=junction_env, check=True, capture_output=True, text=True,
+                )
+                assert redirect.lstat().st_file_attributes & 0x400, "junction fixture is not a reparse point"
             else:
-                raise AssertionError("symlinked output parent accepted")
+                redirect.symlink_to(outside, target_is_directory=True)
+
+            try:
+                normal = repo / "normal" / "release.zip"
+                assert mod.validate_output_paths(normal, [], root=ROOT)[0] == normal.resolve(strict=False), "normal output rejected"
+                assert not normal.parent.exists(), "output validation created a directory"
+                try:
+                    mod.validate_output_paths(redirect / "release.zip", [], root=ROOT)
+                except SystemExit as exc:
+                    assert "component" in str(exc), f"redirect rejected for unrelated reason: {exc}"
+                else:
+                    raise AssertionError("redirected output passed path validation")
+                result = subprocess.run(
+                    [sys.executable, str(ROOT / "scripts/build_release.py"),
+                     "--output", str(redirect / "release.zip")],
+                    cwd=ROOT, capture_output=True, text=True,
+                )
+                assert result.returncode != 0, f"redirected release output accepted: {result.stdout}"
+                assert "component" in result.stderr, f"release failed for unrelated reason: {result.stderr}"
+                assert not list(outside.iterdir()), "rejected output wrote through redirect"
+            finally:
+                if os.name == "nt":
+                    redirect.rmdir()
 
             if sys.platform == "darwin":
                 assert Path("/tmp") in mod._TRUSTED_SYMLINKS

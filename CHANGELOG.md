@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Ignore the config-only `GIT_CONFIG` file selector during remote inspection so configured and effective URLs use the same repository configuration; retain effective command-scope overrides.
+- Close the v2 review gaps in exact transport identity, native submodule effects, symbolic refs, worktree/config transitions, preservation artifacts, and staged verification.
+- Correct remote-helper LF record parsing and username-less SCP handling; bind its inspection to the repository argument while retaining effective configuration.
+- Add disposable review regression checks to validation and release CI. These verify Git mechanics and helper behavior, not general agent performance.
+- Complete push-refspec and explicit-port inspection; bound observation fetches, optional index refresh, inherited branch policy, and notes/autostash effects during rewrites.
+- Reject Windows reparse-point release destinations before writing. Exercise real junctions on Windows and symlinks elsewhere so destination-safety checks do not require elevated Windows symlink privileges.
+
 ## 2.0.0 - 2026-10-03
 
 - Rewrite the operating contract of all 24 Git skills around observed state, Git-specific decisions, bounded actions, and result verification. Skill names and install paths stay stable; consumers that parse skill prose or headings must review the new structure.

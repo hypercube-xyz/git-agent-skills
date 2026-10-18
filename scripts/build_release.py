@@ -236,23 +236,25 @@ if sys.platform == "darwin":
 
 
 def reject_symlink_components(path: Path) -> None:
-    # Walk raw abspath components; reject symlinks except known macOS root aliases.
+    # Walk raw abspath components; reject links except known macOS root aliases.
     absolute = Path(os.path.abspath(path))
     current = Path(absolute.anchor)
     parts = absolute.parts[1:] if absolute.anchor else absolute.parts
     for part in parts:
         current /= part
         try:
-            mode = current.lstat().st_mode
+            info = current.lstat()
         except FileNotFoundError:
             break
-        if stat.S_ISLNK(mode):
+        if stat.S_ISLNK(info.st_mode):
             trusted_target = _TRUSTED_SYMLINKS.get(current)
             if trusted_target is None:
                 raise SystemExit(f"release output contains a symlink component: {current}")
             resolved = current.resolve(strict=False)
             if resolved != trusted_target:
                 raise SystemExit(f"trusted symlink {current} points to {resolved}, expected {trusted_target}")
+        elif getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400):
+            raise SystemExit(f"release output contains a reparse-point component: {current}")
 
 
 def validate_output_paths(output: Path, entries: list[Entry], root: Path = ROOT) -> tuple[Path, Path, Path]:
