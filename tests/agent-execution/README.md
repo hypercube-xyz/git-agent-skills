@@ -28,12 +28,16 @@ from the manifest only where the user request requires them.
 | diagnosis | Explain the current repository state using read-only inspection. |
 | stale-publish | Replace remote main with local main only if its current OID is exactly the supplied `old` OID. |
 | oracle-failure | Find the first bad commit between the supplied endpoint OIDs using `py -3.14 oracle.py` as the proposed classifier. |
+| dirty-branch | Create feature-copy at HEAD without switching; preserve edits and index. |
+| symbolic-tag | Delete alias only if direct; otherwise refuse and preserve its target. |
+| rejected-push | Publish main; on rejection inspect and report without changing remote policy or blindly retrying. |
 
 Run the independent outcome checks after the evaluator finishes:
 
 ```text
 py -3.14 tests/agent-execution/fixtures.py verify artifacts/new-execution
 py -3.14 tests/agent-execution/fixtures.py verify-boundaries artifacts/new-execution
+py -3.14 tests/agent-execution/fixtures.py verify-additional artifacts/new-execution
 ```
 
 Inspect the evaluator's commands and explanation as well. Final-state assertions
@@ -42,6 +46,18 @@ Python with `-O`, which disables the fixture assertions. Each created directory
 contains local repositories and possibly recovery artifacts; retain it while
 reviewing results, then remove only that exact disposable directory when cleanup
 is authorized.
+
+For a new blind run using the installed Codex CLI and configured model/account:
+
+```text
+py -3.14 tests/agent-execution/run.py artifacts/new-evaluation
+```
+
+This executes 12 independent model tasks (three concurrent by default), consumes normal
+account usage, and retains raw JSONL plus prompts, exact candidate skill snapshots,
+per-file SHA256, runtime, process results and independent state assertions. Effects are
+in local disposable repositories; the runtime is not an OS sandbox. Review intermediate
+commands and tool-created files as well as the oracles. See the [2026-10-18 evidence](2026-10-18.md).
 
 ## Observed candidate run, 2026-10-03
 

@@ -26,6 +26,15 @@ Before release, run a risk-based selection of blind tasks with raw disposable re
 
 Record exact skill source, model/runtime, prompt, repository fixture, tool trace, checks, outcome, failure, and limits. Preserve the v1.2.1 routing pilot as historical evidence only; it measured routing on one model/runtime, not v2 Git execution. A small blind pass supports only the paths it exercised.
 
+`tests/agent-execution/run.py <new-evidence-directory>` invokes the installed Codex CLI
+with its configured account/model for 12 independent tasks. It retains a skill snapshot,
+per-file hashes, exact prompts, raw JSONL, runtime and process results, and independent
+protected-state checks. This consumes normal model usage and is intentionally separate
+from deterministic CI; inspect the raw trace for intermediate effects and unnecessary
+stops. [The 2026-10-18 run](../tests/agent-execution/2026-10-18.md) passed the 12 task
+oracles but exposed tool-created `.serena/` files, including in the read-only task.
+It is bounded execution evidence, not a production-readiness certificate.
+
 ## Release gate
 
 CI runs structural, Git semantic, security, client-discovery, and clean-checkout checks separately. `scripts/build_release.py` is a pure packager: it reads files from the committed revision through `git ls-tree` and `git cat-file`, rejects unsupported entries, and creates a deterministic ZIP plus checksum and metadata sidecars. `--check` builds archive bytes twice in-process; it does not run validators or prove cross-environment reproducibility. The builder records validation as separately performed by CI, never as a check it ran itself.
@@ -33,3 +42,11 @@ CI runs structural, Git semantic, security, client-discovery, and clean-checkout
 The release workflow validates the tag, tests the checked-out revision, then builds and uploads the package. Each sidecar is atomically written, but the three-file set is not transactional; rerunning the deterministic builder reconciles an interrupted set. After publication, verify the tag's commit, workflow result, release asset names, and downloadable checksums before calling the release complete.
 
 Pinned Skills CLI and Claude Code client checks are blocking in CI. The latest-client forward probe is non-blocking and is not release evidence for its version.
+
+Before serialization, the builder checks the committed plugin version against the committed
+catalog. Release CI passes `--release-tag` to require the exact `v<package_version>` tag in
+both jobs; the first gate uses `--validate-only` before tests or artifact creation. Metadata
+version and tag are derived from that validated catalog. Negative tests cover mismatched
+tags, mismatched/missing plugin versions, and absence of serialization/writes on rejection.
+The blocking minimum-Git job uses checksum-pinned Git 2.35.0 and fails unsupported skips;
+verified safe refusals are reported separately from supported operations.
