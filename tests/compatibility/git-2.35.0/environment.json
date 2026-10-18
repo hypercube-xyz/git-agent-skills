@@ -1,0 +1,25 @@
+{
+  "git": "2.35.0",
+  "source": "https://www.kernel.org/pub/software/scm/git/git-2.35.0.tar.xz",
+  "source_sha256": "47e677b475226857ceece569fb6ded8b85838ede97ae1e01bd365ac32a468fc8",
+  "os": "Ubuntu under WSL, Windows host",
+  "python": "3.12.3",
+  "date": "2026-10-18",
+  "features": "Local transports, contrib/subtree; NO_CURL NO_OPENSSL NO_EXPAT NO_GETTEXT NO_TCLTK",
+  "smoke": {
+    "supported": 49,
+    "safe_refusal": 1,
+    "unsupported": 0
+  },
+  "review": {
+    "supported": 21,
+    "safe_refusal": 1,
+    "unsupported": 0,
+    "failed": 0
+  },
+  "limits": [
+    "Local evidence used Python 3.12.3; blocking CI uses Python 3.14",
+    "Not HTTP/TLS/authentication compatibility or all optional workflows",
+    "Safe refusals preserve state but do not complete the unavailable operation"
+  ]
+}

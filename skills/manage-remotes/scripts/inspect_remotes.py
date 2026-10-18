@@ -1,20 +1,30 @@
 #!/usr/bin/env python3
-"""Inspect configured and effective URLs, redacting userinfo/query/fragment.
+"""Inspect configured URLs/refspecs and effective URLs, redacting URL secrets.
 
 Paths, hosts, remote names and config origins remain visible. This is not a
 general secret detector; do not display its output if those fields are sensitive.
+The repo argument selects the repository; ambient repository and config-file
+selectors are ignored. Other config, including includes and rewrites, is retained.
 """
 from __future__ import annotations
-import argparse, json, re, subprocess, sys
+import argparse, json, os, re, subprocess, sys
 from pathlib import Path
 from typing import Union
 from urllib.parse import urlsplit, urlunsplit
 
-REMOTE_KEY = re.compile(r"^remote\.(.+)\.(url|pushurl|fetch)$", re.IGNORECASE)
+REMOTE_KEY = re.compile(r"^remote\.(.+)\.(url|pushurl|fetch|push)$", re.IGNORECASE)
 SCP_LIKE = re.compile(
     r"^(?:(?P<user>[^@/:]+)@)?(?P<host>\[[^]]+\]|[^:/]+):(?P<path>.+)$"
 )
 SAFE_HOST = re.compile(r"^[A-Za-z0-9._-]+$|^\[[0-9A-Fa-f:]+\]$")
+
+
+def inspection_env() -> dict[str, str]:
+    # GIT_CONFIG redirects only `git config`, making it disagree with get-url.
+    # Keep both inspections on the selected repo's effective configuration.
+    selectors = {"GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_CONFIG"}
+    return {key: value for key, value in os.environ.items()
+            if key.upper() not in selectors}
 
 
 def run_config(repo: Path) -> bytes:
@@ -28,12 +38,13 @@ def run_config(repo: Path) -> bytes:
             "--show-origin",
             "--show-scope",
             "--get-regexp",
-            r"^(remote\..*\.(url|pushurl|fetch)|url\..*\.(insteadof|pushinsteadof))$",
+            r"^(remote\..*\.(url|pushurl|fetch|push)|url\..*\.(insteadof|pushinsteadof))$",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,
         timeout=15,
+        env=inspection_env(),
     )
     if proc.returncode == 1 and not proc.stdout:
         return b""
@@ -65,6 +76,14 @@ def sanitize_url(value: str) -> dict[str, Union[str, bool]]:
         return {"display": "", "classified": False}
     if re.match(r"^[A-Za-z]:[\\/]", value):
         return {"display": value, "classified": True}
+    # Git's SSH grammar allows an omitted username; urlsplit instead interprets
+    # host:path as a scheme. Do not admit explicit remote-helper transport:: forms.
+    match = SCP_LIKE.match(value) if "://" not in value else None
+    if match and SAFE_HOST.fullmatch(match.group("host")) and not match.group("path").startswith(":"):
+        return {
+            "display": f"{'@' if match.group('user') else ''}{match.group('host')}:{match.group('path')}",
+            "classified": True,
+        }
     try:
         parts = urlsplit(value)
         scheme = parts.scheme.lower()
@@ -87,17 +106,11 @@ def sanitize_url(value: str) -> dict[str, Union[str, bool]]:
             if ":" not in hostname or hostname.startswith("[")
             else f"[{hostname}]"
         )
-        port = f":{port_number}" if port_number else ""
+        port = f":{port_number}" if port_number is not None else ""
         user = "@" if parts.username is not None else ""
         path = parts.path or ""
         return {
             "display": urlunsplit((scheme, f"{user}{host}{port}", path, "", "")),
-            "classified": True,
-        }
-    match = SCP_LIKE.match(value)
-    if match and SAFE_HOST.match(match.group("host")):
-        return {
-            "display": f"{'@' if match.group('user') else ''}{match.group('host')}:{match.group('path')}",
             "classified": True,
         }
     if value.startswith(("/", "./", "../", "~")):
@@ -111,10 +124,16 @@ def effective_urls(repo: Path, name: str, push: bool) -> list[dict[str, Union[st
         ["git", "-C", str(repo), "remote", "get-url", "--all",
          *(["--push"] if push else []), "--", name],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=15,
+        env=inspection_env(),
     )
     if proc.returncode:
         return [{"display": "", "classified": False}]
-    return [sanitize_url(value) for value in proc.stdout.decode("utf-8", "strict").splitlines()]
+    # get-url uses LF, not Unicode's broader splitlines separators. Preflight
+    # rejects embedded ASCII controls; preserve Unicode bytes in actual records.
+    output = proc.stdout.decode("utf-8", "strict")
+    if not output.endswith("\n"):
+        return [{"display": "", "classified": False}]
+    return [sanitize_url(value) for value in output[:-1].split("\n")]
 
 
 def inspect(repo: Path) -> dict[str, object]:
@@ -133,10 +152,10 @@ def inspect(repo: Path) -> dict[str, object]:
         entry: dict[str, object] = {"scope": scope, "origin": origin}
         entry.update(
             {"value": value, "classified": True}
-            if kind == "fetch"
+            if kind in {"fetch", "push"}
             else sanitize_url(value)
         )
-        remotes.setdefault(name, {"url": [], "pushurl": [], "fetch": []})[kind].append(
+        remotes.setdefault(name, {"url": [], "pushurl": [], "fetch": [], "push": []})[kind].append(
             entry
         )
     for name, remote in remotes.items():

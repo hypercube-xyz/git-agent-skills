@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+## 2.0.1 - 2026-10-18
+
+- Separate routing ownership from execution decisions, correct two unsafe/multi-intent fixture labels, and add conditional workflow expectations while retaining the legacy fixture interface.
+- Add optional structured handoff/resume checkpoints to all 24 standalone skill contracts, a dependency-free validator, and native/agent execution evaluation for interruption, retry, no-op and protected state. Retain prototype evaluation failures and scoring corrections as evidence.
+- Reject portable ZIP collisions between files and directory prefixes, including case-folded aliases.
+- Preserve modified copy installations by recording original content manifests; require explicit `--force-copies` for local edits and legacy copies, with content rechecks and invocation rollback.
+- Reuse the complete validation workflow before release publication, including pinned clients, workflow lint and minimum-Git checks; make packaging depend on lint, tests and minimum Git.
+- Require release tags, committed catalog and plugin versions to agree before building; derive release metadata from the validated version.
+- Add a blocking Git 2.35.0 compatibility job and distinguish supported operations from verified safe refusals and unsupported tests.
+- Extend blind agent execution fixtures to 12 tasks and retain exact skill snapshots, prompts, process results and raw Codex CLI traces; report runtime-created metadata separately from protected-state success.
+- Ignore the config-only `GIT_CONFIG` file selector during remote inspection so configured and effective URLs use the same repository configuration; retain effective command-scope overrides.
+- Close the v2 review gaps in exact transport identity, native submodule effects, symbolic refs, worktree/config transitions, preservation artifacts, and staged verification.
+- Correct remote-helper LF record parsing and username-less SCP handling; bind its inspection to the repository argument while retaining effective configuration.
+- Add disposable review regression checks to validation and release CI. These verify Git mechanics and helper behavior, not general agent performance.
+- Complete push-refspec and explicit-port inspection; bound observation fetches, optional index refresh, inherited branch policy, and notes/autostash effects during rewrites.
+- Reject Windows reparse-point release destinations before writing. Exercise real junctions on Windows and symlinks elsewhere so destination-safety checks do not require elevated Windows symlink privileges.
+
 ## 2.0.0 - 2026-10-03
 
 - Rewrite the operating contract of all 24 Git skills around observed state, Git-specific decisions, bounded actions, and result verification. Skill names and install paths stay stable; consumers that parse skill prose or headings must review the new structure.

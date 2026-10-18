@@ -6,6 +6,7 @@ on:
     branches:
       - main
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -22,6 +23,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  minimum-git:
+    uses: ./.github/workflows/git-minimum.yml
+
   lint:
     name: Lint workflows
     runs-on: ubuntu-latest
@@ -97,6 +101,21 @@ jobs:
       - name: Run security regression tests
         run: python scripts/security_regression.py
 
+      - name: Run review regression tests
+        run: python scripts/review_regressions.py
+
+      - name: Run recheck regression tests
+        run: python scripts/recheck_regressions.py
+
+      - name: Run release version regression tests
+        run: python -m unittest discover -s scripts -p 'test_release_version.py' -v
+
+      - name: Run file preservation regression tests
+        run: python -m unittest discover -s scripts -p 'test_file_safety.py' -v
+
+      - name: Run routing and handoff regression tests
+        run: python -m unittest discover -s scripts -p 'test_skill_contracts.py' -v
+
       - name: Verify reproducible release
         run: python scripts/build_release.py --check
 
@@ -105,7 +124,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs:
+      - lint
       - test
+      - minimum-git
 
     steps:
       - name: Check out repository
@@ -194,7 +215,7 @@ jobs:
 
   client-forward-probe:
     name: Node 26 latest-client probe
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs:

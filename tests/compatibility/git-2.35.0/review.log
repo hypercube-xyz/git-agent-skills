@@ -1,0 +1,28 @@
+test_chained_rewrite_named_invocation (__main__.ReviewRegressions.test_chained_rewrite_named_invocation) ... ok
+test_exact_config_value_selector (__main__.ReviewRegressions.test_exact_config_value_selector) ... ok
+test_explicit_fetch_refspec_still_uses_remote_refmap (__main__.ReviewRegressions.test_explicit_fetch_refspec_still_uses_remote_refmap) ... ok
+test_explicit_zero_port_is_preserved (__main__.ReviewRegressions.test_explicit_zero_port_is_preserved) ... ok
+test_helper_ignores_config_file_selector (__main__.ReviewRegressions.test_helper_ignores_config_file_selector) ... ok
+test_helper_repository_selectors (__main__.ReviewRegressions.test_helper_repository_selectors) ... ok
+test_observation_fetch_does_not_recurse_into_submodules (__main__.ReviewRegressions.test_observation_fetch_does_not_recurse_into_submodules) ... ok
+test_observation_fetch_without_auto_tags (__main__.ReviewRegressions.test_observation_fetch_without_auto_tags) ... ok
+test_parent_only_local_submodule_operations (__main__.ReviewRegressions.test_parent_only_local_submodule_operations) ... ok
+test_parent_push_does_not_publish_nested_refs (__main__.ReviewRegressions.test_parent_push_does_not_publish_nested_refs) ... ok
+test_raw_backup_before_clearing_stash (__main__.ReviewRegressions.test_raw_backup_before_clearing_stash) ... ok
+test_recovery_intrinsic_content (__main__.ReviewRegressions.test_recovery_intrinsic_content) ... ok
+test_remote_push_refspec_inventory (__main__.ReviewRegressions.test_remote_push_refspec_inventory) ... ok
+test_restack_disables_notes_rewriting (__main__.ReviewRegressions.test_restack_disables_notes_rewriting) ... ok
+test_scp_grammar_and_redaction (__main__.ReviewRegressions.test_scp_grammar_and_redaction) ... ok
+test_staged_conflict_check (__main__.ReviewRegressions.test_staged_conflict_check) ... ok
+test_status_fsmonitor_disabled (__main__.ReviewRegressions.test_status_fsmonitor_disabled) ... ok
+test_symbolic_tag_no_dereference_preserves_branch (__main__.ReviewRegressions.test_symbolic_tag_no_dereference_preserves_branch) ... ok
+test_symbolic_tag_transaction_requires_old_target (__main__.ReviewRegressions.test_symbolic_tag_transaction_requires_old_target) ... SAFE_REFUSAL (symbolic-target transaction unavailable; refs preserved)
+test_unicode_endpoint_records (__main__.ReviewRegressions.test_unicode_endpoint_records) ... ok
+test_worktree_config_migration (__main__.ReviewRegressions.test_worktree_config_migration) ... ok
+test_worktree_hidden_edits_are_preserved (__main__.ReviewRegressions.test_worktree_hidden_edits_are_preserved) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 10.878s
+
+OK
+COMPATIBILITY supported=21 safe_refusal=1 unsupported=0 failed=0

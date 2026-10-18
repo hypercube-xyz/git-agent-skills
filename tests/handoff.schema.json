@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Git skill handoff checkpoint v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "owner",
+    "phase",
+    "repository",
+    "ref",
+    "expected_old_oid",
+    "intended_new_oid",
+    "observed_oid",
+    "operation",
+    "protected_paths",
+    "protected_refs",
+    "verified_effects",
+    "unknown_effects",
+    "next_owner",
+    "next_action"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase": {
+      "enum": [
+        "prepared",
+        "stopped",
+        "verified",
+        "unknown"
+      ]
+    },
+    "repository": {
+      "type": "object",
+      "required": [
+        "worktree",
+        "git_dir",
+        "common_dir"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "worktree": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\)"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "git_dir": {
+          "type": "string",
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\)"
+        },
+        "common_dir": {
+          "type": "string",
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\)"
+        }
+      }
+    },
+    "ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^refs/.+"
+    },
+    "expected_old_oid": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "intended_new_oid": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "observed_oid": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "operation": {
+      "type": "object",
+      "required": [
+        "kind",
+        "source_oid"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_oid": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        }
+      }
+    },
+    "protected_paths": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\)"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9a-fA-F]{64}$"
+      }
+    },
+    "protected_refs": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^refs/.+"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+      }
+    },
+    "verified_effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "target",
+          "value"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "object",
+                "minProperties": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    "unknown_effects": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "next_owner": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "verified"
+          }
+        },
+        "required": [
+          "phase"
+        ]
+      },
+      "then": {
+        "properties": {
+          "unknown_effects": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "unknown"
+          }
+        },
+        "required": [
+          "phase"
+        ]
+      },
+      "then": {
+        "properties": {
+          "unknown_effects": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

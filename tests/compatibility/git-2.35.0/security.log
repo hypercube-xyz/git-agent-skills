@@ -1,0 +1,3 @@
+PASS: deterministic archive /tmp/pkg-integrity-3jqtzqr4-artifact.zip
+SHA256: cb69423a46ace35fa30f726aa4993ab0bcbb6b9943ba7cc441a7af63c3a86e22
+PASS: security contract and regressions (24 skills)

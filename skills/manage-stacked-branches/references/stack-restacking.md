@@ -9,6 +9,14 @@ Read this when a parent/base moved or equivalent changes may already have landed
 - Squash: old ancestry disappears. Compare patch IDs/content and behavior on the new parent; do not drop a child commit from subject similarity.
 - Empty layer: accept only when its full intended change is verified on the new parent and the review boundary may disappear under the agreed plan.
 
-For a linear child whose old parent is the exact boundary, `git rebase --onto <new-parent-oid> <old-parent-oid> <child>` expresses the move. Merge commits, prior cherry-picks, or a non-ancestor old parent need a different reviewed plan. Disable implicit `rebase.updateRefs` unless its entire affected set is in scope.
+For a linear child whose old parent is the exact boundary, `git rebase --onto <new-parent-oid> <old-parent-oid> <child>` expresses the move. Merge commits, prior cherry-picks, or a non-ancestor old parent need a different reviewed plan. Disable implicit `rebase.updateRefs` unless its entire affected set is in scope. Separately inspect effective `notes.rewrite.rebase`, `notes.rewriteRef`, and `GIT_NOTES_REWRITE_REF`; a rebase can rewrite notes refs even with `rebase.updateRefs` disabled. Disable notes rewriting for a branch-only restack with invocation-scoped `-c notes.rewrite.rebase=false`, accounting for effective configuration/environment, or record each affected notes ref's old OID, preserve it, and review its new state. Disable implicit autostash with `-c rebase.autoStash=false` unless its effects on local work are reviewed.
 
 Restack bottom-up. At each layer, check sequencer completion, new base/tip OIDs, isolated review diff, omitted/duplicated logical changes, signatures, and focused behavior before using it as the next base. On interruption, inspect current refs and sequencer state; resume from the last verified layer, not from the original list position.
+
+Keep a separate checkpoint for each completed or pending layer using the fields in this
+skill's Scope and Composition. On resume, compare a completed layer's actual ref and diff
+to its observed/intended tip; verify it without rebasing it again. For a pending layer,
+reconcile its recorded source OID with the active rebase and current index before any
+continuation. A stale or unknown journal entry requires inspection, not replay of its
+original rebase command. Protected paths/refs and existing authorization carry across
+the conflict-resolution handoff; a journal never grants publication authority.

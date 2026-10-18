@@ -92,7 +92,7 @@ def tracked_files(revision: str, root: Path = ROOT) -> list[Entry]:
         raise SystemExit("unable to enumerate committed release files")
 
     entries: list[Entry] = []
-    collision_keys: dict[str, PurePosixPath] = {}
+    collision_keys: dict[str, tuple[PurePosixPath, str]] = {}
     for record in proc.stdout.split(b"\0"):
         if not record:
             continue
@@ -110,10 +110,13 @@ def tracked_files(revision: str, root: Path = ROOT) -> list[Entry]:
         if raw_type != b"blob" or mode not in {0o100644, 0o100755}:
             raise SystemExit(f"unsupported committed entry {raw_mode.decode()} {raw_type.decode()}: {rel}")
 
-        key = unicodedata.normalize("NFC", rel.as_posix()).casefold()
-        previous = collision_keys.setdefault(key, rel)
-        if previous != rel:
-            raise SystemExit(f"portable path collision: {previous} and {rel}")
+        for length in range(1, len(rel.parts) + 1):
+            prefix = PurePosixPath(*rel.parts[:length])
+            kind = "file" if length == len(rel.parts) else "directory"
+            key = prefix.as_posix().casefold()
+            previous = collision_keys.setdefault(key, (prefix, kind))
+            if previous != (prefix, kind):
+                raise SystemExit(f"portable path collision: {previous[0]} ({previous[1]}) and {prefix} ({kind})")
 
         oid = raw_oid.decode("ascii")
         blob = git("cat-file", "blob", oid, check=True, root=root).stdout
@@ -183,6 +186,20 @@ def release_metadata(entries: list[Entry], catalog: dict, revision: str, root: P
     }
 
 
+def validate_release_versions(entries: list[Entry], catalog: dict, release_tag: str | None) -> None:
+    version = catalog["package_version"]
+    for entry in entries:
+        if entry.rel.as_posix() == ".claude-plugin/plugin.json":
+            plugin_version = json.loads(entry.data.decode("utf-8")).get("version")
+            if plugin_version != version:
+                raise SystemExit(f"release version mismatch: catalog={version!r}, plugin={plugin_version!r}")
+            break
+    else:
+        raise SystemExit("committed release input lacks .claude-plugin/plugin.json")
+    if release_tag is not None and release_tag != f"v{version}":
+        raise SystemExit(f"release version mismatch: tag={release_tag!r}, catalog requires 'v{version}'")
+
+
 def archive_bytes(entries: list[Entry], catalog: dict) -> bytes:
     prefix = f"git-agent-skills-{catalog['package_version']}"
     names = [entry.rel.as_posix() for entry in entries]
@@ -236,23 +253,25 @@ if sys.platform == "darwin":
 
 
 def reject_symlink_components(path: Path) -> None:
-    # Walk raw abspath components; reject symlinks except known macOS root aliases.
+    # Walk raw abspath components; reject links except known macOS root aliases.
     absolute = Path(os.path.abspath(path))
     current = Path(absolute.anchor)
     parts = absolute.parts[1:] if absolute.anchor else absolute.parts
     for part in parts:
         current /= part
         try:
-            mode = current.lstat().st_mode
+            info = current.lstat()
         except FileNotFoundError:
             break
-        if stat.S_ISLNK(mode):
+        if stat.S_ISLNK(info.st_mode):
             trusted_target = _TRUSTED_SYMLINKS.get(current)
             if trusted_target is None:
                 raise SystemExit(f"release output contains a symlink component: {current}")
             resolved = current.resolve(strict=False)
             if resolved != trusted_target:
                 raise SystemExit(f"trusted symlink {current} points to {resolved}, expected {trusted_target}")
+        elif getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400):
+            raise SystemExit(f"release output contains a reparse-point component: {current}")
 
 
 def validate_output_paths(output: Path, entries: list[Entry], root: Path = ROOT) -> tuple[Path, Path, Path]:
@@ -306,11 +325,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Build a deterministic release archive from immutable committed blobs.")
     parser.add_argument("--check", action="store_true", help="Build twice in memory and fail if bytes differ.")
     parser.add_argument("--output", type=Path, help="Write ZIP here instead of dist/.")
+    parser.add_argument("--release-tag", help="Require this exact tag to match committed catalog and plugin versions.")
+    parser.add_argument("--validate-only", action="store_true", help="Validate committed release versions without building or writing artifacts.")
     args = parser.parse_args()
 
     revision = source_revision()
     entries = tracked_files(revision)
     catalog = catalog_from_entries(entries)
+    validate_release_versions(entries, catalog, args.release_tag)
+    if args.validate_only:
+        print(f"PASS: committed release versions match v{catalog['package_version']}")
+        return 0
     first = archive_bytes(entries, catalog)
     if args.check and first != archive_bytes(entries, catalog):
         raise SystemExit("release archives are not deterministic")
