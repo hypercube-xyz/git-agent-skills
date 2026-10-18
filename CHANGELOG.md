@@ -4,6 +4,8 @@
 
 ## 2.0.1 - 2026-10-18
 
+- Separate routing ownership from execution decisions, correct two unsafe/multi-intent fixture labels, and add conditional workflow expectations while retaining the legacy fixture interface.
+- Add optional structured handoff/resume checkpoints to all 24 standalone skill contracts, a dependency-free validator, and native/agent execution evaluation for interruption, retry, no-op and protected state. Retain prototype evaluation failures and scoring corrections as evidence.
 - Reject portable ZIP collisions between files and directory prefixes, including case-folded aliases.
 - Preserve modified copy installations by recording original content manifests; require explicit `--force-copies` for local edits and legacy copies, with content rechecks and invocation rollback.
 - Reuse the complete validation workflow before release publication, including pinned clients, workflow lint and minimum-Git checks; make packaging depend on lint, tests and minimum Git.

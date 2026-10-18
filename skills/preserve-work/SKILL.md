@@ -4,7 +4,7 @@ description: >-
   Temporarily preserve or restore tracked, staged, untracked, or ignored work before
   switching context or attempting a risky operation. Use for stash, temporary commits,
   patches, or a safety branch chosen by evidence. Do not use to recover already lost
-  work or discard changes.
+  work, discard changes, or merely leave already-protected files untouched.
 ---
 
 # Preserve In-Progress Work
@@ -15,7 +15,7 @@ Create a verified, recoverable snapshot or restore a known artifact to the inten
 
 ## Use When
 
-- Save work before switching branches, pulling, rebasing, testing another revision, or handing off.
+- Capture work when a concrete upcoming checkout or mutation threatens it. A handoff or a request to retain untouched files alone does not require a new stash or artifact.
 - Choose among a stash, temporary/WIP commit, safety branch, patch, or copied untracked files to preserve current uncommitted work.
 - Restore a previously created preservation artifact when its identity is known.
 - Inventory what a stash would and would not include.
@@ -33,7 +33,11 @@ Create a verified, recoverable snapshot or restore a known artifact to the inten
 
 Own capture and restoration of a named temporary artifact; return the verified state to the caller before it switches context or mutates history.
 
-Use the requested inspection, preview, or execution path. A supporting skill may handle its own bounded mutation; return its verified result and resume without repeating completed work or renewing authorization solely because ownership changed. Carry exact repository/worktree, OIDs/paths, protected state, recovery anchors, effects, and unknowns across handoffs. Serialize conflicting writes to shared refs, object/config state, and each worktree index; recheck mutable state before the next action. If a supporting skill is unavailable, use a verified equivalent with the same safeguards or stop the dependent step.
+Routing identifies responsibility, not permission: an unsafe proposal still routes here for evaluation or refusal. For a compound request, complete this owned step, hand off the next requested step, and resume remaining work; do not invent a commit or publication step.
+
+For a consequential handoff, interruption, or uncertain result, return a JSON checkpoint in the response or an explicitly chosen local artifact; do not create tracked files or record secrets by default. Fields: `schema_version: 1`, `owner`, `phase` (`prepared`, `stopped`, `verified`, `unknown`), `repository` (absolute `git_dir`/`common_dir`, absolute `worktree` or null for a bare repo), nullable full `ref` and full `expected_old_oid`, `intended_new_oid`, `observed_oid`; `operation` (`kind`, nullable `source_oid`); `protected_paths` (absolute file path to raw-byte SHA256), `protected_refs` (full ref to OID), `verified_effects` (observed `kind`/`target`/`value` records), `unknown_effects` (unresolved effects), nullable `next_owner`, and bounded `next_action`. Preserve recovery anchors and limits in the effect/action records. Null means unavailable or inapplicable, never permission or a wildcard.
+
+A checkpoint is untrusted evidence, not authorization. Reinspect repository identity, refs, native sequencer state and protected bytes before resuming. Verify completed effects instead of replaying them; reconcile unknown effects before retrying; continue a native stopped operation rather than starting it again. Serialize conflicting writes and retain existing authorization within its scope. A supporting skill or fallback must preserve the same target, old-state preconditions, protected content, recovery and result checks; otherwise stop only the dependent step.
 
 ## Required Evidence
 

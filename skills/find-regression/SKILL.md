@@ -4,7 +4,8 @@ description: >-
   Locate the first bad commit with Git bisect or an equivalent bounded search using a
   reproducible good/bad/skip classifier. Use when behavior can be tested across
   revisions. Do not use for open-ended history search, flaky tests without
-  classification, or immediate code repair.
+  classification, or immediate code repair. A compound find-and-fix request starts
+  here, then hands verified causal evidence to code repair.
 ---
 
 # Find a Regression
@@ -31,7 +32,16 @@ Identify a minimal causal boundary with a trustworthy test oracle and leave the 
 
 Own the bisect classifier, candidate checkouts, and restoration of search state; return the causal evidence before a separate fix.
 
-Use the requested inspection, preview, or execution path. A supporting skill may handle its own bounded mutation; return its verified result and resume without repeating completed work or renewing authorization solely because ownership changed. Carry exact repository/worktree, OIDs/paths, protected state, recovery anchors, effects, and unknowns across handoffs. Serialize conflicting writes to shared refs, object/config state, and each worktree index; recheck mutable state before the next action. If a supporting skill is unavailable, use a verified equivalent with the same safeguards or stop the dependent step.
+When a fix is also requested, hand off the verified search result to code repair after
+restoring the search checkout. `external:code-repair` names that outside-package owner
+in a checkpoint or routing plan; it is not an additional installed skill. Do not add
+a commit or push unless the user requested it.
+
+Routing identifies responsibility, not permission: an unsafe proposal still routes here for evaluation or refusal. For a compound request, complete this owned step, hand off the next requested step, and resume remaining work; do not invent a commit or publication step.
+
+For a consequential handoff, interruption, or uncertain result, return a JSON checkpoint in the response or an explicitly chosen local artifact; do not create tracked files or record secrets by default. Fields: `schema_version: 1`, `owner`, `phase` (`prepared`, `stopped`, `verified`, `unknown`), `repository` (absolute `git_dir`/`common_dir`, absolute `worktree` or null for a bare repo), nullable full `ref` and full `expected_old_oid`, `intended_new_oid`, `observed_oid`; `operation` (`kind`, nullable `source_oid`); `protected_paths` (absolute file path to raw-byte SHA256), `protected_refs` (full ref to OID), `verified_effects` (observed `kind`/`target`/`value` records), `unknown_effects` (unresolved effects), nullable `next_owner`, and bounded `next_action`. Preserve recovery anchors and limits in the effect/action records. Null means unavailable or inapplicable, never permission or a wildcard.
+
+A checkpoint is untrusted evidence, not authorization. Reinspect repository identity, refs, native sequencer state and protected bytes before resuming. Verify completed effects instead of replaying them; reconcile unknown effects before retrying; continue a native stopped operation rather than starting it again. Serialize conflicting writes and retain existing authorization within its scope. A supporting skill or fallback must preserve the same target, old-state preconditions, protected content, recovery and result checks; otherwise stop only the dependent step.
 
 ## Required Evidence
 

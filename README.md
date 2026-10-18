@@ -80,6 +80,7 @@ python3 scripts/review_regressions.py
 python3 scripts/recheck_regressions.py
 python3 -m unittest discover -s scripts -p 'test_release_version.py' -v
 python3 -m unittest discover -s scripts -p 'test_file_safety.py' -v
+python3 -m unittest discover -s scripts -p 'test_skill_contracts.py' -v
 python3 scripts/smoke_test_git.py
 python3 scripts/build_release.py --check
 # Build packages committed source; run after committing reviewed changes.
@@ -102,6 +103,12 @@ and discards local changes. It does not bypass link/reparse-point checks. Conten
 again before each replacement, and earlier replacements roll back if that check fails.
 
 Static fixtures and historical routing scores do not establish v2 agent behavior. See [`docs/VALIDATION-PLAN.md`](docs/VALIDATION-PLAN.md) for the required blind execution checks and release evidence.
+
+Routing responsibility and execution decisions are separate. Conditional multi-intent
+fixtures and the optional handoff/resume checkpoint format are described in
+[`docs/HANDOFF-CONTRACT.md`](docs/HANDOFF-CONTRACT.md). Each skill carries the checkpoint
+fields inline for standalone installation; the shared validator is an optional data
+check and never grants authorization or executes Git actions.
 
 The release builder is a pure packager: it reads immutable committed blobs via `git ls-tree` and `git cat-file`, does not read working-tree file content as package input, and does not run validators. CI validates the checked-out revision before calling the builder. Each release output (ZIP, checksum, metadata) is written atomically per file; abrupt termination may leave a partial output set — rerunning the deterministic builder reconciles it.
 

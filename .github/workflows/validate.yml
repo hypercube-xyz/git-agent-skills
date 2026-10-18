@@ -113,6 +113,9 @@ jobs:
       - name: Run file preservation regression tests
         run: python -m unittest discover -s scripts -p 'test_file_safety.py' -v
 
+      - name: Run routing and handoff regression tests
+        run: python -m unittest discover -s scripts -p 'test_skill_contracts.py' -v
+
       - name: Verify reproducible release
         run: python scripts/build_release.py --check
 

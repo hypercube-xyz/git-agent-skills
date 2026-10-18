@@ -8,6 +8,12 @@ Validation applies to the exact source, tools, model/runtime, and scenarios exer
 
 `tests/routing.json` and `tests/scenarios.json` are static inventories. The latter records observable assertions for stale-state, partial-failure, and prompt-injection cases; the validator checks their structure and coverage, not an agent's decisions. Do not describe a static pass as an execution evaluation.
 
+The routing fixture keeps its legacy `expect` field and adds separate decisions and
+conditional workflows. Unsafe methods for an owned outcome still route to their owner;
+compound find/fix requests retain the outside-package repair step without inventing
+commit/push authority. See [the v1 contract](HANDOFF-CONTRACT.md). Checkpoint shape
+validation is not proof of authorization, fresh state, or protected bytes.
+
 ## Git and package semantics
 
 `scripts/smoke_test_git.py` uses disposable repositories to test Git and package mechanics, including leases, conflict state, recovery, worktrees, mailbox replay, remote redaction, and release inputs. A platform subset includes portable tests plus the selected platform cases. Record Git/Python/OS versions and skips; an environment-dependent skip limits the claim.
@@ -34,6 +40,19 @@ from deterministic CI; inspect the raw trace for intermediate effects and unnece
 stops. [The 2026-10-18 run](../tests/agent-execution/2026-10-18.md) passed the 12 task
 oracles but exposed tool-created `.serena/` files, including in the read-only task.
 It is bounded execution evidence, not a production-readiness certificate.
+
+For composition execution, run `tests/agent-execution/run.py <new-directory> --suite composition`.
+This suite contains one routing-only session with eight queries and six independent native
+Git tasks, with saved checkpoint/journal artifacts. Recheck an existing run without invoking
+a model using `tests/agent-execution/composition.py verify <directory>/repos`. Its independent
+oracles check native merge parents/continuation, per-layer restack OIDs and reflogs, lost-response
+no-op, stale authorization, unsafe proposal refusal, protected raw bytes, index, and real
+published refs. Detailed phases are normalized into owner transitions; conditional preparation
+is not scored as a required extra mutation. Unconditional preservation, repeated execution,
+wrong owners, lost requested steps and changed protected state are rejected.
+
+The [2026-10-18 composition evidence](../tests/agent-execution/composition-2026-10-18.md)
+retains failed prototype evaluations and the final independently rescored results.
 
 ## Release gate
 

@@ -8,6 +8,8 @@ from collections import Counter, defaultdict
 from itertools import combinations
 from pathlib import Path
 
+from skill_contracts import routing_errors
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -253,6 +255,7 @@ for ref in (ROOT / "skills").glob("*/references/*.md"):
 routing_doc = load_json("tests/routing.json")
 scenario_doc = load_json("tests/scenarios.json")
 routing = routing_doc["cases"]
+errors.extend(routing_errors(routing_doc, name_set))
 scenarios = scenario_doc["scenarios"]
 if scenario_doc.get("kind") != "static-contract-scenarios":
     errors.append("tests/scenarios.json must identify static contract scenarios")

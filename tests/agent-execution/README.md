@@ -59,6 +59,23 @@ per-file SHA256, runtime, process results and independent state assertions. Effe
 in local disposable repositories; the runtime is not an OS sandbox. Review intermediate
 commands and tool-created files as well as the oracles. See the [2026-10-18 evidence](2026-10-18.md).
 
+## Composition and resume suite
+
+For the newer routing/handoff suite, use a new evidence directory:
+
+```text
+py -3.14 tests/agent-execution/run.py artifacts/new-composition --suite composition
+py -3.14 tests/agent-execution/composition.py verify artifacts/new-composition/repos
+```
+
+It runs eight routing queries in one fresh session plus six native execution sessions:
+merge handoff/resume/publication, unsafe-method refusal, interrupted restack, lost-response
+retry/no-op, stale checkpoint refusal, and commit→publish with a retained draft. Optional
+`--case <name>` selects a composition case for a new targeted run; it never reuses a working
+repository from a previous run. Standalone checkpoint validation is available through
+`scripts/skill_contracts.py`; it is a format check, not a mutation runner or freshness proof.
+See [the composition evidence](composition-2026-10-18.md).
+
 ## Observed candidate run, 2026-10-03
 
 Two fresh-context evaluators were requested as `gpt-6-sol`, reasoning `high`,

@@ -1,4 +1,4 @@
-"""Run 12 blind Codex CLI tasks, retaining prompts, skill bytes and raw JSONL.
+"""Run blind Codex CLI tasks, retaining prompts, skill bytes and raw JSONL.
 
 Uses the installed CLI and its configured model/account. No external Git remotes
 are used by the fixtures. Model runs consume the account's normal usage.
@@ -17,6 +17,7 @@ import tomllib
 from pathlib import Path
 
 import fixtures
+import composition
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -42,7 +43,11 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("directory", type=Path, help="New evidence directory; never reused or overwritten")
     p.add_argument("--workers", type=int, default=3, choices=range(1, 4))
+    p.add_argument("--suite", choices=("core", "composition"), default="core")
+    p.add_argument("--case", action="append", help="Composition case to run; repeat to select several")
     args = p.parse_args()
+    if args.case and args.suite != "composition":
+        p.error("--case is supported only for the composition suite")
     root = args.directory.resolve()
     root.mkdir(parents=True, exist_ok=False)
     snapshot = root / "skills"
@@ -50,15 +55,16 @@ def main():
     digests = {path.relative_to(snapshot).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
                for path in sorted(snapshot.rglob("*")) if path.is_file()}
     (root / "skill-sha256.json").write_text(json.dumps(digests, indent=2) + "\n", encoding="utf-8")
-    for name in ("fixtures.py", "run.py"):
+    for name in ("fixtures.py", "composition.py", "run.py"):
         shutil.copyfile(Path(__file__).with_name(name), root / f"{name}.snapshot")
     fixture_root = root / "repos"
-    fixtures.create(fixture_root)
+    suite = composition if args.suite == "composition" else fixtures
+    suite.create(fixture_root)
     expected = json.loads((fixture_root / "expected.json").read_text())
     cli = shutil.which("codex")
     if not cli:
         raise SystemExit("Codex CLI is required; fixtures retained, no agent was run")
-    metadata = {"source_revision": fixtures.git(ROOT, "rev-parse", "HEAD").stdout.strip(),
+    metadata = {"suite": args.suite, "source_revision": fixtures.git(ROOT, "rev-parse", "HEAD").stdout.strip(),
                 "source_dirty": bool(fixtures.git(ROOT, "status", "--porcelain").stdout),
                 "python": sys.version, "git": fixtures.git(ROOT, "--version").stdout.strip(),
                 "cli": subprocess.check_output([cli, "--version"], text=True).strip(),
@@ -91,16 +97,23 @@ def main():
                 return name, "timeout"
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool:
-        outcomes = dict(pool.map(run_case, requests(expected).items()))
+        prompts = composition.requests(expected) if args.suite == "composition" else requests(expected)
+        if args.case:
+            unknown = set(args.case) - prompts.keys()
+            if unknown:
+                raise SystemExit(f"Unknown composition cases: {sorted(unknown)}")
+            prompts = {name: prompts[name] for name in args.case}
+        outcomes = dict(pool.map(run_case, prompts.items()))
     (root / "process-results.json").write_text(json.dumps(outcomes, indent=2) + "\n", encoding="utf-8")
     # These independent state assertions do not see the agent's explanation.
     checks = []
-    for verify in (fixtures.verify, fixtures.verify_boundaries, fixtures.verify_additional):
+    verifiers = [(name, lambda directory, name=name: composition.verify(directory, {name})) for name in prompts] if args.suite == "composition" else [(fn.__name__, fn) for fn in (fixtures.verify, fixtures.verify_boundaries, fixtures.verify_additional)]
+    for name, verify in verifiers:
         try:
             verify(fixture_root)
-            checks.append({"check": verify.__name__, "passed": True})
-        except (AssertionError, OSError, RuntimeError) as exc:
-            checks.append({"check": verify.__name__, "passed": False, "error": repr(exc)})
+            checks.append({"check": name, "passed": True})
+        except (AssertionError, OSError, RuntimeError, ValueError, TypeError, KeyError) as exc:
+            checks.append({"check": name, "passed": False, "error": repr(exc)})
     (root / "assertions.json").write_text(json.dumps(checks, indent=2) + "\n", encoding="utf-8")
     return 0 if all(value == 0 for value in outcomes.values()) and all(x["passed"] for x in checks) else 1
 
