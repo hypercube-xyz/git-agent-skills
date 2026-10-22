@@ -52,16 +52,6 @@ signing, credential and protocol policy when constructing those commands.
 
 ### Proportional execution and evidence reuse
 
-Start with the requested result and the smallest adequate existing procedure.
-Investigate a concern when evidence could change correctness, scope, preservation
-or recovery; use a discriminating check rather than a general survey. When the
-relevant evidence is sufficient, proceed within the existing authorization. Ask
-only for a material decision the user must make. Evidence lists are conditional:
-an ordinary local task does not require every check from every workflow mode.
-Stop when the outcome and applicable verification are satisfied; broaden work
-only for new evidence or an unresolved material concern. Fewer instructions or
-commands alone do not establish better outcomes or lower total cost.
-
 Read-only paths inspect the requested facts without optional index writes. Reversible
 local paths bind the target and verify affected refs/bytes, without unrelated remote
 surveys or preservation artifacts. Shared paths establish endpoint/account/refscope

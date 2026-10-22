@@ -33,24 +33,6 @@ atomic push, or exact push modes:
 Provider authentication, branch protection, hosted releases, and remote policy require
 provider-specific tests.
 
-| Capability | Git 2.35 | Newer Git when available |
-| --- | --- | --- |
-| Merge without implicit autostash | Supported: explicit `merge --no-autostash`, including branch merge options | Same command |
-| Selected alternate-index additions, deletions and renames | Supported: apply the selected delta, preserving excluded HEAD entries | Same procedure |
-| Known-path worktree creation/inspection | Supported with native commands and exact path/HEAD checks | Same procedure |
-| Complete machine-parsed worktree inventory | No `list --porcelain -z`; plain porcelain is for direct inspection. Refuse only a mutation whose required exact inventory cannot be established | Prefer NUL porcelain; test unusual paths |
-| Files ref backend, including packed refs | Supported through native ref/reflog APIs | Supported |
-| Reftable backend | Unavailable; explicit unsupported-feature refusal, no target created | Native reads and expected-old ref updates tested when `init --ref-format=reftable` is supported |
-| Ref backend detection / database verification | `--show-ref-format` and `refs verify` unavailable; inspect format/extensions and use native reads. An echoed flag is not a detected format | Require recognized `files`/`reftable` output; use `refs verify` when supported |
-| Symbolic-target compare-and-swap | Safe refusal when no equivalent old-target transaction exists | Feature-check the transaction; ordinary OID leases are not equivalent |
-
-These are operation-level limits, not a reason to reject every task on older Git.
-Do not build an ad-hoc parser or migrate a ref backend for a routine task. The
-review suite exercises config-only autostash suppression as a negative control,
-selected-delta tests cover deletion/rename, and backend checks retain protected
-refs/index/content. Existing legacy `git config --get/--get-all` forms intentionally
-retain Git 2.35 compatibility; newer get/set subcommands are not required.
-
 The review suite reports `supported`, `safe_refusal`, `unsupported`, and `failed` separately.
 A safe refusal means the requested optional operation is unavailable and the verified
 stop path preserves protected state; it does not mean the operation completed. For example,

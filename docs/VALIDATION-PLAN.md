@@ -30,11 +30,6 @@ The destination-safety fixture uses a real directory junction on Windows, which 
 
 Before release, run a risk-based selection of blind tasks with raw disposable repositories and the installed v2 skills. Prioritize routine routes, near-boundary ambiguity, unrelated staged/untracked work, conflicts and sequencer continuation, unborn/bare/partial states, remote endpoint splits, stale refs, partial publication, and untrusted content according to what static and mechanical checks leave uncertain. Inspect tool traces and final refs/index/worktree/remote state against independent assertions, including protected effects. Repeat cases that reveal a skill defect after repair; record unexercised paths as limits, not passes.
 
-The CLI harness requires loading the selected skill before any Git inspection.
-Inspect the trace for that order: passing final-state assertions cannot excuse
-unguarded earlier commands. This tests behavior after explicit skill loading;
-automatic discovery/activation by each client needs separate client-level evidence.
-
 Record exact skill source, model/runtime, prompt, repository fixture, tool trace, checks, outcome, failure, and limits. Preserve the v1.2.1 routing pilot as historical evidence only; it measured routing on one model/runtime, not v2 Git execution. A small blind pass supports only the paths it exercised.
 
 `tests/agent-execution/run.py <new-evidence-directory>` invokes the installed Codex CLI
