@@ -22,6 +22,18 @@ import composition
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def isolated_settings():
+    """Invocation-only config isolation; auth and host process policy still apply."""
+    home = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
+    paths = []
+    for directory in (Path.home() / ".agents/skills", home / "skills"):
+        if directory.is_dir():
+            paths.extend(str(p.parent) for p in directory.rglob("SKILL.md"))
+    disabled = "[" + ",".join('{path=' + json.dumps(path) + ',enabled=false}' for path in paths) + "]"
+    return ["--ignore-user-config", "-c", "model_reasoning_effort=\"medium\"",
+            "-c", "skills.config=" + disabled, "-c", "project_doc_max_bytes=0"]
+
+
 def requests(expected):
     return {
         "selected-commit": "Commit only the staged calculator value change. Preserve its unstaged draft and the separately staged personal notes.",
@@ -45,6 +57,8 @@ def main():
     p.add_argument("--workers", type=int, default=3, choices=range(1, 4))
     p.add_argument("--suite", choices=("core", "composition"), default="core")
     p.add_argument("--case", action="append", help="Composition case to run; repeat to select several")
+    p.add_argument("--model", help="Explicit available model; otherwise use the configured default")
+    p.add_argument("--isolated", action="store_true", help="Ignore user config, disable user skills and project instructions for this invocation")
     args = p.parse_args()
     if args.case and args.suite != "composition":
         p.error("--case is supported only for the composition suite")
@@ -69,6 +83,8 @@ def main():
                 "python": sys.version, "git": fixtures.git(ROOT, "--version").stdout.strip(),
                 "cli": subprocess.check_output([cli, "--version"], text=True).strip(),
                 "model": "CLI configured default; consult raw trace/runtime for resolved model"}
+    settings = isolated_settings() if args.isolated else []
+    metadata.update(requested_model=args.model, isolated=args.isolated, config_flags=settings)
     config = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "config.toml"
     if config.is_file():
         configured = tomllib.loads(config.read_text(encoding="utf-8"))
@@ -85,8 +101,10 @@ def main():
                   "Do not ask for confirmation for already authorized actions. "
                   "In your final answer state the selected skills, result and any necessary refusal.\n\n" + request)
         (root / f"{name}.prompt.txt").write_text(prompt, encoding="utf-8")
-        command = [cli, "exec", "--ephemeral", "--json", "--skip-git-repo-check",
+        command = [cli, "exec", "--ephemeral", "--json", "--skip-git-repo-check", *settings,
                    "-s", "danger-full-access", "-C", str(fixture_root / name), "-"]
+        if args.model:
+            command[2:2] = ["-m", args.model]
         with (root / f"{name}.jsonl").open("w", encoding="utf-8") as trace, \
              (root / f"{name}.stderr.txt").open("w", encoding="utf-8") as err:
             try:

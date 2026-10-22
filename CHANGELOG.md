@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 2.0.2 - 2026-10-23
+
+- Match execution checks to read-only, reversible-local, shared and destructive effects; add short local branch/tag paths and reuse immutable evidence without caching mutable targets or remote observations.
+- Add compact checkpoint schema v2 while retaining full v1 records and all applicable protected-state, expected-old, recovery and unknown-effect requirements.
+- Keep conditional transport detail within independently installable skills and retain exact destination, submodule/tag side-effect and read-back safeguards.
+- Add a read-only runtime capability probe that separates actual observations/probe controls from unproven runtime isolation, and fails closed for required controls it cannot prove.
+- Add paired version benchmarks, multi-model and per-skill standalone execution fixtures, with retained traces, latency/usage metrics and independent native-state oracles. Separate bounded outcomes from general performance or security claims.
+- Extend three/four-intent routing coverage and regression checks for compact checkpoints, capability reports and benchmark negative controls.
+
 ## 2.0.1 - 2026-10-18
 
 - Separate routing ownership from execution decisions, correct two unsafe/multi-intent fixture labels, and add conditional workflow expectations while retaining the legacy fixture interface.
