@@ -11,7 +11,7 @@ Validation applies to the exact source, tools, model/runtime, and scenarios exer
 The routing fixture keeps its legacy `expect` field and adds separate decisions and
 conditional workflows. Unsafe methods for an owned outcome still route to their owner;
 compound find/fix requests retain the outside-package repair step without inventing
-commit/push authority. See [the v1 contract](HANDOFF-CONTRACT.md). Checkpoint shape
+commit/push authority. See [the compatible v1/v2 contracts](HANDOFF-CONTRACT.md). Checkpoint shape
 validation is not proof of authorization, fresh state, or protected bytes.
 
 ## Git and package semantics
@@ -55,6 +55,48 @@ The [2026-10-18 composition evidence](../tests/agent-execution/composition-2026-
 retains failed prototype evaluations and the final independently rescored results.
 
 ## Release gate
+
+### Paired execution and refusal measurement
+
+Run a new paired benchmark without modifying earlier evidence:
+
+```text
+python tests/agent-execution/benchmark.py <new-directory> --candidate v1.2.1=v1.2.1 --candidate v2.0.1=v2.0.1 --model <available-model>
+python tests/agent-execution/benchmark.py <other-new-directory> --candidate candidate=working --model <same-model>
+python tests/agent-execution/benchmark.py <third-new-directory> --candidate candidate=working --model <second-available-model>
+python tests/agent-execution/benchmark.py <standalone-directory> --candidate candidate=working --model <available-model> --standalone
+```
+
+The benchmark has 16 independent native tasks plus one session containing 14 routing
+queries (30 task/query observations, not 30 independent model sessions). Cases include
+routine branch/tag work, selected staged content, split push destinations, stale
+authorization, failure/retry, ambiguous destination and three/four-intent composition.
+The standalone suite installs only the owning skill and its bundled resources into
+each task's installation directory and executes one bounded task for every skill.
+Some diagnostic outcomes and safety refusals are intentionally read-only. This does
+not cover every operation or option of each standalone skill.
+
+Fresh ephemeral sessions use the same model/reasoning/config flags; paired jobs are
+interleaved with a fixed shuffle. The runner ignores user config, disables discovered
+user/system skills for its invocation and suppresses project instruction loading;
+it does not modify those skills or provide OS-level isolation. No real Git network
+destinations or credentials are needed. Record remaining runtime influences rather
+than claiming a clean-room environment. Wall times under concurrency are noisy.
+
+Retain exact prompts, skill/resource bytes and SHA256 manifests, fixture/harness
+snapshots, raw JSONL, stderr, process outcomes and per-case native state oracles.
+Report shell calls (not inferred Git/network command counts), end-to-end wall time,
+CLI-reported cached/total input and output tokens, and UTF-8 instruction bytes/words
+separately. Input totals include runtime context and repeated conversation history;
+word/byte counts are not tokenizer measurements or isolated skill token attribution.
+
+Classify safe success, correct refusal, unnecessary refusal, incorrect/unsafe effect
+and incomplete execution separately. State preservation alone is not a correct refusal:
+review final answers/tool traces for truthful results, blockers and unnecessary approval
+stops. Preserve original failed scorer outputs; document any justified oracle correction,
+add a counter-test, and rescore immutable outcomes without changing task states. Do not
+infer superiority, production safety, latency guarantees or a broad false-refusal rate
+from a single bounded trial. CI runs mechanical regressions, not paid model sessions.
 
 CI runs structural, Git semantic, security, client-discovery, and clean-checkout checks separately. `scripts/build_release.py` is a pure packager: it reads files from the committed revision through `git ls-tree` and `git cat-file`, rejects unsupported entries, and creates a deterministic ZIP plus checksum and metadata sidecars. `--check` builds archive bytes twice in-process; it does not run validators or prove cross-environment reproducibility. The builder records validation as separately performed by CI, never as a check it ran itself.
 

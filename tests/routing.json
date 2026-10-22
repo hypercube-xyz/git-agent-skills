@@ -889,6 +889,48 @@
       "expect": "route",
       "decision": "evaluate",
       "prompt": "ไฟล์หายหลังจากเปลี่ยน branch ไม่รู้ว่าเกิดอะไรขึ้น แค่ช่วยตรวจดูก่อน"
+    },
+    {
+      "id": "multi-intent-v202-9",
+      "skill": "manage-branches",
+      "prompt": "Create release-fix at main, replay commit abc123 onto it, then publish release-fix to origin.",
+      "expect": "route",
+      "decision": "evaluate"
+    },
+    {
+      "id": "multi-intent-v202-10",
+      "skill": "craft-commits",
+      "prompt": "Commit only staged changes, create annotated local tag test-marker, then publish the branch only; keep that tag local.",
+      "expect": "route",
+      "decision": "evaluate"
+    },
+    {
+      "id": "multi-intent-v202-11",
+      "skill": "setup-repository",
+      "prompt": "Clone this repository, create topic at its default branch, replay my selected commit, and publish topic to origin.",
+      "expect": "route",
+      "decision": "evaluate"
+    },
+    {
+      "id": "multi-intent-v202-12",
+      "skill": "transplant-commits",
+      "prompt": "Resume the stopped cherry-pick, resolve its existing conflicts, verify the selected commit was replayed once, then push this branch.",
+      "expect": "route",
+      "decision": "evaluate"
+    },
+    {
+      "id": "multi-intent-v202-13",
+      "skill": "manage-branches",
+      "prompt": "สร้าง branch fix/payment จาก HEAD จัด commit เฉพาะไฟล์ที่ staged แล้วสร้าง tag local และ push เฉพาะ branch นี้ไป origin",
+      "expect": "route",
+      "decision": "evaluate"
+    },
+    {
+      "id": "multi-intent-v202-14",
+      "skill": "manage-remotes",
+      "prompt": "Inspect the remote URL, change origin to my supplied replacement URL, then publish this branch; do not integrate other history.",
+      "expect": "route",
+      "decision": "evaluate"
     }
   ],
   "decision_schema_version": 1,
@@ -1033,6 +1075,148 @@
       "forbidden_unrequested_steps": [
         "sync-branches"
       ]
+    },
+    {
+      "id": "multi-intent-v202-9",
+      "prompt": "Create release-fix at main, replay commit abc123 onto it, then publish release-fix to origin.",
+      "steps": [
+        {
+          "owner": "manage-branches",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "transplant-commits",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "sync-branches",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        }
+      ],
+      "forbidden_unrequested_steps": []
+    },
+    {
+      "id": "multi-intent-v202-10",
+      "prompt": "Commit only staged changes, create annotated local tag test-marker, then publish the branch only; keep that tag local.",
+      "steps": [
+        {
+          "owner": "craft-commits",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "manage-tags",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "sync-branches",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        }
+      ],
+      "forbidden_unrequested_steps": []
+    },
+    {
+      "id": "multi-intent-v202-11",
+      "prompt": "Clone this repository, create topic at its default branch, replay my selected commit, and publish topic to origin.",
+      "steps": [
+        {
+          "owner": "setup-repository",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "manage-branches",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "transplant-commits",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "sync-branches",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        }
+      ],
+      "forbidden_unrequested_steps": []
+    },
+    {
+      "id": "multi-intent-v202-12",
+      "prompt": "Resume the stopped cherry-pick, resolve its existing conflicts, verify the selected commit was replayed once, then push this branch.",
+      "steps": [
+        {
+          "owner": "transplant-commits",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "resolve-conflicts",
+          "phase": "resolve",
+          "when": "if conflicted; inspect existing native operation"
+        },
+        {
+          "owner": "transplant-commits",
+          "phase": "resume",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "sync-branches",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        }
+      ],
+      "forbidden_unrequested_steps": []
+    },
+    {
+      "id": "multi-intent-v202-13",
+      "prompt": "สร้าง branch fix/payment จาก HEAD จัด commit เฉพาะไฟล์ที่ staged แล้วสร้าง tag local และ push เฉพาะ branch นี้ไป origin",
+      "steps": [
+        {
+          "owner": "manage-branches",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "craft-commits",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "manage-tags",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "sync-branches",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        }
+      ],
+      "forbidden_unrequested_steps": []
+    },
+    {
+      "id": "multi-intent-v202-14",
+      "prompt": "Inspect the remote URL, change origin to my supplied replacement URL, then publish this branch; do not integrate other history.",
+      "steps": [
+        {
+          "owner": "manage-remotes",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        },
+        {
+          "owner": "sync-branches",
+          "phase": "execute",
+          "when": "after preceding requested step is verified; preserve unrelated work"
+        }
+      ],
+      "forbidden_unrequested_steps": []
     }
   ]
 }

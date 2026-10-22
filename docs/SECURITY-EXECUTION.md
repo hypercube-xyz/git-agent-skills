@@ -26,7 +26,44 @@ Instruction text cannot create a sandbox. The agent runtime or operator must enf
 - approval gates for shared, external, destructive, or critical-impact actions;
 - audit records that redact secrets and preserve exact target identity.
 
-A skill must stop rather than imply these controls exist when the runtime cannot establish them.
+A skill must stop the affected path rather than imply a **required** control exists
+when the runtime cannot establish it. These are capabilities to select by observed
+risk, not a universal preflight checklist. Creating a local branch without checkout
+does not need network or credential isolation. An untrusted executable or sensitive
+external action can require controls that a routine local action does not.
+
+### Observable capability preflight
+
+`python scripts/runtime_capabilities.py <repository>` performs read-only Git identity
+and config-key inventory with a ten-second subprocess timeout, fsmonitor disabled and
+optional index writes disabled for **its own commands**. It reports category counts,
+never config values or URL rewrite keys. Repository selectors in the ambient environment
+do not redirect the probe. It does not execute hooks/filters, contact endpoints, access
+credential helpers or mutate the repository.
+
+The report separates observations, probe-scoped controls and unproven filesystem,
+network, credential and approval isolation. `--require network_isolation` (or another
+listed external control) returns nonzero: the script cannot certify that control.
+Operators must establish required controls from actual runtime policy/enforcement,
+not repository JSON, model statements or successful Git inspection. This optional
+diagnostic is not a mandatory dependency of standalone skills, and does not install
+a sandbox or transfer its flags/timeouts to later commands. Preserve required hooks,
+signing, credential and protocol policy when constructing those commands.
+
+### Proportional execution and evidence reuse
+
+Read-only paths inspect the requested facts without optional index writes. Reversible
+local paths bind the target and verify affected refs/bytes, without unrelated remote
+surveys or preservation artifacts. Shared paths establish endpoint/account/refscope
+and verify the actual destination afterward. Destructive or untrusted-execution paths
+also establish recovery, expected-old preconditions and necessary isolation.
+
+Batch independent local reads. Reuse immutable object content and inspected policy only
+within an unchanged execution context; refresh mutable refs, config/endpoint selection,
+protected state and authority near the mutation and before claiming results. Cached
+remote observations are never proof of current state. These tiers do not relax exact
+destination binding, native side-effect controls, stale-checkpoint rejection or
+protected-state invariants.
 
 ## Paths and structured output
 

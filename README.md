@@ -110,6 +110,13 @@ fixtures and the optional handoff/resume checkpoint format are described in
 fields inline for standalone installation; the shared validator is an optional data
 check and never grants authorization or executes Git actions.
 
+v2.0.2 matches inspection to read-only, reversible-local, shared and destructive
+effects. Routine local branch/tag creation needs no remote survey or handoff JSON.
+Compact checkpoint v2 omits inapplicable fields; full v1 checkpoints remain accepted.
+Conditional transport details ship inside each affected skill, preserving standalone
+installation. The optional `python scripts/runtime_capabilities.py <repository>`
+reports observable probe controls and unproven runtime isolation, not a security certificate.
+
 The release builder is a pure packager: it reads immutable committed blobs via `git ls-tree` and `git cat-file`, does not read working-tree file content as package input, and does not run validators. CI validates the checked-out revision before calling the builder. Each release output (ZIP, checksum, metadata) is written atomically per file; abrupt termination may leave a partial output set — rerunning the deterministic builder reconciles it.
 
 ## Compatibility

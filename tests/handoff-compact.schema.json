@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Git skill compact handoff checkpoint v2",
+  "type": "object",
+  "required": ["schema_version", "owner", "phase", "repository", "next_owner", "next_action"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "integer", "const": 2},
+    "owner": {"$ref": "handoff.schema.json#/properties/owner"},
+    "phase": {"$ref": "handoff.schema.json#/properties/phase"},
+    "repository": {"$ref": "handoff.schema.json#/properties/repository"},
+    "next_owner": {"$ref": "handoff.schema.json#/properties/next_owner"},
+    "next_action": {"$ref": "handoff.schema.json#/properties/next_action"},
+    "ref": {"$ref": "handoff.schema.json#/properties/ref"},
+    "expected_old_oid": {"$ref": "handoff.schema.json#/properties/expected_old_oid"},
+    "intended_new_oid": {"$ref": "handoff.schema.json#/properties/intended_new_oid"},
+    "observed_oid": {"$ref": "handoff.schema.json#/properties/observed_oid"},
+    "operation": {"$ref": "handoff.schema.json#/properties/operation"},
+    "protected_paths": {"$ref": "handoff.schema.json#/properties/protected_paths"},
+    "protected_refs": {"$ref": "handoff.schema.json#/properties/protected_refs"},
+    "verified_effects": {"$ref": "handoff.schema.json#/properties/verified_effects"},
+    "unknown_effects": {"$ref": "handoff.schema.json#/properties/unknown_effects"}
+  },
+  "allOf": [
+    {"if": {"properties": {"phase": {"const": "unknown"}}, "required": ["phase"]},
+     "then": {"required": ["unknown_effects"], "properties": {"unknown_effects": {"minItems": 1}}}},
+    {"if": {"properties": {"phase": {"const": "verified"}}, "required": ["phase"]},
+     "then": {"properties": {"unknown_effects": {"maxItems": 0}}}}
+  ]
+}

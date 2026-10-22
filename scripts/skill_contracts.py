@@ -68,10 +68,16 @@ def checkpoint_errors(record, owners: set[str] | None = None) -> list[str]:
     if not isinstance(record, dict):
         return ["checkpoint must be an object"]
     errors = []
-    if set(record) != required:
-        errors.append(f"checkpoint fields missing={sorted(required - record.keys())} extra={sorted(record.keys() - required)}")
-    if type(record.get("schema_version")) is not int or record["schema_version"] != 1:
+    compact = type(record.get("schema_version")) is int and record["schema_version"] == 2
+    minimum = {"schema_version", "owner", "phase", "repository", "next_owner", "next_action"} if compact else required
+    if not minimum <= record.keys() or record.keys() - required:
+        errors.append(f"checkpoint fields missing={sorted(minimum - record.keys())} extra={sorted(record.keys() - required)}")
+    if type(record.get("schema_version")) is not int or record["schema_version"] not in (1, 2):
         errors.append("unsupported checkpoint schema_version")
+    if compact:
+        record = {"ref": None, "expected_old_oid": None, "intended_new_oid": None, "observed_oid": None,
+                  "operation": {"kind": "none", "source_oid": None}, "protected_paths": {}, "protected_refs": {},
+                  "verified_effects": [], "unknown_effects": [], **record}
     for field in ("owner", "next_owner"):
         value = record.get(field)
         if field == "next_owner" and value is None:

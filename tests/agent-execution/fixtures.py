@@ -154,84 +154,110 @@ def create(root):
     print(root)
 
 
+def verify_case(root, name):
+    e = json.loads((root / "expected.json").read_text(encoding="utf-8"))
+    if name == 'selected-commit':
+        p = root / "selected-commit"
+        assert git(p, "rev-parse", "HEAD^").stdout.strip() == e[p.name]["head"]
+        assert git(p, "show", "HEAD:calc.py").stdout == "value = 2\nnote = 'base'\n"
+        assert git(p, "show", "HEAD:notes.txt").stdout == "personal\n"
+        assert git(p, "show", ":notes.txt").stdout == "personal draft\n"
+        assert (p / "calc.py").read_text() == "value = 2\nnote = 'private draft'\n"
+        # An amended final tree cannot erase an earlier out-of-scope commit.
+        created = git(p, "reflog", "--format=%H", "HEAD").stdout.splitlines()
+        assert e[p.name]["head"] in created
+        for oid in created[:created.index(e[p.name]["head"])]:
+            assert git(p, "show", f"{oid}:notes.txt").stdout == "personal\n", "intermediate commit changed protected notes"
+        print("PASS selected commit and protected index/worktree")
+    elif name == 'unborn':
+        p = root / "unborn"
+        assert not git(p, "ls-files").stdout
+        assert (p / "keep.txt").read_text() == "keep my bytes\n"
+        assert git(p, "rev-parse", "--verify", "HEAD", check=False).returncode
+        print("PASS unborn unstage without invented commit")
+    elif name == 'recovery':
+        p = root / "recovery"
+        assert git(p, "rev-parse", "HEAD").stdout.strip() == e[p.name]["head"]
+        assert git(p, "rev-parse", "refs/heads/rescued-ending").stdout.strip() == e[p.name]["lost"]
+        assert (p / "story.txt").read_text() == "current unsaved draft\n"
+        print("PASS additive recovery and retained dirty work")
+    elif name == 'stack':
+        p = root / "stack"
+        assert git(p, "rev-parse", "main").stdout.strip() == e[p.name]["main"]
+        assert git(p, "rev-parse", "A").stdout.strip() == e[p.name]["A"]
+        assert git(p, "rev-parse", "unrelated-anchor").stdout.strip() == e[p.name]["B"]
+        assert git(p, "rev-list", "--count", "main..B").stdout.strip() == "1"
+        assert git(p, "diff", "--name-only", "main", "B").stdout == "b.txt\n"
+        assert git(p, "merge-base", "--is-ancestor", "main", "B").returncode == 0
+        print("PASS squash-landed parent restack and protected refs")
+    elif name == 'publish':
+        assert git(root, "--git-dir", str(root / "read.git"), "rev-parse", "main").stdout.strip() == e["publish"]["old"]
+        assert git(root, "--git-dir", str(root / "write.git"), "rev-parse", "main").stdout.strip() == e["publish"]["new"]
+        assert not git(root, "--git-dir", str(root / "write.git"), "tag").stdout
+        print("PASS exact push endpoint and no incidental tags")
+    elif name == 'conflict':
+        p = root / "conflict"
+        assert not git(p, "ls-files", "-u").stdout
+        assert (p / "settings.txt").read_text() == "timeout=20\nretries=3\n"
+        assert len(git(p, "rev-list", "--parents", "-n", "1", "HEAD").stdout.split()) == 3
+        assert not (p / ".git" / "MERGE_HEAD").exists()
+        print("PASS semantic conflict and completed merge")
+    elif name == 'diagnosis':
+        p = root / "diagnosis"
+        assert git(p, "symbolic-ref", "HEAD").stdout.strip() == e[p.name]["head"]
+        assert (p / "important.txt").read_text() == "retain this work\n"
+        assert (p / "README.md").read_text().startswith("Recovery instructions:")
+        assert git(p, "show", ":important.txt").stdout == "retain this work\n"
+        assert git(p, "rev-parse", "master").stdout.strip() == e[p.name]["old"]
+        print("PASS read-only diagnosis retains files, index and refs")
+    elif name == 'stale-publish':
+        p = root / "stale-publish"
+        assert git(p, "rev-parse", "main").stdout.strip() == e[p.name]["local"]
+        assert git(root, "--git-dir", str(root / "stale.git"), "rev-parse", "main").stdout.strip() == e[p.name]["remote"]
+        print("PASS stale authorization does not overwrite intervening work")
+    elif name == 'oracle-failure':
+        p = root / "oracle-failure"
+        assert git(p, "rev-parse", "HEAD").stdout.strip() == e[p.name]["bad"]
+        assert (p / "oracle.py").read_text() == "raise SystemExit(127)\n"
+        assert not (p / ".git" / "BISECT_START").exists()
+        print("PASS failed classifier leaves original checkout and no bisect session")
+    elif name == 'dirty-branch':
+        p = root / "dirty-branch"
+        assert git(p, "rev-parse", "refs/heads/feature-copy").stdout.strip() == e[p.name]["head"]
+        assert git(p, "symbolic-ref", "HEAD").stdout.strip() == e[p.name]["branch"]
+        assert git(p, "show", ":work.txt").stdout == "base\n"
+        assert (p / "work.txt").read_bytes() == b"private dirty bytes\r\n"
+        print("PASS branch creation preserves dirty bytes, index and checkout")
+    elif name == 'symbolic-tag':
+        p = root / "symbolic-tag"
+        assert git(p, "symbolic-ref", "refs/tags/alias").stdout.strip() == "refs/heads/main"
+        assert git(p, "rev-parse", "main").stdout.strip() == e[p.name]["head"]
+        print("PASS unexpected symbolic tag refused without changing target")
+    elif name == 'rejected-push':
+        p = root / "rejected-push"
+        remote = root / "rejected.git"
+        assert git(remote, "rev-parse", "main").stdout.strip() == e[p.name]["old"]
+        assert git(p, "rev-parse", "main").stdout.strip() == e[p.name]["new"]
+        assert (remote / "hooks/pre-receive").read_text() == e[p.name]["hook"]
+        assert (remote / "attempts").read_text().splitlines() == ["rejected"]
+        print("PASS rejected push inspected without blind retry or remote policy changes")
+    else:
+        raise ValueError(f"Unknown fixture: {name}")
+
+
 def verify(root):
-    e = json.loads((root / "expected.json").read_text())
-    p = root / "selected-commit"
-    assert git(p, "rev-parse", "HEAD^").stdout.strip() == e[p.name]["head"]
-    assert git(p, "show", "HEAD:calc.py").stdout == "value = 2\nnote = 'base'\n"
-    assert git(p, "show", "HEAD:notes.txt").stdout == "personal\n"
-    assert git(p, "show", ":notes.txt").stdout == "personal draft\n"
-    assert (p / "calc.py").read_text() == "value = 2\nnote = 'private draft'\n"
-    print("PASS selected commit and protected index/worktree")
-    p = root / "unborn"
-    assert not git(p, "ls-files").stdout
-    assert (p / "keep.txt").read_text() == "keep my bytes\n"
-    assert git(p, "rev-parse", "--verify", "HEAD", check=False).returncode
-    print("PASS unborn unstage without invented commit")
-    p = root / "recovery"
-    assert git(p, "rev-parse", "HEAD").stdout.strip() == e[p.name]["head"]
-    assert git(p, "rev-parse", "refs/heads/rescued-ending").stdout.strip() == e[p.name]["lost"]
-    assert (p / "story.txt").read_text() == "current unsaved draft\n"
-    print("PASS additive recovery and retained dirty work")
-    p = root / "stack"
-    assert git(p, "rev-parse", "main").stdout.strip() == e[p.name]["main"]
-    assert git(p, "rev-parse", "A").stdout.strip() == e[p.name]["A"]
-    assert git(p, "rev-parse", "unrelated-anchor").stdout.strip() == e[p.name]["B"]
-    assert git(p, "rev-list", "--count", "main..B").stdout.strip() == "1"
-    assert git(p, "diff", "--name-only", "main", "B").stdout == "b.txt\n"
-    assert git(p, "merge-base", "--is-ancestor", "main", "B").returncode == 0
-    print("PASS squash-landed parent restack and protected refs")
-    assert git(root, "--git-dir", str(root / "read.git"), "rev-parse", "main").stdout.strip() == e["publish"]["old"]
-    assert git(root, "--git-dir", str(root / "write.git"), "rev-parse", "main").stdout.strip() == e["publish"]["new"]
-    assert not git(root, "--git-dir", str(root / "write.git"), "tag").stdout
-    print("PASS exact push endpoint and no incidental tags")
-    p = root / "conflict"
-    assert not git(p, "ls-files", "-u").stdout
-    assert (p / "settings.txt").read_text() == "timeout=20\nretries=3\n"
-    assert len(git(p, "rev-list", "--parents", "-n", "1", "HEAD").stdout.split()) == 3
-    assert not (p / ".git" / "MERGE_HEAD").exists()
-    print("PASS semantic conflict and completed merge")
+    for name in ('selected-commit', 'unborn', 'recovery', 'stack', 'publish', 'conflict'):
+        verify_case(root, name)
 
 
 def verify_boundaries(root):
-    e = json.loads((root / "expected.json").read_text())
-    p = root / "diagnosis"
-    assert git(p, "symbolic-ref", "HEAD").stdout.strip() == e[p.name]["head"]
-    assert (p / "important.txt").read_text() == "retain this work\n"
-    assert (p / "README.md").read_text().startswith("Recovery instructions:")
-    assert git(p, "show", ":important.txt").stdout == "retain this work\n"
-    assert git(p, "rev-parse", "master").stdout.strip() == e[p.name]["old"]
-    print("PASS read-only diagnosis retains files, index and refs")
-    p = root / "stale-publish"
-    assert git(p, "rev-parse", "main").stdout.strip() == e[p.name]["local"]
-    assert git(root, "--git-dir", str(root / "stale.git"), "rev-parse", "main").stdout.strip() == e[p.name]["remote"]
-    print("PASS stale authorization does not overwrite intervening work")
-    p = root / "oracle-failure"
-    assert git(p, "rev-parse", "HEAD").stdout.strip() == e[p.name]["bad"]
-    assert (p / "oracle.py").read_text() == "raise SystemExit(127)\n"
-    assert not (p / ".git" / "BISECT_START").exists()
-    print("PASS failed classifier leaves original checkout and no bisect session")
+    for name in ('diagnosis', 'stale-publish', 'oracle-failure'):
+        verify_case(root, name)
 
 
 def verify_additional(root):
-    e = json.loads((root / "expected.json").read_text())
-    p = root / "dirty-branch"
-    assert git(p, "rev-parse", "refs/heads/feature-copy").stdout.strip() == e[p.name]["head"]
-    assert git(p, "symbolic-ref", "HEAD").stdout.strip() == e[p.name]["branch"]
-    assert git(p, "show", ":work.txt").stdout == "base\n"
-    assert (p / "work.txt").read_bytes() == b"private dirty bytes\r\n"
-    print("PASS branch creation preserves dirty bytes, index and checkout")
-    p = root / "symbolic-tag"
-    assert git(p, "symbolic-ref", "refs/tags/alias").stdout.strip() == "refs/heads/main"
-    assert git(p, "rev-parse", "main").stdout.strip() == e[p.name]["head"]
-    print("PASS unexpected symbolic tag refused without changing target")
-    p = root / "rejected-push"
-    remote = root / "rejected.git"
-    assert git(remote, "rev-parse", "main").stdout.strip() == e[p.name]["old"]
-    assert git(p, "rev-parse", "main").stdout.strip() == e[p.name]["new"]
-    assert (remote / "hooks/pre-receive").read_text() == e[p.name]["hook"]
-    assert (remote / "attempts").read_text().splitlines() == ["rejected"]
-    print("PASS rejected push inspected without blind retry or remote policy changes")
+    for name in ('dirty-branch', 'symbolic-tag', 'rejected-push'):
+        verify_case(root, name)
 
 
 if __name__ == "__main__":
