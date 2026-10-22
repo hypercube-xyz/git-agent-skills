@@ -82,6 +82,39 @@ class RuntimeProbe(unittest.TestCase):
 
 
 class BenchmarkOracles(unittest.TestCase):
+    def test_selected_deletion_and_rename_apply_delta_without_touching_real_index(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary) / "repo"
+            init(repo)
+            for path in ("deleted", "old-name", "keep"):
+                commit_file(repo, path, f"{path}\n", path)
+            git(repo, "rm", "deleted")
+            git(repo, "mv", "old-name", "new-name")
+            (repo / "keep").write_bytes(b"private staged\n")
+            git(repo, "add", "keep")
+            original_index = (repo / ".git/index").read_bytes()
+            env = controlled_git_env()
+            env["GIT_INDEX_FILE"] = str(repo / ".git/selected-index")
+            def alternate(*args):
+                return subprocess.run(["git", *args], cwd=repo, env=env,
+                                      capture_output=True, text=True, check=True)
+            alternate("read-tree", "HEAD")
+            oid = git(repo, "rev-parse", ":new-name").stdout.strip()
+            alternate("update-index", "--add", "--cacheinfo", "100644", oid, "new-name")
+            # Overlaying present entries alone silently loses deletions and the rename source.
+            self.assertEqual(set(alternate("ls-files").stdout.splitlines()),
+                             {"deleted", "old-name", "new-name", "keep"})
+            alternate("update-index", "--force-remove", "--", "deleted", "old-name")
+            candidate = alternate("write-tree").stdout.strip()
+            self.assertEqual(set(alternate("ls-files").stdout.splitlines()), {"new-name", "keep"})
+            alternate("commit", "-qm", "selected deletion and rename")
+            self.assertEqual(git(repo, "rev-parse", "HEAD^{tree}").stdout.strip(), candidate)
+            self.assertEqual(git(repo, "show", "HEAD:keep").stdout, "keep\n")
+            self.assertEqual(git(repo, "show", "HEAD:new-name").stdout, "old-name\n")
+            self.assertEqual((repo / ".git/index").read_bytes(), original_index)
+            self.assertEqual(git(repo, "diff", "--cached", "--name-only").stdout, "keep\n")
+            self.assertEqual((repo / "keep").read_bytes(), b"private staged\n")
+
     def test_alternate_index_retains_excluded_entries_and_rejects_repaired_bad_commit(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "cases"

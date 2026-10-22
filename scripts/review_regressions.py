@@ -32,6 +32,95 @@ class ReviewRegressions(unittest.TestCase):
     def helper(self):
         return load_helper("skills/manage-remotes/scripts/inspect_remotes.py", "review_remote_helper")
 
+    def test_explicit_no_autostash_overrides_branch_merge_options(self):
+        for explicit in (False, True):
+            with self.subTest(explicit_no_autostash=explicit):
+                p = self.repo(f"merge-{explicit}")
+                commit_file(p, "app", "base\n", "base")
+                base = commit_file(p, "draft", "base\n", "draft")
+                branch = git(p, "symbolic-ref", "--short", "HEAD").stdout.strip()
+                git(p, "checkout", "-qb", "source")
+                tip = commit_file(p, "app", "new\n", "change")
+                git(p, "checkout", "-q", branch)
+                (p / "draft").write_bytes(b"private draft\n")
+                git(p, "config", f"branch.{branch}.mergeOptions", "--autostash")
+                command = ["-c", "merge.autoStash=false", "merge", "--ff-only"]
+                if explicit:
+                    command.append("--no-autostash")
+                result = git(p, *command, tip)
+                self.assertEqual("Created autostash" in result.stdout + result.stderr, not explicit)
+                self.assertEqual(git(p, "rev-parse", "HEAD").stdout.strip(), tip)
+                self.assertEqual((p / "draft").read_bytes(), b"private draft\n")
+                self.assertEqual(git(p, "show", "HEAD:draft").stdout, "base\n")
+                self.assertEqual(git(p, "rev-parse", "refs/heads/source").stdout.strip(), tip)
+                self.assertEqual(git(p, "rev-parse", f"{base}:draft").stdout,
+                                 git(p, "rev-parse", "HEAD:draft").stdout)
+
+    def test_ref_reads_and_expected_old_updates_use_native_backend(self):
+        p = self.repo("files")
+        format_result = git(p, "rev-parse", "--show-ref-format").stdout.strip()
+        if format_result != "files":
+            # Old rev-parse can echo the unknown flag and still succeed.
+            self.assertEqual(format_result, "--show-ref-format")
+            self.assertEqual(git(p, "config", "--get", "core.repositoryformatversion").stdout.strip(), "0")
+            self.assertEqual(git(p, "config", "--get", "extensions.refstorage", check=False).returncode, 1)
+        old = commit_file(p, "f", "old\n", "old")
+        new = commit_file(p, "f", "new\n", "new")
+        git(p, "update-ref", "refs/heads/inactive", old)
+        git(p, "pack-refs", "--all")
+        self.assertFalse((p / ".git/refs/heads/inactive").exists())
+        git(p, "update-ref", "--no-deref", "refs/heads/inactive", new, old)
+        self.assertNotEqual(git(p, "update-ref", "--no-deref", "refs/heads/inactive", old, old,
+                                check=False).returncode, 0)
+        self.assertEqual(git(p, "show-ref", "--verify", "--hash", "refs/heads/inactive").stdout.strip(), new)
+        self.assertEqual(git(p, "rev-parse", "HEAD").stdout.strip(), new)
+        self.assertEqual((p / "f").read_bytes(), b"new\n")
+
+    def test_known_path_worktree_creation_does_not_require_nul_inventory(self):
+        p = self.repo("worktree-source")
+        oid = commit_file(p, "f", "retain\n", "base")
+        index = (p / ".git/index").read_bytes()
+        refs = git(p, "show-ref").stdout
+        target = self.root / "ordinary worktree"
+        git(p, "worktree", "add", "--detach", str(target), oid)
+        self.assertEqual(git(target, "rev-parse", "HEAD").stdout.strip(), oid)
+        self.assertEqual(Path(git(target, "rev-parse", "--git-common-dir").stdout.strip()).resolve(),
+                         (p / ".git").resolve())
+        self.assertEqual((target / "f").read_bytes(), b"retain\n")
+        self.assertEqual(git(p, "show-ref").stdout, refs)
+        self.assertEqual((p / ".git/index").read_bytes(), index)
+
+    def test_reftable_native_diagnosis_or_verified_unavailable(self):
+        p = self.root / "reftable"
+        cp = git(self.root, "init", "-q", "--ref-format=reftable", str(p), check=False)
+        if cp.returncode == 129 and "unknown option" in cp.stderr:
+            self.assertFalse(p.exists(), "unsupported init must leave no target")
+            self.compatibility_outcome = "safe_refusal"
+            self.compatibility_reason = "reftable unavailable; no repository created"
+            return
+        self.assertEqual(cp.returncode, 0, cp.stderr)
+        git(p, "config", "user.name", "Test User")
+        git(p, "config", "user.email", "test@example.invalid")
+        old = commit_file(p, "f", "old\n", "old")
+        new = commit_file(p, "f", "new\n", "new")
+        self.assertEqual(git(p, "rev-parse", "--show-ref-format").stdout.strip(), "reftable")
+        git(p, "update-ref", "refs/heads/inactive", old)
+        before_index = (p / ".git/index").read_bytes()
+        before_files = {f.relative_to(p / ".git"): f.read_bytes()
+                        for f in (p / ".git/reftable").iterdir() if f.is_file()}
+        self.assertFalse((p / ".git/refs/heads/inactive").exists())
+        self.assertIn(f"{old} refs/heads/inactive", git(p, "show-ref").stdout)
+        git(p, "refs", "verify")
+        self.assertEqual(before_files, {f.relative_to(p / ".git"): f.read_bytes()
+                                      for f in (p / ".git/reftable").iterdir() if f.is_file()})
+        git(p, "update-ref", "--no-deref", "refs/heads/inactive", new, old)
+        self.assertNotEqual(git(p, "update-ref", "--no-deref", "refs/heads/inactive", old, old,
+                                check=False).returncode, 0)
+        self.assertEqual(git(p, "rev-parse", "refs/heads/inactive").stdout.strip(), new)
+        self.assertEqual(git(p, "rev-parse", "HEAD").stdout.strip(), new)
+        self.assertEqual((p / ".git/index").read_bytes(), before_index)
+        self.assertEqual((p / "f").read_bytes(), b"new\n")
+
     def test_unicode_endpoint_records(self):
         p = self.repo("repo")
         helper = self.helper()
@@ -388,7 +477,8 @@ class CompatibilityResult(unittest.TextTestResult):
     def addSuccess(self, test):
         if getattr(test, "compatibility_outcome", None) == "safe_refusal":
             self.safe_refusals.append(test.id())
-            self.stream.writeln("SAFE_REFUSAL (symbolic-target transaction unavailable; refs preserved)")
+            reason = getattr(test, "compatibility_reason", "symbolic-target transaction unavailable; refs preserved")
+            self.stream.writeln(f"SAFE_REFUSAL ({reason})")
         else:
             super().addSuccess(test)
 

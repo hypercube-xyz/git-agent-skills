@@ -268,6 +268,7 @@ def main():
         selection = (f"Use only the standalone skill at {trial / 'standalone' / name / standalone.OWNERS[name]}; its installation directory has no catalog, sibling skills or root docs. Read its SKILL.md and relevant bundled references. "
                      if args.standalone else f"Use only candidate Git skills at {trial / 'skills'}; choose from its catalog and read relevant SKILL.md. ")
         prompt = (selection +
+                  "Load the relevant SKILL.md before running any Git command, including inspection. "
                   f"These are disposable local repos: all mutations and Git transport must remain within {allowed}. "
                   "Do not read harness/fixture code, expected.json, other cases, other candidate versions, or evaluation reports. "
                   "Do not request approval for already authorized effects. No network Git endpoints or real credentials are needed. "
