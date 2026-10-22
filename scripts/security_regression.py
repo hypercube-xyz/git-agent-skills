@@ -34,9 +34,9 @@ mailbox = ROOT / "skills/transplant-commits/references/patch-mailbox-workflows.m
 if not mailbox.is_file() or MAILBOX_MARKER not in mailbox.read_text(encoding="utf-8"):
     errors.append("transplant mailbox reference lacks hardened ingestion boundary")
 
-security_doc = ROOT / "docs/SECURITY-EXECUTION.md"
+security_doc = ROOT / "SECURITY.md"
 if not security_doc.is_file():
-    errors.append("docs/SECURITY-EXECUTION.md is missing")
+    errors.append("SECURITY.md is missing")
 else:
     doc = security_doc.read_text(encoding="utf-8")
     for phrase in (
@@ -49,7 +49,7 @@ else:
             errors.append(f"security execution document missing: {phrase}")
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-if "docs/SECURITY-EXECUTION.md" not in readme:
+if "SECURITY.md" not in readme:
     errors.append("README does not link the execution security contract")
 
 

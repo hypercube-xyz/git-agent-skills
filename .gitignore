@@ -4,3 +4,4 @@ __pycache__/
 dist/
 artifacts/
 .hardening-report.json
+/docs/
