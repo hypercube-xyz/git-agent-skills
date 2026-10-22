@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2.0.3 - 2026-10-23
+
+- Simplify all 24 workflows with checks selected by actual effects, material concerns and clear completion boundaries while retaining standalone safety and handoff compatibility.
+- Disable implicit merge autostash with an explicit flag and include selected deletions/renames in alternate-index commits.
+- Clarify Git 2.35 worktree limits and use native ref-backend diagnosis for packed refs and reftable.
+- Add native regression coverage and require skill loading before Git inspection in explicit-load evaluations.
+
 ## 2.0.2 - 2026-10-23
 
 - Match execution checks to read-only, reversible-local, shared and destructive effects; add short local branch/tag paths and reuse immutable evidence without caching mutable targets or remote observations.
