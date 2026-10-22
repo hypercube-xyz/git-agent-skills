@@ -143,7 +143,7 @@ compatibility = catalog.get("compatibility", {})
 changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 if f"## {version} - {release_date}" not in changelog:
     errors.append("changelog version/date mismatch")
-compat_doc = (ROOT / "docs/COMPATIBILITY.md").read_text(encoding="utf-8")
+compat_doc = readme
 workflow = (ROOT / ".github/workflows/validate.yml").read_text(encoding="utf-8")
 python_compat = compatibility.get("python", {})
 ci_compat = compatibility.get("ci", {})
