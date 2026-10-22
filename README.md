@@ -117,6 +117,13 @@ Conditional transport details ship inside each affected skill, preserving standa
 installation. The optional `python scripts/runtime_capabilities.py <repository>`
 reports observable probe controls and unproven runtime isolation, not a security certificate.
 
+Each skill starts from the requested outcome, investigates material concerns and
+uses the smallest adequate procedure. Evidence lists apply to the selected mode;
+they are not universal checklists. Existing authorization carries through handoffs,
+and verification ends when the outcome and relevant protected-state checks are met.
+See the [capability matrix](docs/COMPATIBILITY.md#feature-detection) for Git 2.35,
+NUL worktree inventory and ref-backend limits.
+
 The release builder is a pure packager: it reads immutable committed blobs via `git ls-tree` and `git cat-file`, does not read working-tree file content as package input, and does not run validators. CI validates the checked-out revision before calling the builder. Each release output (ZIP, checksum, metadata) is written atomically per file; abrupt termination may leave a partial output set — rerunning the deterministic builder reconciles it.
 
 ## Compatibility

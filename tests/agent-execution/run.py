@@ -95,7 +95,7 @@ def main():
     def run_case(item):
         name, request = item
         prompt = (f"Use candidate Git skills from {snapshot} to complete the request below. "
-                  "Choose applicable skills from catalog.json and read their SKILL.md and relevant references. "
+                  "Choose applicable skills from catalog.json and load their SKILL.md before any Git command, including inspection; read relevant references. "
                   f"All mutations and Git transport must stay within {fixture_root}; these are disposable local repos. "
                   "Do not read fixture code, expected.json, other cases, or evaluation reports. "
                   "Do not ask for confirmation for already authorized actions. "

@@ -5,7 +5,7 @@ Read this after resolving the exact local branch, upstream mapping, effective fe
 | Observed relationship | Choice when it matches the task |
 |---|---|
 | Equal tips | Verify tracking metadata; no history operation. |
-| Local tip ancestor of remote tip | Fast-forward locally with the verified remote commit using `git -c merge.autoStash=false merge --ff-only` after reviewing local work; preserve conflicting work first and allow autostash only when its effects are reviewed. |
+| Local tip ancestor of remote tip | Fast-forward to the verified remote commit with `git merge --ff-only --no-autostash` after reviewing local work; preserve conflicting work first. Config-only suppression does not override branch merge options. Allow autostash only within reviewed scope. |
 | Remote tip ancestor of local tip | Ordinary explicit push may publish a fast-forward update. |
 | Neither tip ancestor | Ask or use established policy for merge versus permitted rebase; local integration belongs to `integrate-branches`. |
 | Remote destination absent | Treat as explicit branch creation; a missing old OID is not proof of a fast-forward. |
