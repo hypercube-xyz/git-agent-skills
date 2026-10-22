@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.0.4 - 2026-10-23
+
+- Stop tracking the local-only `docs/` directory and ignore future local notes.
+- Retain the shared security execution contract in `SECURITY.md` and compatibility guidance in README, update their validation inputs, and replace links to removed documentation.
+
 ## 2.0.3 - 2026-10-23
 
 - Simplify all 24 workflows with checks selected by actual effects, material concerns and clear completion boundaries while retaining standalone safety and handoff compatibility.
